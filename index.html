@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-SU</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#f4f4f5;color:#18181b;font-family:'DM Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+a{color:#18181b;text-decoration:none}
+a:hover{color:#09090b}
+:focus-visible{outline:2px solid #09090b;outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:10000px;border:3px solid #f4f4f5}
+@keyframes esuIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes esuSk{0%{opacity:.4}50%{opacity:.85}100%{opacity:.4}}
+@keyframes esuSpin{to{transform:rotate(360deg)}}
+@keyframes esuDrawer{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</helmet>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#f4f4f5">
+  <div style="display:flex;align-items:center;justify-content:center;padding:48px 40px">
+    <div style="width:100%;max-width:420px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:40px">
+        <div style="width:48px;height:48px;border-radius:14px;background:#09090b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;letter-spacing:-0.5px">E</div>
+        <div>
+          <div style="font-size:18px;font-weight:600;color:#09090b;line-height:1.2">E-SU</div>
+          <div style="font-size:12px;color:#71717a;line-height:1.4">Electronic Salymbekov University</div>
+        </div>
+      </div>
+      <h1 style="font-size:32px;line-height:1.28;font-weight:600;color:#09090b;margin:0 0 10px">Вход в систему</h1>
+      <p style="font-size:15px;line-height:1.45;color:#52525b;margin:0 0 32px">Электронная система документооборота Salymbekov University. Доступ только для сотрудников университета.</p>
+      <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#fff1e9;border:1px solid #ffd6bd;border-radius:14px;padding:12px 14px;margin-bottom:20px;animation:esuIn .18s ease-out">
+          <div style="color:#c24400;flex:0 0 auto;margin-top:1px">{{ icons.warn }}</div>
+          <div style="font-size:14px;line-height:1.45;color:#c24400">{{ loginErr }}</div>
+        </div>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <label style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:500;color:#3f3f46">Корпоративная почта</span>
+          <input type="email" value="{{ loginEmail }}" onChange="{{ on.loginEmail }}" placeholder="name@salymbekov.edu.kg" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 16px;font-size:15px;color:#18181b;box-shadow:inset 0 1px 0 0 rgb(228,228,231)" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:500;color:#3f3f46">Пароль</span>
+          <span style="position:relative;display:flex">
+            <input type="{{ passType }}" value="{{ loginPass }}" onChange="{{ on.loginPass }}" placeholder="Введите пароль" style="flex:1;background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 44px 12px 16px;font-size:15px;color:#18181b;box-shadow:inset 0 1px 0 0 rgb(228,228,231)" />
+            <button type="button" onClick="{{ on.togglePass }}" title="Показать или скрыть пароль" style="position:absolute;right:6px;top:6px;bottom:6px;width:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:12px;color:#71717a;cursor:pointer" style-hover="background:#f4f4f5;color:#3f3f46">{{ icons.eyeBtn }}</button>
+          </span>
+        </label>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#3f3f46;cursor:pointer">
+            <input type="checkbox" checked="{{ remember }}" onChange="{{ on.remember }}" style="width:16px;height:16px;accent-color:#09090b;cursor:pointer" />
+            Запомнить меня
+          </label>
+          <button type="button" onClick="{{ on.forgot }}" style="background:transparent;border:0;padding:0;font-size:14px;color:#3f3f46;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#09090b">Восстановить пароль</button>
+        </div>
+        <button type="button" onClick="{{ on.login }}" disabled="{{ loginBusy }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:6px;background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), inset 0 9px 14px -5px rgba(117,123,133,.4), 0 4px 6px 0 rgba(0,0,0,.14);opacity:{{ loginOpacity }}">
+          <sc-if value="{{ loginBusy }}" hint-placeholder-val="{{ false }}">
+            <span style="width:16px;height:16px;border-radius:10000px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:esuSpin .7s linear infinite"></span>
+          </sc-if>
+          {{ loginLabel }}
+        </button>
+      </div>
+      <div style="margin-top:32px;padding-top:24px;border-top:1px solid #ececee;font-size:13px;line-height:1.6;color:#71717a">Проблемы со входом — обратитесь в IT-отдел, вн. 214.</div>
+    </div>
+  </div>
+  <div style="padding:24px 24px 24px 0;display:flex">
+    <div style="flex:1;border-radius:36px;background:#18181b;padding:64px 56px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-flex;align-items:center;background:#ff5a00;color:#fff;border-radius:12px;padding:4px 8px;font-size:12px;font-weight:500">MVP 2026</span>
+        <span style="display:inline-flex;align-items:center;background:transparent;border:1px solid #3f3f46;color:#a1a1aa;border-radius:12px;padding:4px 8px;font-size:12px">Внутренняя система</span>
+      </div>
+      <div>
+        <div style="font-size:40px;line-height:1.28;font-weight:600;color:#fff;text-wrap:pretty;margin-bottom:20px">Документооборот университета в одном рабочем пространстве</div>
+        <div style="font-size:15px;line-height:1.6;color:#a1a1aa;max-width:420px">Создание и регистрация документов, последовательное согласование, контроль дедлайнов, история действий и архив — без бумаги и пересылки файлов по почте.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-top:32px;border-top:1px solid #27272a">
+        <div><div style="font-size:32px;font-weight:600;color:#fff;line-height:1.2">1 240</div><div style="font-size:13px;color:#71717a;margin-top:4px">документов в системе</div></div>
+        <div><div style="font-size:32px;font-weight:600;color:#fff;line-height:1.2">18</div><div style="font-size:13px;color:#71717a;margin-top:4px">подразделений</div></div>
+        <div><div style="font-size:32px;font-weight:600;color:#fff;line-height:1.2">2,4 дня</div><div style="font-size:13px;color:#71717a;margin-top:4px">среднее согласование</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;min-height:100vh;background:#f4f4f5">
+
+  <aside style="position:sticky;top:0;align-self:flex-start;height:100vh;flex:0 0 auto;width:{{ sbW }}px;background:#fff;border-right:1px solid #ececee;display:flex;flex-direction:column;padding:20px 12px 12px;gap:4px;transition:width .18s ease">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 8px 20px">
+      <div style="width:36px;height:36px;flex:0 0 auto;border-radius:12px;background:#09090b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600">E</div>
+      <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:600;color:#09090b;line-height:1.2">E-SU</div>
+          <div style="font-size:11px;color:#a1a1aa;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Документооборот</div>
+        </div>
+      </sc-if>
+      <button type="button" onClick="{{ on.toggleSb }}" title="Свернуть меню" style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:8px;color:#a1a1aa;cursor:pointer" style-hover="background:#f4f4f5;color:#3f3f46">{{ icons.collapse }}</button>
+    </div>
+    <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
+      <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <sc-if value="{{ g.showLabel }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:8px 10px 6px;font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:#a1a1aa">{{ g.label }}</div>
+          </sc-if>
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="6">
+            <button type="button" onClick="{{ it.go }}" title="{{ it.label }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:12px;cursor:pointer;text-align:left;font-size:14px;background:{{ it.bg }};color:{{ it.fg }};font-weight:{{ it.fw }}" style-hover="background:#f4f4f5">
+              <span style="flex:0 0 auto;display:flex;color:{{ it.ic }}">{{ it.icon }}</span>
+              <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+                <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.label }}</span>
+              </sc-if>
+              <sc-if value="{{ it.hasCount }}" hint-placeholder-val="{{ false }}">
+                <span style="flex:0 0 auto;min-width:20px;text-align:center;background:{{ it.cBg }};color:{{ it.cFg }};border-radius:10000px;font-size:11px;font-weight:500;padding:2px 6px">{{ it.count }}</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid #ececee;padding-top:12px;margin-top:8px;display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;flex:0 0 auto;border-radius:10000px;background:#f4f4f5;border:1px solid #ececee;color:#3f3f46;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">{{ me.initials }}</div>
+      <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;color:#18181b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ me.name }}</div>
+          <div style="font-size:11px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ me.post }}</div>
+          <div style="font-size:11px;color:#a1a1aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ me.dep }}</div>
+        </div>
+      </sc-if>
+      <button type="button" onClick="{{ on.logout }}" title="Выйти из системы" style="flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:10px;color:#a1a1aa;cursor:pointer" style-hover="background:#f4f4f5;color:#c24400">{{ icons.logout }}</button>
+    </div>
+  </aside>
+
+  <div style="flex:1;min-width:1004px;display:flex;flex-direction:column">
+    <header style="position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid #ececee;padding:12px 32px;display:flex;align-items:center;gap:16px">
+      <div style="position:relative;flex:1;max-width:460px;display:flex;align-items:center">
+        <span style="position:absolute;left:14px;display:flex;color:#a1a1aa;pointer-events:none">{{ icons.search }}</span>
+        <input value="{{ q }}" onChange="{{ on.q }}" placeholder="Поиск по номеру, названию, автору…" style="width:100%;background:#f4f4f5;border:1px solid transparent;border-radius:14px;padding:10px 14px 10px 42px;font-size:14px;color:#18181b" style-focus="background:#fff;border-color:#ececee" />
+      </div>
+      <div style="flex:1"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#71717a;background:#f4f4f5;border-radius:14px;padding:6px 8px 6px 12px">
+        Роль
+        <select value="{{ role }}" onChange="{{ on.role }}" title="Демонстрация интерфейса для разных ролей" style="background:#fff;border:1px solid #ececee;border-radius:12px;padding:5px 8px;font-size:13px;color:#18181b;cursor:pointer">
+          <option value="employee">Сотрудник</option>
+          <option value="manager">Руководитель</option>
+          <option value="clerk">Канцелярия</option>
+          <option value="admin">Администратор</option>
+        </select>
+      </label>
+      <button type="button" onClick="{{ on.notifToggle }}" title="Уведомления" style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ececee;border-radius:14px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">
+        {{ icons.bell }}
+        <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+          <span style="position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:10000px;background:#ff5a00;color:#fff;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;border:2px solid #fff">{{ unreadCount }}</span>
+        </sc-if>
+      </button>
+      <button type="button" onClick="{{ on.userMenu }}" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ececee;border-radius:14px;padding:5px 10px 5px 6px;cursor:pointer" style-hover="background:#fafafa">
+        <span style="width:30px;height:30px;border-radius:10000px;background:#f4f4f5;color:#3f3f46;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ me.initials }}</span>
+        <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.25">
+          <span style="font-size:13px;font-weight:500;color:#18181b">{{ me.short }}</span>
+          <span style="font-size:11px;color:#a1a1aa">{{ me.roleLabel }}</span>
+        </span>
+        <span style="display:flex;color:#a1a1aa">{{ icons.chevD }}</span>
+      </button>
+
+      <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;top:64px;right:180px;width:400px;background:#fff;border:1px solid #ececee;border-radius:24px;box-shadow:rgba(0,0,0,.04) 0px 4px 12px 0px;overflow:hidden;z-index:40;animation:esuIn .16s ease-out">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ececee">
+            <div style="font-size:15px;font-weight:600;color:#09090b">Уведомления</div>
+            <button type="button" onClick="{{ on.readAll }}" style="background:transparent;border:0;font-size:13px;color:#3f3f46;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#09090b">Отметить всё как прочитанное</button>
+          </div>
+          <div style="max-height:340px;overflow-y:auto">
+            <sc-for list="{{ notifTop }}" as="n" hint-placeholder-count="4">
+              <button type="button" onClick="{{ n.open }}" style="display:flex;gap:12px;width:100%;text-align:left;padding:14px 20px;background:{{ n.bg }};border:0;border-bottom:1px solid #f4f4f5;cursor:pointer" style-hover="background:#fafafa">
+                <span style="flex:0 0 auto;width:32px;height:32px;border-radius:10px;background:#f4f4f5;color:#3f3f46;display:flex;align-items:center;justify-content:center">{{ n.icon }}</span>
+                <span style="flex:1;min-width:0">
+                  <span style="display:block;font-size:14px;font-weight:500;color:#18181b;line-height:1.35">{{ n.title }}</span>
+                  <span style="display:block;font-size:13px;color:#52525b;line-height:1.4;margin-top:2px">{{ n.doc }}</span>
+                  <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:4px">{{ n.time }}</span>
+                </span>
+                <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}">
+                  <span style="flex:0 0 auto;width:7px;height:7px;border-radius:10000px;background:#ff5a00;margin-top:6px"></span>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+          <button type="button" onClick="{{ on.goNotifications }}" style="width:100%;padding:14px;background:#fafafa;border:0;font-size:14px;font-weight:500;color:#18181b;cursor:pointer" style-hover="background:#f4f4f5">Все уведомления</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ userMenuOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;top:64px;right:32px;width:260px;background:#fff;border:1px solid #ececee;border-radius:20px;box-shadow:rgba(0,0,0,.04) 0px 4px 12px 0px;padding:8px;z-index:40;animation:esuIn .16s ease-out">
+          <div style="padding:12px;border-bottom:1px solid #f4f4f5;margin-bottom:6px">
+            <div style="font-size:14px;font-weight:500;color:#18181b">{{ me.name }}</div>
+            <div style="font-size:12px;color:#71717a;margin-top:2px">{{ me.email }}</div>
+            <div style="font-size:12px;color:#a1a1aa;margin-top:2px">{{ me.postDep }}</div>
+          </div>
+          <button type="button" onClick="{{ on.goSettings }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:transparent;border:0;border-radius:12px;font-size:14px;color:#18181b;text-align:left;cursor:pointer" style-hover="background:#f4f4f5"><span style="display:flex;color:#71717a">{{ icons.settings }}</span>Настройки</button>
+          <button type="button" onClick="{{ on.logout }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:transparent;border:0;border-radius:12px;font-size:14px;color:#c24400;text-align:left;cursor:pointer" style-hover="background:#fff1e9"><span style="display:flex">{{ icons.logout }}</span>Выйти из системы</button>
+        </div>
+      </sc-if>
+    </header>
+
+    <main style="flex:1;min-width:0;padding:28px 32px 64px">
+      <div style="max-width:1200px;min-width:940px;margin:0 auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#a1a1aa;margin-bottom:14px">
+          <sc-for list="{{ crumbs }}" as="c" hint-placeholder-count="2">
+            <span style="display:flex;align-items:center;gap:8px">
+              <button type="button" onClick="{{ c.go }}" style="background:transparent;border:0;padding:0;font-size:13px;color:{{ c.color }};cursor:{{ c.cursor }}" style-hover="color:#3f3f46">{{ c.label }}</button>
+              <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><span style="display:flex;color:#d4d4d8">{{ icons.chevS }}</span></sc-if>
+            </span>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:12px">
+              <h1 style="font-size:32px;line-height:1.28;font-weight:600;color:#09090b;margin:0">{{ page.title }}</h1>
+              <sc-if value="{{ page.hasCount }}" hint-placeholder-val="{{ false }}">
+                <span style="display:inline-flex;align-items:center;background:#f4f4f5;border:1px solid #ececee;color:#3f3f46;border-radius:12px;padding:4px 10px;font-size:13px;font-weight:500;margin-top:6px">{{ page.count }}</span>
+              </sc-if>
+            </div>
+            <p style="font-size:15px;line-height:1.45;color:#52525b;margin:6px 0 0;max-width:680px;text-wrap:pretty">{{ page.desc }}</p>
+          </div>
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding-top:4px">
+            <sc-for list="{{ page.actions }}" as="a" hint-placeholder-count="1">
+              <button type="button" onClick="{{ a.go }}" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:{{ a.bg }};color:{{ a.fg }};border:1px solid {{ a.bd }};border-radius:14px;padding:11px 16px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:{{ a.sh }}" style-hover="opacity:.92">
+                <sc-if value="{{ a.hasIcon }}" hint-placeholder-val="{{ true }}"><span style="display:flex">{{ a.icon }}</span></sc-if>
+                {{ a.label }}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+              <div style="height:104px;border-radius:28px;background:#ececee;animation:esuSk 1.1s ease-in-out infinite"></div>
+              <div style="height:104px;border-radius:28px;background:#ececee;animation:esuSk 1.1s ease-in-out infinite .1s"></div>
+              <div style="height:104px;border-radius:28px;background:#ececee;animation:esuSk 1.1s ease-in-out infinite .2s"></div>
+              <div style="height:104px;border-radius:28px;background:#ececee;animation:esuSk 1.1s ease-in-out infinite .3s"></div>
+            </div>
+            <div style="height:420px;border-radius:36px;background:#ececee;animation:esuSk 1.1s ease-in-out infinite .15s"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showDashboard }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:esuIn .2s ease-out">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+              <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="5">
+                <button type="button" onClick="{{ m.go }}" style="text-align:left;background:#fff;border:1px solid #ececee;border-radius:28px;padding:20px;cursor:pointer" style-hover="background:#fafafa">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font-size:13px;color:#52525b;line-height:1.35">{{ m.label }}</span>
+                    <span style="display:flex;color:{{ m.ic }}">{{ m.icon }}</span>
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:8px;margin-top:14px">
+                    <span style="font-size:40px;line-height:1;font-weight:600;color:{{ m.color }}">{{ m.value }}</span>
+                    <span style="font-size:12px;color:#a1a1aa">{{ m.hint }}</span>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px;align-items:start">
+              <div style="background:#fff;border:1px solid #ececee;border-radius:36px;overflow:hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:24px 28px 18px">
+                  <div>
+                    <div style="font-size:20px;font-weight:600;color:#09090b;line-height:1.3">Требуют вашего внимания</div>
+                    <div style="font-size:13px;color:#71717a;margin-top:4px">{{ attentionHint }}</div>
+                  </div>
+                  <button type="button" onClick="{{ on.goDocuments }}" style="background:#fafafa;border:0;border-radius:14px;padding:10px 14px;font-size:14px;color:#18181b;cursor:pointer" style-hover="background:#f4f4f5">Все документы</button>
+                </div>
+                <sc-for list="{{ attention }}" as="d" hint-placeholder-count="4">
+                  <button type="button" onClick="{{ d.open }}" style="display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:16px 28px;background:transparent;border:0;border-top:1px solid #f4f4f5;cursor:pointer" style-hover="background:#fafafa">
+                    <span style="flex:0 0 auto;width:40px;height:40px;border-radius:12px;background:#f4f4f5;color:#52525b;display:flex;align-items:center;justify-content:center">{{ d.icon }}</span>
+                    <span style="flex:1;min-width:0">
+                      <span style="display:block;font-size:14px;font-weight:500;color:#18181b;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span>
+                      <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:3px">{{ d.meta }}</span>
+                    </span>
+                    <span style="flex:0 0 auto;display:inline-flex;align-items:center;background:{{ d.sBg }};color:{{ d.sFg }};border:1px solid {{ d.sBd }};border-radius:12px;padding:5px 10px;font-size:12px;font-weight:500">{{ d.status }}</span>
+                    <span style="flex:0 0 auto;display:flex;color:#d4d4d8">{{ icons.chev }}</span>
+                  </button>
+                </sc-for>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div style="background:#27272a;border-radius:36px;padding:28px">
+                  <div style="font-size:20px;font-weight:600;color:#fff;line-height:1.3">Ближайшие дедлайны</div>
+                  <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+                    <sc-for list="{{ deadlines }}" as="d" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ d.open }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid #3f3f46;padding:0 0 14px;cursor:pointer" style-hover="opacity:.8">
+                        <span style="flex:1;min-width:0">
+                          <span style="display:block;font-size:15px;font-weight:500;color:#fff;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span>
+                          <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:3px">{{ d.num }}</span>
+                        </span>
+                        <span style="flex:0 0 auto;font-size:13px;font-weight:500;color:{{ d.color }}">{{ d.left }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px">
+                  <div style="font-size:20px;font-weight:600;color:#09090b;line-height:1.3">Мои документы по статусам</div>
+                  <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+                    <sc-for list="{{ dist }}" as="s" hint-placeholder-count="5">
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                          <span style="color:#3f3f46">{{ s.label }}</span>
+                          <span style="color:#71717a">{{ s.value }}</span>
+                        </div>
+                        <div style="height:8px;border-radius:10000px;background:#f4f4f5;overflow:hidden">
+                          <div style="height:100%;border-radius:10000px;background:{{ s.color }};width:{{ s.pct }}%;transition:width .3s ease"></div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+              <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:20px;font-weight:600;color:#09090b;line-height:1.3">Последние действия</div>
+                  <button type="button" onClick="{{ on.goLog }}" style="background:transparent;border:0;font-size:13px;color:#3f3f46;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#09090b">Журнал</button>
+                </div>
+                <div style="display:flex;flex-direction:column;margin-top:18px">
+                  <sc-for list="{{ recentActs }}" as="a" hint-placeholder-count="5">
+                    <div style="display:flex;gap:14px">
+                      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">
+                        <div style="width:9px;height:9px;border-radius:10000px;background:{{ a.dot }};margin-top:5px"></div>
+                        <div style="flex:1;width:1px;background:#ececee"></div>
+                      </div>
+                      <div style="flex:1;min-width:0;padding-bottom:18px">
+                        <div style="font-size:14px;color:#18181b;line-height:1.4">{{ a.text }}</div>
+                        <div style="font-size:12px;color:#a1a1aa;margin-top:3px">{{ a.sub }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:20px;font-weight:600;color:#09090b;line-height:1.3">Новые уведомления</div>
+                  <button type="button" onClick="{{ on.goNotifications }}" style="background:transparent;border:0;font-size:13px;color:#3f3f46;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#09090b">Все</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px;margin-top:14px">
+                  <sc-for list="{{ notifTop }}" as="n" hint-placeholder-count="4">
+                    <button type="button" onClick="{{ n.open }}" style="display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px;background:transparent;border:0;border-radius:16px;cursor:pointer" style-hover="background:#fafafa">
+                      <span style="flex:0 0 auto;width:30px;height:30px;border-radius:10px;background:#f4f4f5;color:#52525b;display:flex;align-items:center;justify-content:center">{{ n.icon }}</span>
+                      <span style="flex:1;min-width:0">
+                        <span style="display:block;font-size:14px;color:#18181b;line-height:1.4">{{ n.title }}</span>
+                        <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:3px">{{ n.time }}</span>
+                      </span>
+                      <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}">
+                        <span style="flex:0 0 auto;width:7px;height:7px;border-radius:10000px;background:#ff5a00;margin-top:8px"></span>
+                      </sc-if>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showTable }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:esuIn .2s ease-out">
+            <sc-if value="{{ hasTabs }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #ececee;border-radius:10000px;padding:6px;overflow-x:auto">
+                <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ t.go }}" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:{{ t.bg }};color:{{ t.fg }};border:0;border-radius:10000px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer" style-hover="opacity:.9">
+                    {{ t.label }}
+                    <sc-if value="{{ t.hasCount }}" hint-placeholder-val="{{ true }}">
+                      <span style="background:{{ t.cBg }};color:{{ t.cFg }};border-radius:10000px;font-size:11px;padding:2px 7px">{{ t.count }}</span>
+                    </sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <div style="background:#fff;border:1px solid #ececee;border-radius:36px;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;padding:20px 24px;border-bottom:1px solid #ececee;flex-wrap:wrap">
+                <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center">
+                  <span style="position:absolute;left:14px;display:flex;color:#a1a1aa;pointer-events:none">{{ icons.search }}</span>
+                  <input value="{{ q }}" onChange="{{ on.q }}" placeholder="{{ table.searchHint }}" style="width:100%;background:#f4f4f5;border:1px solid transparent;border-radius:14px;padding:10px 14px 10px 42px;font-size:14px;color:#18181b" style-focus="background:#fff;border-color:#ececee" />
+                </div>
+                <button type="button" onClick="{{ on.filters }}" style="display:inline-flex;align-items:center;gap:8px;background:{{ filterBtnBg }};color:{{ filterBtnFg }};border:1px solid {{ filterBtnBd }};border-radius:14px;padding:10px 14px;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#fafafa">
+                  {{ icons.filter }} Фильтры
+                  <sc-if value="{{ hasActiveFilters }}" hint-placeholder-val="{{ false }}">
+                    <span style="background:#ff5a00;color:#fff;border-radius:10000px;font-size:11px;padding:1px 6px">{{ activeFilterCount }}</span>
+                  </sc-if>
+                </button>
+                <select value="{{ sort }}" onChange="{{ on.sort }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:10px 12px;font-size:14px;color:#3f3f46;cursor:pointer">
+                  <option value="new">Сначала новые</option>
+                  <option value="old">Сначала старые</option>
+                  <option value="due">По дедлайну</option>
+                  <option value="title">По названию</option>
+                </select>
+              </div>
+
+              <sc-if value="{{ filtersOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:20px 24px;background:#fafafa;border-bottom:1px solid #ececee;animation:esuIn .16s ease-out">
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+                    <sc-for list="{{ filterFields }}" as="f" hint-placeholder-count="7">
+                      <label style="display:flex;flex-direction:column;gap:6px">
+                        <span style="font-size:12px;font-weight:500;color:#71717a">{{ f.label }}</span>
+                        <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ true }}">
+                          <select value="{{ f.value }}" onChange="{{ f.set }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:10px 12px;font-size:14px;color:#18181b;cursor:pointer">
+                            <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3">
+                              <option value="{{ o }}">{{ o }}</option>
+                            </sc-for>
+                          </select>
+                        </sc-if>
+                        <sc-if value="{{ f.isDate }}" hint-placeholder-val="{{ false }}">
+                          <input type="date" value="{{ f.value }}" onChange="{{ f.set }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:9px 12px;font-size:14px;color:#18181b" />
+                        </sc-if>
+                      </label>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:16px">
+                    <button type="button" onClick="{{ on.applyFilters }}" style="background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), 0 4px 6px 0 rgba(0,0,0,.14)">Применить</button>
+                    <button type="button" onClick="{{ on.resetFilters }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:10px 16px;font-size:14px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">Сбросить</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:grid;grid-template-columns:{{ table.cols }};gap:16px;padding:12px 24px;background:#fafafa;border-bottom:1px solid #ececee">
+                <sc-for list="{{ table.head }}" as="h" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;gap:6px;justify-content:{{ h.jc }};font-size:12px;font-weight:500;color:#71717a;letter-spacing:.02em">{{ h.label }}</div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ table.isEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:72px 24px">
+                  <div style="width:64px;height:64px;border-radius:20px;background:#f4f4f5;color:#a1a1aa;display:flex;align-items:center;justify-content:center;margin-bottom:20px">{{ icons.empty }}</div>
+                  <div style="font-size:20px;font-weight:600;color:#09090b">Ничего не найдено</div>
+                  <div style="font-size:14px;color:#71717a;margin-top:8px;max-width:380px;line-height:1.5">По запросу «{{ q }}» документов нет. Измените запрос или сбросьте фильтры.</div>
+                  <button type="button" onClick="{{ on.resetFilters }}" style="margin-top:20px;background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:11px 16px;font-size:14px;font-weight:500;cursor:pointer">Сбросить поиск и фильтры</button>
+                </div>
+              </sc-if>
+
+              <sc-for list="{{ table.rows }}" as="r" hint-placeholder-count="8">
+                <div style="position:relative;display:grid;grid-template-columns:{{ table.cols }};gap:16px;align-items:center;padding:{{ table.padY }}px 24px;border-bottom:1px solid #f4f4f5;cursor:pointer;background:{{ r.bg }}" style-hover="background:#fafafa" onClick="{{ r.open }}">
+                  <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="8">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;justify-content:{{ c.jc }}">
+                      <sc-if value="{{ c.isNum }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:13px;font-weight:500;color:#09090b;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.v }}</span>
+                      </sc-if>
+                      <sc-if value="{{ c.isTitle }}" hint-placeholder-val="{{ true }}">
+                        <span style="min-width:0">
+                          <span style="display:block;font-size:14px;font-weight:500;color:#18181b;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.v }}</span>
+                          <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.sub }}</span>
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ c.isTxt }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:14px;color:{{ c.color }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.v }}</span>
+                      </sc-if>
+                      <sc-if value="{{ c.isUser }}" hint-placeholder-val="{{ false }}">
+                        <span style="display:flex;align-items:center;gap:8px;min-width:0">
+                          <span style="flex:0 0 auto;width:28px;height:28px;border-radius:10000px;background:#f4f4f5;border:1px solid #ececee;color:#3f3f46;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">{{ c.initials }}</span>
+                          <span style="min-width:0">
+                            <span style="display:block;font-size:14px;color:#18181b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.v }}</span>
+                            <sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:12px;color:#a1a1aa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.sub }}</span></sc-if>
+                          </span>
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ c.isBadge }}" hint-placeholder-val="{{ false }}">
+                        <span style="display:inline-flex;align-items:center;gap:6px;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }};border-radius:12px;padding:5px 10px;font-size:12px;font-weight:500;white-space:nowrap">{{ c.v }}</span>
+                      </sc-if>
+                      <sc-if value="{{ c.isDue }}" hint-placeholder-val="{{ false }}">
+                        <span style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:{{ c.color }};white-space:nowrap">
+                          <sc-if value="{{ c.warn }}" hint-placeholder-val="{{ false }}"><span style="display:flex">{{ icons.clockS }}</span></sc-if>
+                          {{ c.v }}
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ c.isBtn }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" onClick="{{ c.act }}" style="background:#fff;border:1px solid #d4d4d8;border-radius:12px;padding:7px 12px;font-size:13px;font-weight:500;color:#18181b;cursor:pointer;white-space:nowrap" style-hover="background:#f4f4f5">{{ c.v }}</button>
+                      </sc-if>
+                      <sc-if value="{{ c.isAct }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" onClick="{{ r.menu }}" title="Действия" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid transparent;border-radius:10px;color:#71717a;cursor:pointer" style-hover="background:#f4f4f5;border-color:#ececee">{{ icons.dots }}</button>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ r.menuOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;right:20px;top:44px;width:220px;background:#fff;border:1px solid #ececee;border-radius:20px;box-shadow:rgba(0,0,0,.04) 0px 4px 12px 0px;padding:8px;z-index:25;animation:esuIn .14s ease-out">
+                      <sc-for list="{{ r.actions }}" as="ma" hint-placeholder-count="4">
+                        <button type="button" onClick="{{ ma.act }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:transparent;border:0;border-radius:12px;font-size:14px;color:{{ ma.color }};text-align:left;cursor:pointer" style-hover="background:#f4f4f5">
+                          <span style="display:flex;color:{{ ma.ic }}">{{ ma.icon }}</span>{{ ma.label }}
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+
+              <sc-if value="{{ table.hasRows }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#71717a">
+                    <span>{{ table.range }}</span>
+                    <label style="display:flex;align-items:center;gap:6px">
+                      Строк:
+                      <select value="{{ perPage }}" onChange="{{ on.perPage }}" style="background:#fff;border:1px solid #ececee;border-radius:12px;padding:6px 8px;font-size:13px;color:#18181b;cursor:pointer">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <button type="button" onClick="{{ on.prevPage }}" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ececee;border-radius:12px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">{{ icons.chevL }}</button>
+                    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ p.go }}" style="min-width:34px;height:34px;padding:0 10px;display:flex;align-items:center;justify-content:center;background:{{ p.bg }};color:{{ p.fg }};border:1px solid {{ p.bd }};border-radius:12px;font-size:13px;font-weight:500;cursor:pointer" style-hover="opacity:.9">{{ p.label }}</button>
+                    </sc-for>
+                    <button type="button" onClick="{{ on.nextPage }}" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ececee;border-radius:12px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">{{ icons.chev }}</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showCreate }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start;animation:esuIn .2s ease-out">
+            <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px">
+              <div style="font-size:20px;font-weight:600;color:#09090b">Основная информация</div>
+              <div style="font-size:13px;color:#71717a;margin-top:4px">Поля, отмеченные звёздочкой, обязательны для отправки на согласование.</div>
+              <div style="display:flex;flex-direction:column;gap:18px;margin-top:24px">
+                <label style="display:flex;flex-direction:column;gap:7px">
+                  <span style="font-size:13px;font-weight:500;color:#3f3f46">Название документа *</span>
+                  <input value="{{ form.title }}" onChange="{{ on.fTitle }}" placeholder="Например: Приказ о назначении ответственных за информационную безопасность" style="background:#fff;border:1px solid {{ fe.title }};border-radius:14px;padding:12px 16px;font-size:15px;color:#18181b;box-shadow:inset 0 1px 0 0 rgb(228,228,231)" />
+                  <sc-if value="{{ fe.titleMsg }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#c24400">{{ fe.titleMsg }}</span></sc-if>
+                </label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <label style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Категория *</span>
+                    <select value="{{ form.cat }}" onChange="{{ on.fCat }}" style="background:#fff;border:1px solid {{ fe.cat }};border-radius:14px;padding:12px 14px;font-size:15px;color:#18181b;cursor:pointer">
+                      <option value="">Выберите категорию</option>
+                      <sc-for list="{{ catNames }}" as="c" hint-placeholder-count="5"><option value="{{ c }}">{{ c }}</option></sc-for>
+                    </select>
+                  </label>
+                  <label style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Тип документа</span>
+                    <select value="{{ form.type }}" onChange="{{ on.fType }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 14px;font-size:15px;color:#18181b;cursor:pointer">
+                      <sc-for list="{{ typeNames }}" as="c" hint-placeholder-count="4"><option value="{{ c }}">{{ c }}</option></sc-for>
+                    </select>
+                  </label>
+                </div>
+                <label style="display:flex;flex-direction:column;gap:7px">
+                  <span style="font-size:13px;font-weight:500;color:#3f3f46">Краткое описание</span>
+                  <textarea value="{{ form.desc }}" onChange="{{ on.fDesc }}" rows="4" placeholder="Кратко опишите суть документа: основание, что требуется согласовать, ожидаемый результат." style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.5;color:#18181b;resize:vertical;box-shadow:inset 0 1px 0 0 rgb(228,228,231)"></textarea>
+                  <span style="font-size:12px;color:#a1a1aa">Описание видно всем участникам согласования.</span>
+                </label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <label style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Подразделение *</span>
+                    <select value="{{ form.dep }}" onChange="{{ on.fDep }}" style="background:#fff;border:1px solid {{ fe.dep }};border-radius:14px;padding:12px 14px;font-size:15px;color:#18181b;cursor:pointer">
+                      <sc-for list="{{ depNames }}" as="c" hint-placeholder-count="5"><option value="{{ c }}">{{ c }}</option></sc-for>
+                    </select>
+                  </label>
+                  <label style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Ответственный</span>
+                    <select value="{{ form.resp }}" onChange="{{ on.fResp }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 14px;font-size:15px;color:#18181b;cursor:pointer">
+                      <option value="">Не назначен</option>
+                      <sc-for list="{{ userNames }}" as="c" hint-placeholder-count="5"><option value="{{ c }}">{{ c }}</option></sc-for>
+                    </select>
+                  </label>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <label style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Дедлайн *</span>
+                    <input type="date" value="{{ form.due }}" onChange="{{ on.fDue }}" style="background:#fff;border:1px solid {{ fe.due }};border-radius:14px;padding:11px 14px;font-size:15px;color:#18181b" />
+                  </label>
+                  <div style="display:flex;flex-direction:column;gap:7px">
+                    <span style="font-size:13px;font-weight:500;color:#3f3f46">Приоритет</span>
+                    <div style="display:flex;gap:6px;background:#f4f4f5;border-radius:14px;padding:4px">
+                      <sc-for list="{{ prios }}" as="p" hint-placeholder-count="3">
+                        <button type="button" onClick="{{ p.set }}" style="flex:1;background:{{ p.bg }};color:{{ p.fg }};border:0;border-radius:12px;padding:9px 8px;font-size:14px;font-weight:500;cursor:pointer" style-hover="opacity:.9">{{ p.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+                <label style="display:flex;flex-direction:column;gap:7px">
+                  <span style="font-size:13px;font-weight:500;color:#3f3f46">Комментарий для согласующих</span>
+                  <textarea value="{{ form.comment }}" onChange="{{ on.fComment }}" rows="2" placeholder="Необязательно" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.5;color:#18181b;resize:vertical"></textarea>
+                </label>
+              </div>
+
+              <div style="margin-top:28px;padding-top:24px;border-top:1px solid #ececee">
+                <div style="font-size:20px;font-weight:600;color:#09090b">Файлы документа</div>
+                <div style="font-size:13px;color:#71717a;margin-top:4px">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG · до 20 МБ на файл</div>
+                <div onClick="{{ on.addFile }}" onDrop="{{ on.dropFile }}" onDragOver="{{ on.dragOver }}" style="margin-top:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:32px;border:1px dashed {{ dropBd }};border-radius:24px;background:{{ dropBg }};cursor:pointer" style-hover="background:#fafafa">
+                  <span style="width:44px;height:44px;border-radius:14px;background:#fff;border:1px solid #ececee;color:#3f3f46;display:flex;align-items:center;justify-content:center">{{ icons.upload }}</span>
+                  <span style="font-size:14px;font-weight:500;color:#18181b">Перетащите файл сюда или нажмите, чтобы выбрать</span>
+                  <span style="font-size:13px;color:#a1a1aa">Первый загруженный файл считается основным</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+                  <sc-for list="{{ formFiles }}" as="f" hint-placeholder-count="0">
+                    <div style="display:flex;align-items:center;gap:12px;background:#fafafa;border:1px solid #ececee;border-radius:16px;padding:12px 14px">
+                      <span style="flex:0 0 auto;width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid #ececee;color:#52525b;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">{{ f.ext }}</span>
+                      <span style="flex:1;min-width:0">
+                        <span style="display:block;font-size:14px;font-weight:500;color:#18181b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name }}</span>
+                        <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:2px">{{ f.meta }}</span>
+                        <sc-if value="{{ f.loading }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:block;height:5px;border-radius:10000px;background:#ececee;margin-top:8px;overflow:hidden"><span style="display:block;height:100%;width:{{ f.pct }}%;background:#18181b;border-radius:10000px;transition:width .3s ease"></span></span>
+                        </sc-if>
+                      </span>
+                      <button type="button" onClick="{{ f.remove }}" title="Удалить файл" style="flex:0 0 auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:10px;color:#a1a1aa;cursor:pointer" style-hover="background:#fff1e9;color:#c24400">{{ icons.x }}</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;margin-top:28px;padding-top:24px;border-top:1px solid #ececee;flex-wrap:wrap">
+                <button type="button" onClick="{{ on.submitDoc }}" style="display:inline-flex;align-items:center;gap:8px;background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), inset 0 9px 14px -5px rgba(117,123,133,.4), 0 4px 6px 0 rgba(0,0,0,.14)">{{ icons.send }} Отправить на согласование</button>
+                <button type="button" onClick="{{ on.saveDraft }}" style="background:#fafafa;border:1px solid #ececee;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;color:#18181b;cursor:pointer" style-hover="background:#f4f4f5">Сохранить как черновик</button>
+                <button type="button" onClick="{{ on.cancelCreate }}" style="background:transparent;border:1px solid transparent;border-radius:14px;padding:12px 16px;font-size:14px;color:#71717a;cursor:pointer" style-hover="color:#18181b;border-color:#ececee">Отмена</button>
+                <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
+                  <span style="display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:13px;color:#c24400">{{ icons.warnS }} Есть несохранённые изменения</span>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px">
+                <div style="font-size:20px;font-weight:600;color:#09090b">Маршрут согласования</div>
+                <div style="font-size:13px;color:#71717a;margin-top:4px">Последовательный маршрут по категории документа. Каждый согласующий получает документ после решения предыдущего.</div>
+                <div style="display:flex;flex-direction:column;gap:0;margin-top:20px">
+                  <sc-for list="{{ formRoute }}" as="r" hint-placeholder-count="4">
+                    <div style="display:flex;gap:14px">
+                      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">
+                        <div style="width:28px;height:28px;border-radius:10000px;background:{{ r.bg }};color:{{ r.fg }};border:1px solid {{ r.bd }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ r.n }}</div>
+                        <sc-if value="{{ r.line }}" hint-placeholder-val="{{ true }}"><div style="flex:1;width:1px;background:#ececee;margin:4px 0"></div></sc-if>
+                      </div>
+                      <div style="flex:1;min-width:0;padding-bottom:18px">
+                        <div style="font-size:14px;font-weight:500;color:#18181b">{{ r.name }}</div>
+                        <div style="font-size:12px;color:#a1a1aa;margin-top:2px">{{ r.role }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size:12px;line-height:1.6;color:#71717a;background:#fafafa;border-radius:16px;padding:14px">Маршрут задаётся администратором в разделе «Категории документов» и в MVP не редактируется вручную.</div>
+              </div>
+              <div style="background:#27272a;border-radius:36px;padding:28px">
+                <div style="font-size:15px;font-weight:600;color:#fff">Что произойдёт после отправки</div>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+                  <div style="font-size:14px;line-height:1.5;color:#a1a1aa">Документ получит регистрационный номер и статус «На согласовании».</div>
+                  <div style="font-size:14px;line-height:1.5;color:#a1a1aa">Первый согласующий получит уведомление на корпоративную почту.</div>
+                  <div style="font-size:14px;line-height:1.5;color:#a1a1aa">Редактирование станет доступно только после возврата на доработку.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showDoc }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:esuIn .2s ease-out">
+            <div style="background:#fff;border:1px solid #ececee;border-radius:36px;overflow:hidden">
+              <div style="padding:28px 28px 24px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px">
+                  <div style="min-width:0">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                      <span style="font-size:13px;font-weight:500;color:#09090b;background:#f4f4f5;border:1px solid #ececee;border-radius:12px;padding:5px 10px;white-space:nowrap;font-variant-numeric:tabular-nums">{{ doc.num }}</span>
+                      <span style="display:inline-flex;align-items:center;white-space:nowrap;background:{{ doc.sBg }};color:{{ doc.sFg }};border:1px solid {{ doc.sBd }};border-radius:12px;padding:5px 10px;font-size:12px;font-weight:500">{{ doc.status }}</span>
+                      <span style="display:inline-flex;align-items:center;white-space:nowrap;background:transparent;border:1px solid #ececee;color:#18181b;border-radius:12px;padding:5px 10px;font-size:12px">{{ doc.cat }}</span>
+                      <span style="display:inline-flex;align-items:center;white-space:nowrap;background:{{ doc.pBg }};color:{{ doc.pFg }};border:1px solid {{ doc.pBd }};border-radius:12px;padding:5px 10px;font-size:12px;font-weight:500">{{ doc.prioLabel }}</span>
+                    </div>
+                    <h2 style="font-size:32px;line-height:1.28;font-weight:600;color:#09090b;margin:16px 0 0;max-width:760px;text-wrap:pretty">{{ doc.title }}</h2>
+                  </div>
+                  <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:230px">
+                    <sc-for list="{{ docActions }}" as="a" hint-placeholder-count="2">
+                      <button type="button" onClick="{{ a.act }}" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:{{ a.bg }};color:{{ a.fg }};border:1px solid {{ a.bd }};border-radius:14px;padding:12px 16px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:{{ a.sh }}" style-hover="opacity:.92">{{ a.icon }} {{ a.label }}</button>
+                    </sc-for>
+                    <sc-if value="{{ doc.readonly }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:12px;line-height:1.5;color:#a1a1aa;text-align:center;padding:4px 8px">Документ доступен только для чтения</div>
+                    </sc-if>
+                  </div>
+                </div>
+                <sc-if value="{{ doc.hasReason }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:12px;align-items:flex-start;background:#fff1e9;border:1px solid #ffd6bd;border-radius:20px;padding:16px 18px;margin-top:20px">
+                    <span style="flex:0 0 auto;color:#c24400;margin-top:1px">{{ icons.warn }}</span>
+                    <span style="min-width:0">
+                      <span style="display:block;font-size:14px;font-weight:500;color:#c24400">{{ doc.returnHead }}</span>
+                      <span style="display:block;font-size:14px;line-height:1.5;color:#8f3400;margin-top:4px">{{ doc.reason }}</span>
+                    </span>
+                  </div>
+                </sc-if>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:24px;padding-top:20px;border-top:1px solid #f4f4f5">
+                  <sc-for list="{{ docHeadMeta }}" as="m" hint-placeholder-count="5">
+                    <div style="min-width:0">
+                      <div style="font-size:12px;color:#a1a1aa">{{ m.label }}</div>
+                      <div style="font-size:14px;font-weight:500;color:{{ m.color }};margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.value }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:2px;padding:0 20px;border-top:1px solid #ececee;background:#fafafa;overflow-x:auto">
+                <sc-for list="{{ docTabs }}" as="t" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ t.go }}" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:transparent;border:0;border-bottom:2px solid {{ t.bd }};color:{{ t.fg }};padding:14px 16px;font-size:14px;font-weight:{{ t.fw }};cursor:pointer" style-hover="color:#09090b">
+                    {{ t.label }}
+                    <sc-if value="{{ t.hasCount }}" hint-placeholder-val="{{ false }}"><span style="background:#ececee;color:#52525b;border-radius:10000px;font-size:11px;padding:2px 7px">{{ t.count }}</span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ docTab.main }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:28px;padding:28px">
+                  <div>
+                    <div style="font-size:15px;font-weight:600;color:#09090b">Описание документа</div>
+                    <p style="font-size:15px;line-height:1.6;color:#3f3f46;margin:10px 0 0;text-wrap:pretty">{{ doc.desc }}</p>
+                    <div style="font-size:15px;font-weight:600;color:#09090b;margin-top:28px">Метаданные</div>
+                    <div style="display:flex;flex-direction:column;margin-top:12px">
+                      <sc-for list="{{ docMeta }}" as="m" hint-placeholder-count="7">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #f4f4f5">
+                          <span style="font-size:14px;color:#71717a">{{ m.label }}</span>
+                          <span style="font-size:14px;font-weight:500;color:#18181b;text-align:right">{{ m.value }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:15px;font-weight:600;color:#09090b">Участники</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                      <sc-for list="{{ docPeople }}" as="p" hint-placeholder-count="4">
+                        <div style="display:flex;align-items:center;gap:12px;background:#fafafa;border:1px solid #ececee;border-radius:16px;padding:12px 14px">
+                          <span style="flex:0 0 auto;width:34px;height:34px;border-radius:10000px;background:#fff;border:1px solid #ececee;color:#3f3f46;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ p.initials }}</span>
+                          <span style="flex:1;min-width:0">
+                            <span style="display:block;font-size:14px;font-weight:500;color:#18181b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</span>
+                            <span style="display:block;font-size:12px;color:#a1a1aa">{{ p.role }}</span>
+                          </span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="background:#f4f4f5;border-radius:20px;padding:18px;margin-top:16px">
+                      <div style="font-size:12px;color:#71717a">Текущий этап</div>
+                      <div style="font-size:15px;font-weight:600;color:#09090b;margin-top:4px">{{ doc.stage }}</div>
+                      <div style="font-size:13px;color:#52525b;margin-top:8px">{{ doc.stageLine }}</div>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ docTab.files }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:28px">
+                  <sc-for list="{{ docFiles }}" as="f" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f4f4f5">
+                      <span style="flex:0 0 auto;width:40px;height:40px;border-radius:12px;background:#f4f4f5;border:1px solid #ececee;color:#52525b;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">{{ f.ext }}</span>
+                      <span style="flex:1;min-width:0">
+                        <span style="display:flex;align-items:center;gap:8px">
+                          <span style="font-size:14px;font-weight:500;color:#18181b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name }}</span>
+                          <sc-if value="{{ f.main }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 auto;background:#f4f4f5;border:1px solid #ececee;color:#3f3f46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:500">Основной файл</span></sc-if>
+                        </span>
+                        <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:3px">{{ f.meta }}</span>
+                      </span>
+                      <button type="button" onClick="{{ f.view }}" style="flex:0 0 auto;background:#fff;border:1px solid #ececee;border-radius:12px;padding:8px 12px;font-size:13px;color:#18181b;cursor:pointer" style-hover="background:#fafafa">Просмотр</button>
+                      <button type="button" onClick="{{ f.download }}" style="flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:#fafafa;border:1px solid #ececee;border-radius:12px;padding:8px 12px;font-size:13px;color:#18181b;cursor:pointer" style-hover="background:#f4f4f5">{{ icons.downloadS }} Скачать</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ docTab.route }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:28px">
+                  <sc-for list="{{ docRoute }}" as="r" hint-placeholder-count="4">
+                    <div style="display:flex;gap:16px">
+                      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">
+                        <div style="width:32px;height:32px;border-radius:10000px;background:{{ r.bg }};color:{{ r.fg }};border:1px solid {{ r.bd }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">{{ r.n }}</div>
+                        <sc-if value="{{ r.line }}" hint-placeholder-val="{{ true }}"><div style="flex:1;width:1px;background:#ececee;margin:6px 0"></div></sc-if>
+                      </div>
+                      <div style="flex:1;min-width:0;padding-bottom:22px">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:{{ r.pad }};background:{{ r.cardBg }};border:1px solid {{ r.cardBd }};border-radius:20px">
+                          <span style="flex:1;min-width:0">
+                            <span style="display:flex;align-items:center;gap:10px">
+                              <span style="font-size:15px;font-weight:600;color:#09090b">{{ r.name }}</span>
+                              <span style="display:inline-flex;align-items:center;background:{{ r.sBg }};color:{{ r.sFg }};border:1px solid {{ r.sBd }};border-radius:12px;padding:4px 9px;font-size:12px;font-weight:500">{{ r.status }}</span>
+                            </span>
+                            <span style="display:block;font-size:13px;color:#71717a;margin-top:3px">{{ r.sub }}</span>
+                            <span style="display:block;font-size:14px;line-height:1.5;color:#3f3f46;margin-top:8px">{{ r.comment }}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ docTab.comments }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:28px;display:flex;flex-direction:column;gap:16px">
+                  <sc-for list="{{ docComments }}" as="c" hint-placeholder-count="2">
+                    <div style="display:flex;gap:14px">
+                      <span style="flex:0 0 auto;width:36px;height:36px;border-radius:10000px;background:#f4f4f5;border:1px solid #ececee;color:#3f3f46;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ c.initials }}</span>
+                      <div style="flex:1;min-width:0;background:#fafafa;border:1px solid #ececee;border-radius:20px;padding:16px 18px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                          <span style="font-size:14px;font-weight:600;color:#09090b">{{ c.name }}</span>
+                          <span style="font-size:12px;color:#a1a1aa">{{ c.time }}</span>
+                        </div>
+                        <div style="font-size:12px;color:#71717a;margin-top:2px">{{ c.role }}</div>
+                        <div style="font-size:14px;line-height:1.55;color:#3f3f46;margin-top:10px">{{ c.text }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <div style="display:flex;gap:12px;align-items:flex-end;padding-top:8px">
+                    <textarea value="{{ newComment }}" onChange="{{ on.comment }}" rows="2" placeholder="Добавьте комментарий к документу…" style="flex:1;background:#fff;border:1px solid #ececee;border-radius:16px;padding:12px 16px;font-size:15px;line-height:1.5;color:#18181b;resize:vertical"></textarea>
+                    <button type="button" onClick="{{ on.addComment }}" style="display:inline-flex;align-items:center;gap:8px;background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 16px;font-size:14px;font-weight:500;cursor:pointer">{{ icons.send }} Отправить</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ docTab.history }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:28px">
+                  <sc-for list="{{ docHistory }}" as="h" hint-placeholder-count="6">
+                    <div style="display:flex;gap:16px">
+                      <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">
+                        <div style="width:30px;height:30px;border-radius:10000px;background:#f4f4f5;border:1px solid #ececee;color:{{ h.ic }};display:flex;align-items:center;justify-content:center">{{ h.icon }}</div>
+                        <sc-if value="{{ h.line }}" hint-placeholder-val="{{ true }}"><div style="flex:1;width:1px;background:#ececee;margin:4px 0"></div></sc-if>
+                      </div>
+                      <div style="flex:1;min-width:0;padding-bottom:20px">
+                        <div style="font-size:14px;font-weight:500;color:#18181b">{{ h.act }}</div>
+                        <div style="font-size:13px;color:#71717a;margin-top:3px">{{ h.sub }}</div>
+                        <sc-if value="{{ h.hasNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;line-height:1.5;color:#52525b;background:#fafafa;border:1px solid #ececee;border-radius:16px;padding:12px 14px;margin-top:10px">{{ h.note }}</div></sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showNotifications }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:esuIn .2s ease-out">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ notifChips }}" as="c" hint-placeholder-count="5">
+                <button type="button" onClick="{{ c.go }}" style="display:inline-flex;align-items:center;gap:8px;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }};border-radius:10000px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer" style-hover="opacity:.9">{{ c.label }} <span style="opacity:.6">{{ c.count }}</span></button>
+              </sc-for>
+            </div>
+            <div style="background:#fff;border:1px solid #ececee;border-radius:36px;overflow:hidden">
+              <sc-if value="{{ notifEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:80px 24px">
+                  <div style="width:64px;height:64px;border-radius:20px;background:#f4f4f5;color:#a1a1aa;display:flex;align-items:center;justify-content:center;margin-bottom:20px">{{ icons.bell }}</div>
+                  <div style="font-size:20px;font-weight:600;color:#09090b">Уведомлений нет</div>
+                  <div style="font-size:14px;color:#71717a;margin-top:8px;max-width:360px;line-height:1.5">В этой категории пока ничего не происходило. Новые уведомления появятся здесь автоматически.</div>
+                </div>
+              </sc-if>
+              <sc-for list="{{ notifList }}" as="n" hint-placeholder-count="6">
+                <button type="button" onClick="{{ n.open }}" style="display:flex;gap:16px;align-items:flex-start;width:100%;text-align:left;padding:18px 24px;background:{{ n.bg }};border:0;border-bottom:1px solid #f4f4f5;cursor:pointer" style-hover="background:#f4f4f5">
+                  <span style="flex:0 0 auto;width:38px;height:38px;border-radius:12px;background:#f4f4f5;border:1px solid #ececee;color:#52525b;display:flex;align-items:center;justify-content:center">{{ n.icon }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                      <span style="font-size:15px;font-weight:500;color:#18181b">{{ n.title }}</span>
+                      <span style="display:inline-flex;align-items:center;background:transparent;border:1px solid #ececee;color:#52525b;border-radius:12px;padding:3px 8px;font-size:11px">{{ n.type }}</span>
+                    </span>
+                    <span style="display:block;font-size:14px;color:#52525b;margin-top:4px">{{ n.doc }}</span>
+                    <span style="display:block;font-size:12px;color:#a1a1aa;margin-top:6px">{{ n.time }}</span>
+                  </span>
+                  <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}">
+                    <span style="flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:#ff5a00;color:#fff;border-radius:12px;padding:3px 9px;font-size:11px;font-weight:500">Новое</span>
+                  </sc-if>
+                  <span style="flex:0 0 auto;display:flex;color:#d4d4d8;margin-top:8px">{{ icons.chev }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showRoles }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px solid #ececee;border-radius:36px;overflow:hidden;animation:esuIn .2s ease-out">
+            <div style="display:grid;grid-template-columns:minmax(240px,1.6fr) repeat(4,1fr);gap:16px;padding:16px 28px;background:#fafafa;border-bottom:1px solid #ececee">
+              <div style="font-size:12px;font-weight:500;color:#71717a">Право доступа</div>
+              <sc-for list="{{ roleCols }}" as="c" hint-placeholder-count="4">
+                <div style="font-size:12px;font-weight:500;color:#71717a;text-align:center">{{ c }}</div>
+              </sc-for>
+            </div>
+            <sc-for list="{{ perms }}" as="p" hint-placeholder-count="10">
+              <div style="display:grid;grid-template-columns:minmax(240px,1.6fr) repeat(4,1fr);gap:16px;align-items:center;padding:14px 28px;border-bottom:1px solid #f4f4f5">
+                <div style="font-size:14px;color:#18181b">{{ p.label }}</div>
+                <sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="4">
+                  <div style="display:flex;justify-content:center;color:{{ c.color }}">{{ c.icon }}</div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <div style="padding:18px 28px;font-size:13px;color:#71717a">Права ролей заданы системой. Изменение набора прав в MVP выполняется администратором через настройки роли пользователя.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:esuIn .2s ease-out">
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #ececee;border-radius:10000px;padding:6px;overflow-x:auto">
+              <sc-for list="{{ setTabs }}" as="t" hint-placeholder-count="7">
+                <button type="button" onClick="{{ t.go }}" style="white-space:nowrap;background:{{ t.bg }};color:{{ t.fg }};border:0;border-radius:10000px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer" style-hover="opacity:.9">{{ t.label }}</button>
+              </sc-for>
+            </div>
+            <div style="background:#fff;border:1px solid #ececee;border-radius:36px;padding:28px;max-width:820px">
+              <div style="font-size:20px;font-weight:600;color:#09090b">{{ setSection.title }}</div>
+              <div style="font-size:13px;color:#71717a;margin-top:4px">{{ setSection.desc }}</div>
+              <div style="display:flex;flex-direction:column;gap:18px;margin-top:24px">
+                <sc-for list="{{ setSection.fields }}" as="f" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:{{ f.align }};justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid #f4f4f5">
+                    <div style="min-width:0;max-width:420px">
+                      <div style="font-size:14px;font-weight:500;color:#18181b">{{ f.label }}</div>
+                      <div style="font-size:13px;line-height:1.5;color:#71717a;margin-top:3px">{{ f.hint }}</div>
+                    </div>
+                    <div style="flex:0 0 auto;width:260px;display:flex;justify-content:flex-end">
+                      <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ true }}">
+                        <input value="{{ f.value }}" onChange="{{ f.set }}" style="width:100%;background:#fff;border:1px solid #ececee;border-radius:14px;padding:11px 14px;font-size:14px;color:#18181b;box-shadow:inset 0 1px 0 0 rgb(228,228,231)" />
+                      </sc-if>
+                      <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                        <select value="{{ f.value }}" onChange="{{ f.set }}" style="width:100%;background:#fff;border:1px solid #ececee;border-radius:14px;padding:11px 12px;font-size:14px;color:#18181b;cursor:pointer">
+                          <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+                        </select>
+                      </sc-if>
+                      <sc-if value="{{ f.isToggle }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" onClick="{{ f.set }}" style="width:48px;height:28px;border-radius:10000px;border:1px solid {{ f.tBd }};background:{{ f.tBg }};display:flex;align-items:center;padding:2px;cursor:pointer;justify-content:{{ f.tJc }}">
+                          <span style="width:22px;height:22px;border-radius:10000px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ f.isTags }}" hint-placeholder-val="{{ false }}">
+                        <span style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
+                          <sc-for list="{{ f.tags }}" as="tg" hint-placeholder-count="5">
+                            <span style="display:inline-flex;align-items:center;background:transparent;border:1px solid #ececee;color:#18181b;border-radius:12px;padding:4px 9px;font-size:12px">{{ tg }}</span>
+                          </sc-for>
+                        </span>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:20px">
+                <button type="button" onClick="{{ on.saveSettings }}" style="background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), 0 4px 6px 0 rgba(0,0,0,.14)">Сохранить изменения</button>
+                <button type="button" onClick="{{ on.resetSettings }}" style="background:#fafafa;border:1px solid #ececee;border-radius:14px;padding:12px 18px;font-size:14px;color:#3f3f46;cursor:pointer" style-hover="background:#f4f4f5">Отменить</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{ anyOverlay }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ on.closeAll }}" style="position:fixed;inset:0;z-index:20;background:transparent"></div>
+  </sc-if>
+
+  <sc-if value="{{ returnModal }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:50;background:rgba(9,9,11,.45);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:100%;max-width:560px;background:#fff;border-radius:36px;overflow:hidden;animation:esuIn .18s ease-out">
+        <div style="padding:28px 28px 0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+            <div>
+              <div style="font-size:24px;font-weight:600;color:#09090b;line-height:1.3">Вернуть документ на доработку</div>
+              <div style="font-size:14px;color:#52525b;margin-top:8px;line-height:1.5">{{ doc.num }} · {{ doc.title }}</div>
+            </div>
+            <button type="button" onClick="{{ on.closeReturn }}" style="flex:0 0 auto;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#f4f4f5;border:0;border-radius:12px;color:#52525b;cursor:pointer" style-hover="background:#ececee">{{ icons.x }}</button>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:8px;margin-top:24px">
+            <span style="font-size:13px;font-weight:500;color:#3f3f46">Причина возврата *</span>
+            <textarea value="{{ returnText }}" onChange="{{ on.returnText }}" rows="4" placeholder="Опишите, что нужно исправить. Автор увидит этот комментарий в карточке документа." style="background:#fff;border:1px solid {{ returnBd }};border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.55;color:#18181b;resize:vertical"></textarea>
+            <sc-if value="{{ returnErr }}" hint-placeholder-val="{{ false }}">
+              <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#c24400">{{ icons.warnS }} Укажите причину возврата — поле обязательно</span>
+            </sc-if>
+          </label>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#71717a;background:#fafafa;border-radius:16px;padding:14px;margin-top:16px">Документ вернётся автору со статусом «Возвращён», дедлайн сохранится.</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:24px 28px 28px">
+          <button type="button" onClick="{{ on.closeReturn }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 18px;font-size:14px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">Отмена</button>
+          <button type="button" onClick="{{ on.confirmReturn }}" style="background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), 0 4px 6px 0 rgba(0,0,0,.14)">Вернуть на доработку</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ confirm }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:55;background:rgba(9,9,11,.45);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:100%;max-width:460px;background:#fff;border-radius:36px;padding:28px;animation:esuIn .18s ease-out">
+        <div style="width:44px;height:44px;border-radius:14px;background:#fff1e9;color:#c24400;display:flex;align-items:center;justify-content:center">{{ icons.warn }}</div>
+        <div style="font-size:24px;font-weight:600;color:#09090b;line-height:1.3;margin-top:18px">{{ confirm.title }}</div>
+        <div style="font-size:15px;line-height:1.55;color:#52525b;margin-top:10px">{{ confirm.text }}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:28px">
+          <button type="button" onClick="{{ on.closeConfirm }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 18px;font-size:14px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">Отмена</button>
+          <button type="button" onClick="{{ confirm.act }}" style="background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), 0 4px 6px 0 rgba(0,0,0,.14)">{{ confirm.label }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ drawer }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:52;background:rgba(9,9,11,.35);display:flex;justify-content:flex-end">
+      <div onClick="{{ on.closeDrawer }}" style="flex:1"></div>
+      <div style="width:520px;max-width:100%;background:#fff;border-left:1px solid #ececee;display:flex;flex-direction:column;animation:esuDrawer .2s ease-out">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:28px 28px 20px;border-bottom:1px solid #ececee">
+          <div>
+            <div style="font-size:24px;font-weight:600;color:#09090b;line-height:1.3">{{ drawer.title }}</div>
+            <div style="font-size:14px;color:#71717a;margin-top:6px">{{ drawer.desc }}</div>
+          </div>
+          <button type="button" onClick="{{ on.closeDrawer }}" style="flex:0 0 auto;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#f4f4f5;border:0;border-radius:12px;color:#52525b;cursor:pointer" style-hover="background:#ececee">{{ icons.x }}</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px">
+          <sc-for list="{{ drawer.fields }}" as="f" hint-placeholder-count="6">
+            <label style="display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:13px;font-weight:500;color:#3f3f46">{{ f.label }}</span>
+              <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                <select value="{{ f.value }}" onChange="{{ f.set }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 14px;font-size:15px;color:#18181b;cursor:pointer">
+                  <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+                </select>
+              </sc-if>
+              <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ true }}">
+                <input value="{{ f.value }}" onChange="{{ f.set }}" placeholder="{{ f.ph }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 16px;font-size:15px;color:#18181b;box-shadow:inset 0 1px 0 0 rgb(228,228,231)" />
+              </sc-if>
+              <sc-if value="{{ f.hasHint }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#a1a1aa">{{ f.hint }}</span></sc-if>
+            </label>
+          </sc-for>
+          <sc-if value="{{ drawer.warn }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:10px;align-items:flex-start;background:#fff1e9;border:1px solid #ffd6bd;border-radius:16px;padding:14px">
+              <span style="flex:0 0 auto;color:#c24400;margin-top:1px">{{ icons.warnS }}</span>
+              <span style="font-size:13px;line-height:1.5;color:#8f3400">{{ drawer.warn }}</span>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:20px 28px;border-top:1px solid #ececee">
+          <button type="button" onClick="{{ on.closeDrawer }}" style="background:#fff;border:1px solid #ececee;border-radius:14px;padding:12px 18px;font-size:14px;color:#3f3f46;cursor:pointer" style-hover="background:#fafafa">Отмена</button>
+          <button type="button" onClick="{{ on.saveDrawer }}" style="background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,.5), 0 4px 6px 0 rgba(0,0,0,.14)">{{ drawer.label }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;background:#09090b;color:#fff;border:1.5px solid #2c2e34;border-radius:14px;padding:14px 18px;box-shadow:0 4px 12px 0 rgba(0,0,0,.18);animation:esuIn .2s ease-out">
+      <span style="display:flex;color:{{ toastColor }}">{{ toastIcon }}</span>
+      <span style="font-size:14px;font-weight:500">{{ toast }}</span>
+      <button type="button" onClick="{{ on.closeToast }}" style="background:transparent;border:0;color:#a1a1aa;display:flex;cursor:pointer;margin-left:6px" style-hover="color:#fff">{{ icons.x }}</button>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;employee&quot;,&quot;manager&quot;,&quot;clerk&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;employee&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Демо-режим&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;dashboard&quot;,&quot;documents&quot;,&quot;my&quot;,&quot;approval&quot;,&quot;returned&quot;,&quot;archive&quot;,&quot;notifications&quot;,&quot;users&quot;,&quot;departments&quot;,&quot;categories&quot;,&quot;roles&quot;,&quot;log&quot;,&quot;settings&quot;,&quot;create&quot;,&quot;doc&quot;],&quot;default&quot;:&quot;login&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Демо-режим&quot;},&quot;collapsedSidebar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Интерфейс&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;comfortable&quot;],&quot;default&quot;:&quot;compact&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Интерфейс&quot;}}">
+const P = {
+  home:'M4 10.8 12 4l8 6.8M6.4 9.6V20h11.2V9.6',
+  docs:'M7 3h7l4 4v14H7zM14 3v4h4M10 12h6M10 16h4',
+  my:'M7 3h7l4 4v14H7zM14 3v4h4M10 13l1.8 1.8L15.6 11',
+  approve:'M4 6h9M4 12h7M4 18h5M14.5 15.5l2.2 2.2 4.3-4.6',
+  returned:'M9 5 4 10l5 5M4 10h9a6 6 0 0 1 0 12h-2',
+  archive:'M3 5h18v4H3zM5 9v10h14V9M10 13h4',
+  bell:'M6 9a6 6 0 0 1 12 0c0 4 1.6 5.6 1.6 5.6H4.4S6 13 6 9M9.8 18.6a2.2 2.2 0 0 0 4.4 0',
+  users:'M8.5 11a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8M2.5 20c0-3.2 2.7-5.4 6-5.4s6 2.2 6 5.4M16.5 5.6a3.2 3.2 0 0 1 0 6.4M18 19.6c0-2.2-.6-3.8-1.8-5',
+  dep:'M12 3v3.5M6.5 21v-4M17.5 21v-4M4 10.5h16V17H4zM12 6.5v4',
+  cat:'M4 6h6.5l2 3H20v11H4zM4 6V4h4.5l2 2',
+  roles:'M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6zM9.2 12l2 2 3.8-4',
+  log:'M5 4h14v16H5zM8.5 8.5h7M8.5 12h7M8.5 15.5h4.5',
+  settings:'M12 15.1a3.1 3.1 0 1 0 0-6.2 3.1 3.1 0 0 0 0 6.2M19.3 12c0-.4 0-.8-.1-1.2l1.8-1.4-1.7-3-2.1.9c-.6-.5-1.3-.9-2-1.2L14.7 4h-3.4l-.5 2.1c-.7.3-1.4.7-2 1.2l-2.1-.9-1.7 3 1.8 1.4c-.1.4-.1.8-.1 1.2s0 .8.1 1.2l-1.8 1.4 1.7 3 2.1-.9c.6.5 1.3.9 2 1.2l.5 2.1h3.4l.5-2.1c.7-.3 1.4-.7 2-1.2l2.1.9 1.7-3-1.8-1.4c.1-.4.1-.8.1-1.2',
+  search:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M16.2 16.2 21 21',
+  filter:'M4 6.5h16M7 12h10M10 17.5h4',
+  plus:'M12 5v14M5 12h14',
+  chev:'M9.5 6l6 6-6 6',
+  chevL:'M14.5 6l-6 6 6 6',
+  chevD:'M6 9.5l6 6 6-6',
+  dots:'M12 6.6h.01M12 12h.01M12 17.4h.01',
+  logout:'M14.5 5H6v14h8.5M10.5 12H21M18 9l3 3-3 3',
+  clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7.2V12l3.4 2',
+  file:'M8 3h6l4 4v14H8zM14 3v4h4',
+  upload:'M12 16.5V5M8 9l4-4 4 4M5 19.5h14',
+  check:'M5 13l4.5 4.5L19.5 7',
+  x:'M6.5 6.5l11 11M17.5 6.5l-11 11',
+  eye:'M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+  eyeOff:'M4 4l16 16M9.6 9.7A3 3 0 0 0 12 15c.9 0 1.7-.4 2.2-1M6.2 6.7C3.9 8.4 2.5 12 2.5 12S6 18 12 18c1.5 0 2.9-.4 4.1-1M9.8 6.3A7.6 7.6 0 0 1 12 6c6 0 9.5 6 9.5 6s-.6 1.1-1.8 2.4',
+  download:'M12 4.5v11M8 11.5l4 4 4-4M5 19.5h14',
+  edit:'M4 20h4L20 8l-4-4L4 16zM14.5 5.5l4 4',
+  send:'M4.5 12l15.5-7.5L14 20l-3.2-6.2z',
+  warn:'M12 4 2.8 20h18.4zM12 10v4.5M12 17.4h.01',
+  empty:'M4 8.5h16v11H4zM4 8.5 7 4.5h10l3 4M9.5 13h5',
+  collapse:'M14.5 6l-6 6 6 6',
+  chevS:'M9.5 6l6 6-6 6',
+  clockS:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7.2V12l3.4 2',
+  restore:'M4 10V5M4 10h5M4.6 10a8 8 0 1 1 1.4 8',
+  block:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M6 6l12 12',
+  minus:'M7 12h10',
+  register:'M5 4h14v16H5zM9 9.5h6M9 13.5h4M15.5 17.5l1.6 1.6 3-3.2',
+};
+
+const ST = {
+  'Черновик':{bg:'#f4f4f5',fg:'#52525b',bd:'#ececee'},
+  'На согласовании':{bg:'#ffffff',fg:'#18181b',bd:'#d4d4d8'},
+  'Возвращён':{bg:'#fff1e9',fg:'#c24400',bd:'#ffd6bd'},
+  'Согласован':{bg:'#18181b',fg:'#ffffff',bd:'#18181b'},
+  'Исполнен':{bg:'#f4f4f5',fg:'#09090b',bd:'#d4d4d8'},
+  'Просрочен':{bg:'#ff5a00',fg:'#ffffff',bd:'#ff5a00'},
+  'Архивирован':{bg:'#fafafa',fg:'#a1a1aa',bd:'#ececee'},
+  'Активен':{bg:'#18181b',fg:'#ffffff',bd:'#18181b'},
+  'Заблокирован':{bg:'#fafafa',fg:'#71717a',bd:'#ececee'},
+  'Успешно':{bg:'#f4f4f5',fg:'#09090b',bd:'#d4d4d8'},
+  'Отказано':{bg:'#fff1e9',fg:'#c24400',bd:'#ffd6bd'},
+  'Высокий':{bg:'#fff1e9',fg:'#c24400',bd:'#ffd6bd'},
+  'Средний':{bg:'#f4f4f5',fg:'#3f3f46',bd:'#ececee'},
+  'Низкий':{bg:'#fafafa',fg:'#71717a',bd:'#ececee'},
+};
+
+const DOCS = [
+  {id:'d1',num:'ESU-2026-00124',title:'Приказ о назначении ответственных за информационную безопасность',cat:'Приказы',type:'Приказ',author:'Айбек Токтосунов',dep:'Ректорат',resp:'Нурбек Абдиев',created:'12.07.2026',due:'28.07.2026',status:'На согласовании',prio:'Высокий',stage:'Согласование HR',wait:'2 дня',left:'3 дня',warn:false,desc:'В связи с вводом в эксплуатацию новой серверной инфраструктуры необходимо закрепить ответственных за информационную безопасность по подразделениям университета.'},
+  {id:'d2',num:'IT-2026-0071',title:'Служебная записка на закупку компьютерного оборудования',cat:'Служебные записки',type:'Служебная записка',author:'Иброхим Абдраимов',dep:'IT-отдел',resp:'Нурбек Абдиев',created:'14.07.2026',due:'24.07.2026',status:'Возвращён',prio:'Средний',stage:'Доработка автором',wait:'1 день',left:'Завтра',warn:true,reason:'Не указана итоговая сумма закупки и источник финансирования. Прошу дополнить смету и приложить коммерческие предложения.',retBy:'Нурбек Абдиев',retAt:'20.07.2026',desc:'Закупка 12 рабочих станций для компьютерной лаборатории №3 в связи с износом текущего парка техники.'},
+  {id:'d3',num:'ADM-2026-0135',title:'Договор на техническое обслуживание серверов',cat:'Договоры',type:'Договор',author:'Нурбек Абдиев',dep:'IT-отдел',resp:'Мария Ким',created:'08.07.2026',due:'30.07.2026',status:'Согласован',prio:'Средний',stage:'Регистрация в канцелярии',wait:'—',left:'5 дней',warn:false,desc:'Годовой договор технического обслуживания серверного оборудования и системы резервного копирования.'},
+  {id:'d4',num:'HR-2026-0048',title:'Заявление на ежегодный отпуск',cat:'Кадровые документы',type:'Заявление',author:'Иброхим Абдраимов',dep:'IT-отдел',resp:'Алина Садыкова',created:'01.07.2026',due:'10.07.2026',status:'Исполнен',prio:'Низкий',stage:'Завершено',wait:'—',left:'—',warn:false,desc:'Ежегодный оплачиваемый отпуск с 04.08.2026 по 24.08.2026.'},
+  {id:'d5',num:'ESU-2026-00119',title:'Отчёт о выполнении плана подразделения',cat:'Внутренние документы',type:'Отчёт',author:'Иброхим Абдраимов',dep:'IT-отдел',resp:'Нурбек Абдиев',created:'25.06.2026',due:'15.07.2026',status:'Просрочен',prio:'Высокий',stage:'Согласование руководителем',wait:'10 дней',left:'10 дней назад',warn:true,desc:'Отчёт о выполнении плана работ IT-отдела за второй квартал 2026 года.'},
+  {id:'d6',num:'IT-2026-0068',title:'Заявка на ремонт компьютерной лаборатории',cat:'Закупки',type:'Заявка',author:'Иброхим Абдраимов',dep:'IT-отдел',resp:'—',created:'22.07.2026',due:'05.08.2026',status:'Черновик',prio:'Средний',stage:'Черновик',wait:'—',left:'11 дней',warn:false,desc:'Косметический ремонт и замена электропроводки в компьютерной лаборатории №3.'},
+  {id:'d7',num:'ESU-2026-00098',title:'Приказ о проведении вступительных экзаменов',cat:'Приказы',type:'Приказ',author:'Айбек Токтосунов',dep:'Ректорат',resp:'Мария Ким',created:'02.06.2026',due:'20.06.2026',status:'Архивирован',prio:'Средний',stage:'Архив',wait:'—',left:'—',warn:false,desc:'Порядок и сроки проведения вступительных экзаменов на 2026–2027 учебный год.'},
+  {id:'d8',num:'ESU-2026-00126',title:'Приказ об утверждении регламента документооборота',cat:'Регламенты',type:'Приказ',author:'Алина Садыкова',dep:'HR',resp:'Айбек Токтосунов',created:'18.07.2026',due:'26.07.2026',status:'На согласовании',prio:'Высокий',stage:'Согласование ректором',wait:'4 дня',left:'Завтра',warn:true,desc:'Утверждение регламента электронного документооборота E-SU для всех подразделений.'},
+  {id:'d9',num:'HR-2026-0052',title:'Служебная записка о повышении квалификации сотрудников',cat:'Служебные записки',type:'Служебная записка',author:'Иброхим Абдраимов',dep:'IT-отдел',resp:'Алина Садыкова',created:'16.07.2026',due:'29.07.2026',status:'Возвращён',prio:'Низкий',stage:'Доработка автором',wait:'2 дня',left:'4 дня',warn:false,reason:'Уточните перечень курсов и стоимость обучения на одного сотрудника.',retBy:'Алина Садыкова',retAt:'21.07.2026',desc:'Направление трёх сотрудников IT-отдела на курсы по кибербезопасности.'},
+  {id:'d10',num:'ADM-2026-0140',title:'Договор на поставку учебной литературы',cat:'Договоры',type:'Договор',author:'Мария Ким',dep:'Канцелярия',resp:'Алина Садыкова',created:'19.07.2026',due:'02.08.2026',status:'На согласовании',prio:'Средний',stage:'Согласование HR',wait:'1 день',left:'8 дней',warn:false,desc:'Поставка учебной литературы для библиотеки на осенний семестр.'},
+  {id:'d11',num:'ESU-2026-00131',title:'Приказ о проведении инвентаризации',cat:'Приказы',type:'Приказ',author:'Мария Ким',dep:'Канцелярия',resp:'Нурбек Абдиев',created:'21.07.2026',due:'12.08.2026',status:'На согласовании',prio:'Средний',stage:'Согласование руководителем',wait:'3 дня',left:'18 дней',warn:false,desc:'Инвентаризация основных средств и материальных ценностей подразделений.'},
+  {id:'d12',num:'HR-2026-0055',title:'Заявление на командировку в г. Ош',cat:'Командировки',type:'Заявление',author:'Нурбек Абдиев',dep:'IT-отдел',resp:'Алина Садыкова',created:'20.07.2026',due:'27.07.2026',status:'Исполнен',prio:'Средний',stage:'Завершено',wait:'—',left:'—',warn:false,desc:'Командировка для участия в межвузовской конференции по цифровизации.'},
+];
+
+const USERS = [
+  {name:'Айбек Токтосунов',email:'a.toktosunov@salymbekov.edu.kg',post:'Ректор',dep:'Ректорат',role:'Руководитель',status:'Активен',last:'сегодня, 09:41',phone:'+996 555 100 100'},
+  {name:'Алина Садыкова',email:'a.sadykova@salymbekov.edu.kg',post:'Руководитель HR',dep:'HR',role:'Администратор',status:'Активен',last:'сегодня, 10:12',phone:'+996 555 100 101'},
+  {name:'Нурбек Абдиев',email:'n.abdiev@salymbekov.edu.kg',post:'Руководитель IT-отдела',dep:'IT-отдел',role:'Руководитель',status:'Активен',last:'сегодня, 08:55',phone:'+996 555 100 102'},
+  {name:'Мария Ким',email:'m.kim@salymbekov.edu.kg',post:'Специалист канцелярии',dep:'Канцелярия',role:'Канцелярия',status:'Активен',last:'вчера, 17:30',phone:'+996 555 100 103'},
+  {name:'Иброхим Абдраимов',email:'i.abdraimov@salymbekov.edu.kg',post:'Специалист',dep:'IT-отдел',role:'Сотрудник',status:'Активен',last:'сегодня, 10:26',phone:'+996 555 100 104'},
+  {name:'Гульнара Асанова',email:'g.asanova@salymbekov.edu.kg',post:'Бухгалтер',dep:'Финансовый отдел',role:'Сотрудник',status:'Заблокирован',last:'12.05.2026',phone:'+996 555 100 105'},
+];
+
+const LOG = [
+  {time:'25.07.2026 10:26',user:'Иброхим Абдраимов',role:'Сотрудник',act:'Отправка на согласование',obj:'Документ',doc:'IT-2026-0071',ip:'10.10.4.21',res:'Успешно'},
+  {time:'25.07.2026 09:58',user:'Нурбек Абдиев',role:'Руководитель',act:'Возврат на доработку',obj:'Документ',doc:'IT-2026-0071',ip:'10.10.4.8',res:'Успешно'},
+  {time:'25.07.2026 09:41',user:'Айбек Токтосунов',role:'Руководитель',act:'Согласование',obj:'Документ',doc:'ESU-2026-00124',ip:'10.10.1.2',res:'Успешно'},
+  {time:'24.07.2026 18:04',user:'Мария Ким',role:'Канцелярия',act:'Регистрация документа',obj:'Документ',doc:'ADM-2026-0135',ip:'10.10.2.14',res:'Успешно'},
+  {time:'24.07.2026 16:12',user:'Алина Садыкова',role:'Администратор',act:'Изменение пользователя',obj:'Пользователь',doc:'Гульнара Асанова',ip:'10.10.3.5',res:'Успешно'},
+  {time:'24.07.2026 15:47',user:'Гульнара Асанова',role:'Сотрудник',act:'Вход в систему',obj:'Сессия',doc:'—',ip:'10.10.6.31',res:'Отказано'},
+  {time:'24.07.2026 12:20',user:'Иброхим Абдраимов',role:'Сотрудник',act:'Загрузка файла',obj:'Файл',doc:'IT-2026-0068',ip:'10.10.4.21',res:'Успешно'},
+  {time:'23.07.2026 17:35',user:'Мария Ким',role:'Канцелярия',act:'Архивирование',obj:'Документ',doc:'ESU-2026-00098',ip:'10.10.2.14',res:'Успешно'},
+  {time:'23.07.2026 11:02',user:'Алина Садыкова',role:'Администратор',act:'Создание категории',obj:'Категория',doc:'Регламенты',ip:'10.10.3.5',res:'Успешно'},
+  {time:'22.07.2026 09:15',user:'Нурбек Абдиев',role:'Руководитель',act:'Просмотр документа',obj:'Документ',doc:'ESU-2026-00119',ip:'10.10.4.8',res:'Успешно'},
+];
+
+const DEPS = [
+  {name:'Ректорат',lvl:0,head:'Айбек Токтосунов',staff:6,docs:14,status:'Активен'},
+  {name:'Учебный отдел',lvl:1,head:'Жанара Мамбетова',staff:18,docs:31,status:'Активен'},
+  {name:'HR',lvl:1,head:'Алина Садыкова',staff:7,docs:22,status:'Активен'},
+  {name:'IT-отдел',lvl:1,head:'Нурбек Абдиев',staff:11,docs:19,status:'Активен'},
+  {name:'Канцелярия',lvl:1,head:'Мария Ким',staff:4,docs:48,status:'Активен'},
+  {name:'Финансовый отдел',lvl:1,head:'Гульнара Асанова',staff:9,docs:27,status:'Активен'},
+  {name:'Отдел закупок',lvl:2,head:'Данияр Осмонов',staff:5,docs:16,status:'Активен'},
+  {name:'Библиотека',lvl:2,head:'Айгуль Турдубаева',staff:6,docs:5,status:'Заблокирован'},
+];
+
+const CATS = [
+  {name:'Приказы',code:'ORD',keep:'75 лет',route:'Автор → Руководитель → Ректор',docs:126,status:'Активен',desc:'Распорядительные документы ректората'},
+  {name:'Договоры',code:'CTR',keep:'10 лет',route:'Автор → Руководитель → Финансы → Ректор',docs:84,status:'Активен',desc:'Договоры с поставщиками и подрядчиками'},
+  {name:'Кадровые документы',code:'HR',keep:'75 лет',route:'Автор → HR → Руководитель',docs:212,status:'Активен',desc:'Приём, перевод, отпуска, увольнения'},
+  {name:'Финансовые документы',code:'FIN',keep:'10 лет',route:'Автор → Финансы → Ректор',docs:97,status:'Активен',desc:'Сметы, счета, финансовые заключения'},
+  {name:'Закупки',code:'PRC',keep:'5 лет',route:'Автор → Руководитель → Закупки',docs:63,status:'Активен',desc:'Заявки и обоснования закупок'},
+  {name:'Командировки',code:'TRP',keep:'5 лет',route:'Автор → Руководитель → HR',docs:41,status:'Активен',desc:'Служебные поездки сотрудников'},
+  {name:'Служебные записки',code:'MEM',keep:'3 года',route:'Автор → Руководитель',docs:158,status:'Активен',desc:'Внутренние обращения между подразделениями'},
+  {name:'Входящие',code:'IN',keep:'5 лет',route:'Канцелярия → Адресат',docs:204,status:'Активен',desc:'Корреспонденция от внешних организаций'},
+  {name:'Исходящие',code:'OUT',keep:'5 лет',route:'Автор → Руководитель → Канцелярия',docs:181,status:'Активен',desc:'Письма во внешние организации'},
+  {name:'Внутренние документы',code:'INT',keep:'5 лет',route:'Автор → Руководитель',docs:112,status:'Активен',desc:'Отчёты, планы, протоколы'},
+  {name:'Регламенты',code:'REG',keep:'Постоянно',route:'Автор → Руководитель → Ректор',docs:24,status:'Активен',desc:'Регламенты процессов университета'},
+  {name:'Политики',code:'POL',keep:'Постоянно',route:'Автор → Руководитель → Ректор',docs:11,status:'Активен',desc:'Политики и стандарты университета'},
+  {name:'Инструкции',code:'INS',keep:'5 лет',route:'Автор → Руководитель',docs:33,status:'Заблокирован',desc:'Рабочие и должностные инструкции'},
+];
+
+const NOTIFS = [
+  {id:1,type:'Возврат',title:'Документ возвращён на доработку',doc:'IT-2026-0071 · Служебная записка на закупку',time:'сегодня, 09:58',unread:true,icon:'returned',docId:'d2'},
+  {id:2,type:'Дедлайн',title:'Приближается дедлайн согласования',doc:'ESU-2026-00126 · Приказ об утверждении регламента',time:'сегодня, 09:00',unread:true,icon:'clock',docId:'d8'},
+  {id:3,type:'Согласование',title:'Документ согласован',doc:'ADM-2026-0135 · Договор на обслуживание серверов',time:'вчера, 18:04',unread:true,icon:'check',docId:'d3'},
+  {id:4,type:'Просрочка',title:'Документ просрочен',doc:'ESU-2026-00119 · Отчёт о выполнении плана',time:'вчера, 08:00',unread:false,icon:'warn',docId:'d5'},
+  {id:5,type:'Согласование',title:'Документ отправлен на согласование',doc:'ESU-2026-00124 · Приказ о назначении ответственных',time:'23.07.2026, 14:20',unread:false,icon:'send',docId:'d1'},
+  {id:6,type:'Ответственный',title:'Вы назначены ответственным',doc:'ESU-2026-00131 · Приказ о проведении инвентаризации',time:'22.07.2026, 11:30',unread:false,icon:'users',docId:'d11'},
+  {id:7,type:'Комментарий',title:'Добавлен комментарий к документу',doc:'HR-2026-0052 · Служебная записка о повышении квалификации',time:'21.07.2026, 16:05',unread:false,icon:'docs',docId:'d9'},
+];
+
+const ME = {
+  employee:{name:'Иброхим Абдраимов',short:'И. Абдраимов',initials:'ИА',post:'Специалист',dep:'IT-отдел',roleLabel:'Сотрудник',email:'i.abdraimov@salymbekov.edu.kg'},
+  manager:{name:'Нурбек Абдиев',short:'Н. Абдиев',initials:'НА',post:'Руководитель IT-отдела',dep:'IT-отдел',roleLabel:'Руководитель',email:'n.abdiev@salymbekov.edu.kg'},
+  clerk:{name:'Мария Ким',short:'М. Ким',initials:'МК',post:'Специалист канцелярии',dep:'Канцелярия',roleLabel:'Канцелярия',email:'m.kim@salymbekov.edu.kg'},
+  admin:{name:'Алина Садыкова',short:'А. Садыкова',initials:'АС',post:'Администратор системы',dep:'HR',roleLabel:'Администратор',email:'a.sadykova@salymbekov.edu.kg'},
+};
+
+const SCREENS = {
+  dashboard:{title:'Главная',desc:'Обзор ваших документов, задач и дедлайнов.',crumbs:['Главная']},
+  documents:{title:'Все документы',desc:'Реестр документов университета с фильтрами и поиском.',crumbs:['Главная','Документы']},
+  my:{title:'Мои документы',desc:'Документы, автором которых являетесь вы.',crumbs:['Главная','Документы','Мои документы']},
+  approval:{title:'На согласовании',desc:'Документы, по которым от вас требуется решение.',crumbs:['Главная','На согласовании']},
+  returned:{title:'Возвращённые',desc:'Документы, возвращённые на доработку с указанием причины.',crumbs:['Главная','Возвращённые']},
+  archive:{title:'Архив',desc:'Завершённые документы. Доступны только для чтения.',crumbs:['Главная','Архив']},
+  notifications:{title:'Уведомления',desc:'Центр уведомлений по вашим документам и задачам.',crumbs:['Главная','Уведомления']},
+  users:{title:'Пользователи',desc:'Сотрудники университета, их роли и доступ к системе.',crumbs:['Главная','Администрирование','Пользователи']},
+  departments:{title:'Подразделения',desc:'Структура университета и распределение документов.',crumbs:['Главная','Администрирование','Подразделения']},
+  categories:{title:'Категории документов',desc:'Виды документов, сроки хранения и базовые маршруты.',crumbs:['Главная','Администрирование','Категории']},
+  roles:{title:'Роли и права',desc:'Матрица прав доступа по ролям системы.',crumbs:['Главная','Администрирование','Роли и права']},
+  log:{title:'Журнал действий',desc:'Аудит действий пользователей. Доступен только для чтения.',crumbs:['Главная','Администрирование','Журнал действий']},
+  settings:{title:'Настройки',desc:'Базовые параметры системы документооборота.',crumbs:['Главная','Настройки']},
+  create:{title:'Создание документа',desc:'Заполните карточку документа и укажите последовательность согласования.',crumbs:['Главная','Документы','Создание']},
+  doc:{title:'Карточка документа',desc:'',crumbs:['Главная','Документы','Карточка']},
+};
+
+const TABLE_SCREENS = ['documents','my','approval','returned','archive','users','departments','categories','log'];
+
+class Component extends DCLogic {
+  state = {
+    screen:null, roleOverride:null, collapsed:null, loading:false,
+    q:'', sort:'new', filtersOpen:false, filters:{status:'Все',cat:'Все',author:'Все',dep:'Все',resp:'Все'},
+    notifOpen:false, userMenuOpen:false, rowMenu:null,
+    myTab:'all', docTab:'main', setTab:'general',
+    perPage:10, page:1,
+    toast:null, toastKind:'ok',
+    loginEmail:'i.abdraimov@salymbekov.edu.kg', loginPass:'esu2026', showPass:false, remember:true, loginErr:'', loginBusy:false,
+    activeDoc:'d1', docState:{}, returnModal:false, returnText:'', returnErr:false,
+    confirm:null, drawer:null,
+    form:{title:'',cat:'',type:'',desc:'',dep:'IT-отдел',resp:'',due:'',prio:'Средний',comment:''},
+    formErr:{}, files:[], dirty:false,
+    notifFilter:'Все', notifRead:{}, comments:[], newComment:'',
+    settings:{
+      sysName:'E-SU — Электронный документооборот', lang:'Русский', tz:'UTC+6 Бишкек', dateFmt:'ДД.ММ.ГГГГ', autoLogout:'30 минут',
+      uniName:'Salymbekov University', uniShort:'SU', uniAddr:'г. Бишкек, ул. Ахунбаева 92', uniHead:'Айбек Токтосунов', uniPhone:'+996 312 300 400', uniEmail:'office@salymbekov.edu.kg',
+      numPattern:'{КОД}-{ГОД}-{НОМЕР}', numDigits:'5 знаков', numReset:'Ежегодно', numExample:'ESU-2026-00124',
+      stStrict:true, stOverdue:true, stAutoArchive:false,
+      mailSend:true, mailApproval:true, mailReturn:true, mailDeadline:true, mailDigest:false,
+      formats:['PDF','DOC','DOCX','XLS','XLSX','JPG','PNG'], formatStrict:true,
+      statusList:['Черновик','На согласовании','Возвращён','Согласован','Исполнен','Просрочен','Архивирован'],
+      maxSize:'20 МБ', maxFiles:'10 файлов', maxTotal:'100 МБ',
+    },
+  };
+
+  icon(n, size, w) { return React.createElement('svg', {width:size||18,height:size||18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:w||1.6,strokeLinecap:'round',strokeLinejoin:'round'}, React.createElement('path',{d:P[n]})); }
+
+  get role(){ return this.state.roleOverride || this.props.role || 'employee'; }
+  get screen(){ return this.state.screen || this.props.startScreen || 'dashboard'; }
+
+  go(screen, extra){
+    this.setState(Object.assign({screen, loading:true, notifOpen:false, userMenuOpen:false, rowMenu:null, q:'', page:1, filtersOpen:false}, extra||{}));
+    clearTimeout(this._t); this._t = setTimeout(()=>this.setState({loading:false}), 320);
+  }
+  toast(text, kind){
+    this.setState({toast:text, toastKind:kind||'ok'});
+    clearTimeout(this._tt); this._tt = setTimeout(()=>this.setState({toast:null}), 3200);
+  }
+  openDoc(id){ this.go('doc', {activeDoc:id, docTab:'main'}); }
+
+  docs(){
+    const f = this.state.filters, q = this.state.q.trim().toLowerCase();
+    let list = DOCS.slice();
+    const s = this.state;
+    list = list.map(d => Object.assign({}, d, s.docState[d.id] || {}));
+    if(f.status !== 'Все') list = list.filter(d=>d.status===f.status);
+    if(f.cat !== 'Все') list = list.filter(d=>d.cat===f.cat);
+    if(f.author !== 'Все') list = list.filter(d=>d.author===f.author);
+    if(f.dep !== 'Все') list = list.filter(d=>d.dep===f.dep);
+    if(f.resp !== 'Все') list = list.filter(d=>d.resp===f.resp);
+    if(this.state.sort==='title') list.sort((a,b)=>a.title.localeCompare(b.title));
+    if(this.state.sort==='old') list.reverse();
+    if(q) list = list.filter(d=>(d.num+' '+d.title+' '+d.author+' '+d.cat+' '+d.dep).toLowerCase().includes(q));
+    return list;
+  }
+  activeDocument(){
+    const base = DOCS.find(d=>d.id===this.state.activeDoc) || DOCS[0];
+    return Object.assign({}, base, this.state.docState[base.id] || {});
+  }
+
+  cell(o){
+    const t = o.t || 'txt';
+    const base = {t, v:'', sub:'', jc:'flex-start', color:'#3f3f46', initials:'', warn:false,
+      isTxt:t==='txt', isTitle:t==='title', isBadge:t==='badge', isUser:t==='user', isAct:t==='act', isBtn:t==='btn', isNum:t==='num', isDue:t==='due'};
+    const c = Object.assign(base, o);
+    if(c.isBadge){ const st = ST[c.v] || ST['Средний']; c.bg=st.bg; c.fg=st.fg; c.bd=st.bd; }
+    if(c.isUser){ const p = String(c.v).split(' '); c.initials = ((p[0]||' ')[0]||'')+((p[1]||' ')[0]||''); c.hasSub = !!c.sub; }
+    if(c.isDue){ c.color = c.warn ? '#c24400' : '#3f3f46'; }
+    if(c.isAct){ c.jc = 'flex-end'; }
+    return c;
+  }
+  row(id, cells, opts){
+    const o = opts || {};
+    const open = o.open || (()=>{});
+    return {
+      id, cells, open,
+      bg: this.state.rowMenu===id ? '#fafafa' : 'transparent',
+      menuOpen: this.state.rowMenu===id,
+      menu: (e)=>{ e.stopPropagation(); this.setState({rowMenu: this.state.rowMenu===id ? null : id}); },
+      actions: o.actions || [],
+    };
+  }
+  menuItem(label, icon, act, danger){
+    return {label, icon:this.icon(icon,16), act:(e)=>{ e.stopPropagation(); this.setState({rowMenu:null}); act(); }, color: danger?'#c24400':'#18181b', ic: danger?'#c24400':'#71717a'};
+  }
+  docMenu(d){
+    const items = [
+      this.menuItem('Открыть карточку','file',()=>this.openDoc(d.id)),
+      this.menuItem('Скачать файл','download',()=>this.toast('Файл «'+d.num+'.pdf» скачан')),
+      this.menuItem('История действий','log',()=>this.go('doc',{activeDoc:d.id,docTab:'history'})),
+    ];
+    if(this.role==='clerk' || this.role==='admin') items.push(this.menuItem('В архив','archive',()=>this.confirmArchive(d),true));
+    return items;
+  }
+  confirmArchive(d){
+    this.setState({confirm:{
+      title:'Отправить документ в архив?',
+      text:'Документ «'+d.title+'» станет доступен только для чтения. Действие можно отменить только с правами администратора.',
+      label:'Отправить в архив',
+      act:()=>{ const ds = Object.assign({}, this.state.docState); ds[d.id]=Object.assign({}, ds[d.id], {status:'Архивирован'}); this.setState({docState:ds, confirm:null}); this.toast('Документ отправлен в архив'); }
+    }});
+  }
+
+  table(){
+    const scr = this.screen, s = this.state, pad = this.props.density==='comfortable' ? 18 : 14;
+    let t = {cols:'1fr', head:[], rows:[], searchHint:'Поиск…', padY:pad};
+    const q = s.q.trim().toLowerCase();
+    const H = (label, jc)=>({label, jc:jc||'flex-start'});
+
+    if(scr==='documents' || scr==='my' || scr==='archive'){
+      let list = this.docs();
+      if(scr==='my') list = list.filter(d=>d.author===ME[this.role].name || d.author==='Иброхим Абдраимов');
+      if(scr==='archive') list = list.filter(d=>d.status==='Архивирован' || d.status==='Исполнен');
+      else list = list.filter(d=>d.status!=='Архивирован');
+      if(scr==='my'){
+        const tab = s.myTab;
+        if(tab==='draft') list = list.filter(d=>d.status==='Черновик');
+        if(tab==='approval') list = list.filter(d=>d.status==='На согласовании');
+        if(tab==='returned') list = list.filter(d=>d.status==='Возвращён');
+        if(tab==='done') list = list.filter(d=>d.status==='Исполнен' || d.status==='Согласован');
+      }
+      t.cols = '150px minmax(220px,2.2fr) 140px 150px 110px 110px 150px 44px';
+      t.head = [H('Номер'),H('Название и категория'),H('Автор'),H('Ответственный'),H('Создан'),H('Дедлайн'),H('Статус'),H('',' flex-end')];
+      t.searchHint = 'Поиск по номеру, названию, автору…';
+      t.rows = list.map(d=>this.row(d.id, [
+        this.cell({t:'num',v:d.num}),
+        this.cell({t:'title',v:d.title,sub:d.cat+' · '+d.dep}),
+        this.cell({t:'user',v:d.author}),
+        this.cell({t:'txt',v:d.resp}),
+        this.cell({t:'txt',v:d.created,color:'#71717a'}),
+        this.cell({t:'due',v:d.due,warn:d.warn}),
+        this.cell({t:'badge',v:d.status}),
+        this.cell({t:'act'}),
+      ], {open:()=>this.openDoc(d.id), actions:this.docMenu(d)}));
+    }
+    else if(scr==='approval'){
+      const list = this.docs().filter(d=>d.status==='На согласовании' || d.status==='Просрочен');
+      t.cols = '150px minmax(220px,2.2fr) 150px 130px 120px 110px 130px';
+      t.head = [H('Номер'),H('Название'),H('Отправитель'),H('Текущий этап'),H('Приоритет'),H('Ожидание'),H('',' flex-end')];
+      t.searchHint = 'Поиск среди документов на согласовании…';
+      t.rows = list.map(d=>this.row(d.id, [
+        this.cell({t:'num',v:d.num}),
+        this.cell({t:'title',v:d.title,sub:'Срок согласования до '+d.due}),
+        this.cell({t:'user',v:d.author,sub:d.dep}),
+        this.cell({t:'txt',v:d.stage,color:'#52525b'}),
+        this.cell({t:'badge',v:d.prio}),
+        this.cell({t:'due',v:d.wait,warn:d.warn}),
+        this.cell({t:'btn',v:'Открыть',jc:'flex-end',act:(e)=>{e.stopPropagation();this.openDoc(d.id);}}),
+      ], {open:()=>this.openDoc(d.id)}));
+    }
+    else if(scr==='returned'){
+      const list = this.docs().filter(d=>d.status==='Возвращён');
+      t.cols = '150px minmax(200px,1.6fr) minmax(200px,1.8fr) 150px 110px 210px';
+      t.head = [H('Номер'),H('Название'),H('Причина возврата'),H('Вернул'),H('Дедлайн'),H('',' flex-end')];
+      t.searchHint = 'Поиск среди возвращённых документов…';
+      t.rows = list.map(d=>this.row(d.id, [
+        this.cell({t:'num',v:d.num}),
+        this.cell({t:'title',v:d.title,sub:d.cat}),
+        this.cell({t:'txt',v:d.reason,color:'#c24400'}),
+        this.cell({t:'user',v:d.retBy,sub:d.retAt}),
+        this.cell({t:'due',v:d.due,warn:d.warn}),
+        this.cell({t:'btn',v:'Продолжить редактирование',jc:'flex-end',act:(e)=>{e.stopPropagation();this.openDoc(d.id);}}),
+      ], {open:()=>this.openDoc(d.id)}));
+    }
+    else if(scr==='users'){
+      let list = USERS.slice();
+      t.cols = 'minmax(220px,2fr) minmax(200px,1.6fr) 150px 150px 140px 150px 44px';
+      t.head = [H('ФИО'),H('Корпоративная почта'),H('Должность'),H('Подразделение'),H('Роль'),H('Статус'),H('',' flex-end')];
+      t.searchHint = 'Поиск по ФИО, почте, должности…';
+      t.rows = list.map((u,i)=>this.row('u'+i, [
+        this.cell({t:'user',v:u.name,sub:u.dep}),
+        this.cell({t:'txt',v:u.email,color:'#52525b'}),
+        this.cell({t:'txt',v:u.post}),
+        this.cell({t:'txt',v:u.dep,color:'#71717a'}),
+        this.cell({t:'badge',v:u.role==='Администратор'?'Средний':'Низкий'}),
+        this.cell({t:'badge',v:u.status}),
+        this.cell({t:'act'}),
+      ], {open:()=>this.setState({drawer:{kind:'user',user:u}}), actions:[
+        this.menuItem('Редактировать','edit',()=>this.setState({drawer:{kind:'user',user:u}})),
+        this.menuItem('Сбросить пароль','settings',()=>this.toast('Временный пароль отправлен на '+u.email)),
+        u.status==='Активен'
+          ? this.menuItem('Заблокировать','block',()=>this.setState({confirm:{title:'Заблокировать пользователя?',text:u.name+' потеряет доступ к системе. Его документы и история действий сохранятся.',label:'Заблокировать',act:()=>{this.setState({confirm:null});this.toast('Пользователь заблокирован','warn');}}}),true)
+          : this.menuItem('Активировать','check',()=>this.toast('Пользователь активирован')),
+      ]}));
+      t.rows.forEach((r,i)=>{ r.cells[4] = this.cell({t:'badge',v:'Средний'}); r.cells[4].v = USERS[i].role; const st = USERS[i].role==='Администратор'?ST['Согласован']:ST['Средний']; r.cells[4].bg=st.bg; r.cells[4].fg=st.fg; r.cells[4].bd=st.bd; });
+    }
+    else if(scr==='departments'){
+      t.cols = 'minmax(240px,2fr) minmax(180px,1.4fr) 130px 150px 140px 44px';
+      t.head = [H('Подразделение'),H('Руководитель'),H('Сотрудников'),H('Активных документов'),H('Статус'),H('',' flex-end')];
+      t.searchHint = 'Поиск по подразделению или руководителю…';
+      t.rows = DEPS.map((d,i)=>this.row('p'+i, [
+        this.cell({t:'title',v:d.pad + d.name,sub:d.lvl===0?'Верхний уровень':'Входит в Ректорат'}),
+        this.cell({t:'user',v:d.head}),
+        this.cell({t:'txt',v:String(d.staff)+' чел.',color:'#52525b'}),
+        this.cell({t:'txt',v:String(d.docs)+' документов',color:'#52525b'}),
+        this.cell({t:'badge',v:d.status}),
+        this.cell({t:'act'}),
+      ], {open:()=>this.toast('Карточка подразделения «'+d.name+'»'), actions:[
+        this.menuItem('Редактировать','edit',()=>this.toast('Редактирование подразделения')),
+        this.menuItem('Сотрудники','users',()=>this.go('users')),
+      ]}));
+      t.rows.forEach((r,i)=>{ const d=DEPS[i]; r.cells[0].v = (d.lvl?'— '.repeat(d.lvl):'')+d.name; });
+    }
+    else if(scr==='categories'){
+      t.cols = 'minmax(220px,1.6fr) 90px minmax(220px,2fr) 130px 130px 130px 44px';
+      t.head = [H('Категория'),H('Код'),H('Базовый маршрут'),H('Срок хранения'),H('Документов'),H('Статус'),H('',' flex-end')];
+      t.searchHint = 'Поиск по категории или коду…';
+      t.rows = CATS.map((c,i)=>this.row('c'+i, [
+        this.cell({t:'title',v:c.name,sub:c.desc}),
+        this.cell({t:'num',v:c.code}),
+        this.cell({t:'txt',v:c.route,color:'#52525b'}),
+        this.cell({t:'txt',v:c.keep,color:'#71717a'}),
+        this.cell({t:'txt',v:String(c.docs)}),
+        this.cell({t:'badge',v:c.status}),
+        this.cell({t:'act'}),
+      ], {open:()=>this.setState({drawer:{kind:'cat',cat:c}}), actions:[
+        this.menuItem('Редактировать','edit',()=>this.setState({drawer:{kind:'cat',cat:c}})),
+        this.menuItem('Документы категории','docs',()=>this.go('documents')),
+      ]}));
+    }
+    else if(scr==='log'){
+      let list = LOG.slice();
+      t.cols = '160px minmax(200px,1.6fr) 150px minmax(180px,1.4fr) 160px 130px 120px';
+      t.head = [H('Дата и время'),H('Пользователь'),H('Роль'),H('Действие'),H('Объект'),H('IP-адрес'),H('Результат')];
+      t.searchHint = 'Поиск по пользователю, действию, документу…';
+      t.rows = list.map((l,i)=>this.row('l'+i, [
+        this.cell({t:'num',v:l.time}),
+        this.cell({t:'user',v:l.user}),
+        this.cell({t:'txt',v:l.role,color:'#71717a'}),
+        this.cell({t:'txt',v:l.act}),
+        this.cell({t:'txt',v:l.doc,color:'#52525b'}),
+        this.cell({t:'txt',v:l.ip,color:'#a1a1aa'}),
+        this.cell({t:'badge',v:l.res}),
+      ], {open:()=>this.toast('Запись журнала доступна только для чтения','warn')}));
+    }
+
+    if(q) t.rows = t.rows.filter(r=>r.cells.map(c=>String(c.v)+' '+String(c.sub||'')).join(' ').toLowerCase().includes(q));
+    t.total = t.rows.length;
+    const per = Number(this.state.perPage), page = this.state.page;
+    const from = (page-1)*per;
+    t.pageCount = Math.max(1, Math.ceil(t.total/per));
+    t.rows = t.rows.slice(from, from+per);
+    t.isEmpty = t.total===0;
+    t.hasRows = t.total>0;
+    t.range = t.total ? ('Показано '+(from+1)+'–'+Math.min(from+per,t.total)+' из '+t.total) : 'Нет записей';
+    return t;
+  }
+
+  navGroups(){
+    const role = this.role, scr = this.screen, S = this.state;
+    const docs = this.docs();
+    const counts = {
+      approval: DOCS.filter(d=>d.status==='На согласовании').length,
+      returned: DOCS.filter(d=>d.status==='Возвращён').length,
+      notifications: NOTIFS.filter(n=>n.unread && !S.notifRead[n.id]).length,
+    };
+    const mk = (id,label,icon)=>{
+      const active = scr===id || (id==='documents' && scr==='create') || (id==='documents' && scr==='doc');
+      const count = counts[id];
+      return {id, label, icon:this.icon(icon,18), go:()=>this.go(id),
+        bg: active?'#f4f4f5':'transparent', fg: active?'#09090b':'#3f3f46', ic: active?'#09090b':'#71717a', fw: active?500:400,
+        hasCount: !!count, count: count||0, cBg: active?'#09090b':'#ececee', cFg: active?'#fff':'#52525b'};
+    };
+    const main = [mk('dashboard','Главная','home'), mk('documents','Документы','docs'), mk('my','Мои документы','my')];
+    if(role==='manager'||role==='admin'||role==='clerk') main.push(mk('approval','На согласовании','approve'));
+    main.push(mk('returned','Возвращённые','returned'));
+    main.push(mk('archive','Архив','archive'));
+    main.push(mk('notifications','Уведомления','bell'));
+    const groups = [{label:'Основное', showLabel:this.showLabels(), items:main}];
+    if(role==='admin'){
+      groups.push({label:'Администрирование', showLabel:this.showLabels(), items:[
+        mk('users','Пользователи','users'), mk('departments','Подразделения','dep'),
+        mk('categories','Категории','cat'), mk('roles','Роли и права','roles'),
+        mk('log','Журнал действий','log'), mk('settings','Настройки','settings'),
+      ]});
+    } else {
+      groups.push({label:'Система', showLabel:this.showLabels(), items:[mk('settings','Настройки','settings')]});
+    }
+    return groups;
+  }
+  componentDidMount(){
+    this._onResize = ()=>this.setState({vw:window.innerWidth});
+    window.addEventListener('resize', this._onResize);
+    this.setState({vw:window.innerWidth});
+  }
+  componentWillUnmount(){ window.removeEventListener('resize', this._onResize); clearTimeout(this._t); clearTimeout(this._tt); }
+  showLabels(){
+    const auto = this.state.vw ? this.state.vw < 1240 : false;
+    const c = this.state.collapsed===null ? (!!this.props.collapsedSidebar || auto) : this.state.collapsed;
+    return !c;
+  }
+
+  pageMeta(){
+    const scr = this.screen, meta = SCREENS[scr] || SCREENS.dashboard;
+    const dark = {bg:'#09090b',fg:'#ffffff',bd:'#2c2e34',sh:'inset 0 0.5px 0 0 rgba(255,255,255,.5), inset 0 9px 14px -5px rgba(117,123,133,.4), 0 4px 6px 0 rgba(0,0,0,.14)'};
+    const ghost = {bg:'#ffffff',fg:'#3f3f46',bd:'#ececee',sh:'none'};
+    const act = (label,icon,kind,go)=>Object.assign({label, icon:this.icon(icon,16), hasIcon:!!icon, go}, kind);
+    let actions = [], count = null, desc = meta.desc, title = meta.title;
+    if(scr==='dashboard'){
+      const h = new Date().getHours();
+      title = (h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', '+ME[this.role].name.split(' ')[0];
+      desc = 'Пятница, 25 июля 2026 · '+ME[this.role].post+' · '+ME[this.role].dep;
+      actions = [act('Создать документ','plus',dark,()=>this.go('create'))];
+    }
+    if(scr==='documents'){ count = String(this.docs().filter(d=>d.status!=='Архивирован').length)+' документов'; actions=[act('Создать документ','plus',dark,()=>this.go('create'))]; }
+    if(scr==='my'){ actions=[act('Создать документ','plus',dark,()=>this.go('create'))]; }
+    if(scr==='approval'){ count = String(DOCS.filter(d=>d.status==='На согласовании').length)+' ожидают решения'; }
+    if(scr==='returned'){ count = String(DOCS.filter(d=>d.status==='Возвращён').length)+' на доработке'; }
+    if(scr==='users'){ count = String(USERS.length)+' сотрудников'; actions=[act('Добавить пользователя','plus',dark,()=>this.setState({drawer:{kind:'user',user:null}}))]; }
+    if(scr==='departments'){ actions=[act('Добавить подразделение','plus',dark,()=>this.toast('Форма создания подразделения'))]; }
+    if(scr==='categories'){ count = String(CATS.length)+' категорий'; actions=[act('Добавить категорию','plus',dark,()=>this.setState({drawer:{kind:'cat',cat:null}}))]; }
+    if(scr==='log'){ actions=[act('Экспорт в CSV','download',ghost,()=>this.toast('Журнал выгружен в CSV'))]; }
+    if(scr==='archive'){ actions=[]; }
+    if(scr==='notifications'){ actions=[act('Отметить всё как прочитанное','check',ghost,()=>this.readAll())]; }
+    if(scr==='doc'){ const d = this.activeDocument(); desc = d.num+' · '+d.cat+' · автор: '+d.author; actions=[act('К реестру документов','chevL',ghost,()=>this.go('documents'))]; }
+    if(scr==='create'){ actions=[act('Отмена','',ghost,()=>this.go('documents'))]; actions[0].hasIcon=false; }
+    if(scr==='settings'){ actions=[]; }
+    return {title, desc, actions, hasCount: !!count, count: count||''};
+  }
+  crumbs(){
+    const list = (SCREENS[this.screen] || SCREENS.dashboard).crumbs;
+    return list.map((label,i)=>({
+      label, more: i < list.length-1,
+      color: i < list.length-1 ? '#a1a1aa' : '#3f3f46',
+      cursor: i < list.length-1 ? 'pointer' : 'default',
+      go: i===0 ? ()=>this.go('dashboard') : ()=>{},
+    }));
+  }
+  readAll(){ const r = {}; NOTIFS.forEach(n=>r[n.id]=true); this.setState({notifRead:r, notifOpen:false}); this.toast('Все уведомления отмечены как прочитанные'); }
+
+  stBadge(v){ const st = ST[v] || ST['Средний']; return st; }
+
+  routeFor(d){
+    const over = this.state.docState[d.id] || {};
+    const head = (DEPS.find(x=>x.name===d.dep) || {head:'Нурбек Абдиев'}).head;
+    const stages = [
+      {n:1, name:d.author, role:'Автор · '+d.dep, status:'Создан', date:d.created+', 09:14', comment:'Документ создан и отправлен на согласование.'},
+      {n:2, name:head, role:'Руководитель подразделения', status:'Согласован', date:'13.07.2026, 11:02', comment:'Согласовано без замечаний.'},
+      {n:3, name:'Алина Садыкова', role:'Руководитель HR', status:'На рассмотрении', date:'Ожидает решения', comment:'Решение пока не принято.'},
+      {n:4, name:'Айбек Токтосунов', role:'Ректор', status:'Ожидает', date:'—', comment:'Этап начнётся после предыдущего решения.'},
+    ];
+    if(over.status==='Согласован'){ stages[2].status='Согласован'; stages[2].date='25.07.2026, 10:40'; stages[2].comment=over.note||'Согласовано.'; stages[3].status='На рассмотрении'; stages[3].date='Ожидает решения'; }
+    if(over.status==='Возвращён'){ stages[2].status='Возвращён'; stages[2].date='25.07.2026, 10:40'; stages[2].comment=over.reason||'Возвращён на доработку.'; }
+    if(d.status==='Черновик'){ stages[1].status='Ожидает'; stages[1].date='—'; stages[1].comment='Маршрут начнётся после отправки на согласование.'; stages[2].status='Ожидает'; stages[2].date='—'; stages[0].status='Черновик'; stages[0].comment='Документ ещё не отправлен на согласование.'; }
+    if(d.status==='Исполнен' || d.status==='Архивирован'){ stages[2].status='Согласован'; stages[2].date='05.07.2026, 12:10'; stages[2].comment='Согласовано.'; stages[3].status='Согласован'; stages[3].date='08.07.2026, 09:30'; stages[3].comment='Документ исполнен и передан в канцелярию.'; }
+    return stages.map((s,i)=>{
+      const cur = s.status==='На рассмотрении';
+      const done = s.status==='Согласован' || s.status==='Создан';
+      const st = this.stBadge(s.status==='Создан'?'Исполнен':(s.status==='На рассмотрении'?'На согласовании':(s.status==='Ожидает'?'Черновик':s.status)));
+      return Object.assign({}, s, {
+        sub: s.role + ' · ' + s.date,
+        line: i < stages.length-1,
+        bg: done?'#09090b':(cur?'#ff5a00':'#ffffff'), fg:(done||cur)?'#ffffff':'#a1a1aa', bd: done?'#09090b':(cur?'#ff5a00':'#ececee'),
+        cardBg: cur?'#fafafa':'transparent', cardBd: cur?'#ececee':'transparent', pad: cur?'16px 18px':'0 2px',
+        sBg:st.bg, sFg:st.fg, sBd:st.bd,
+      });
+    });
+  }
+
+  historyFor(d){
+    const over = this.state.docState[d.id] || {};
+    const items = [
+      {act:'Документ создан', who:d.author, time:d.created+', 09:14', icon:'plus', note:''},
+      {act:'Загружен основной файл — '+d.num+'.pdf', who:d.author, time:d.created+', 09:20', icon:'upload', note:''},
+    ];
+    if(d.status!=='Черновик') items.push({act:'Отправлен на согласование', who:d.author, time:d.created+', 09:22', icon:'send', note:''});
+    if(d.status!=='Черновик') items.push({act:'Согласовано — руководитель подразделения', who:(DEPS.find(x=>x.name===d.dep)||{head:'Нурбек Абдиев'}).head, time:'13.07.2026, 11:02', icon:'check', note:'Согласовано без замечаний.'});
+    if(d.reason) items.push({act:'Возвращён на доработку', who:d.retBy, time:d.retAt+', 09:58', icon:'returned', note:d.reason});
+    if(d.status==='Исполнен'||d.status==='Архивирован') items.push({act:'Документ исполнен', who:'Мария Ким', time:'08.07.2026, 09:30', icon:'check', note:''});
+    if(d.status==='Архивирован') items.push({act:'Отправлен в архив', who:'Мария Ким', time:'23.07.2026, 17:35', icon:'archive', note:''});
+    if(over.status==='Согласован') items.push({act:'Согласовано', who:ME[this.role].name, time:'25.07.2026, 10:40', icon:'check', note:over.note||''});
+    if(over.status==='Возвращён') items.push({act:'Возвращён на доработку', who:ME[this.role].name, time:'25.07.2026, 10:40', icon:'returned', note:over.reason||''});
+    return items.reverse().map((h,i,arr)=>Object.assign({}, h, {
+      icon:this.icon(h.icon,15), ic: h.icon==='returned'?'#c24400':'#3f3f46', sub: h.who+' · '+h.time,
+      hasNote: !!h.note, line: i < arr.length-1,
+    }));
+  }
+
+  docActionsFor(d){
+    const dark = {bg:'#09090b',fg:'#ffffff',bd:'#2c2e34',sh:'inset 0 0.5px 0 0 rgba(255,255,255,.5), inset 0 9px 14px -5px rgba(117,123,133,.4), 0 4px 6px 0 rgba(0,0,0,.14)'};
+    const ghost = {bg:'#ffffff',fg:'#3f3f46',bd:'#ececee',sh:'none'};
+    const warn = {bg:'#fff1e9',fg:'#c24400',bd:'#ffd6bd',sh:'none'};
+    const mk = (label,icon,kind,act)=>Object.assign({label, icon:this.icon(icon,16), act}, kind);
+    const role = this.role, out = [];
+    const approve = ()=>this.setState({confirm:{
+      title:'Согласовать документ?',
+      text:'Документ «'+d.title+'» перейдёт к следующему согласующему по маршруту. Решение будет зафиксировано в журнале действий.',
+      label:'Согласовать',
+      act:()=>{ const ds=Object.assign({},this.state.docState); ds[d.id]=Object.assign({},ds[d.id],{status:'Согласован',note:'Согласовано без замечаний.'}); this.setState({docState:ds, confirm:null, docTab:'route'}); this.toast('Документ согласован'); }
+    }});
+    if((role==='manager'||role==='admin') && (d.status==='На согласовании'||d.status==='Просрочен')){
+      out.push(mk('Согласовать','check',dark,approve));
+      out.push(mk('Вернуть на доработку','returned',warn,()=>this.setState({returnModal:true, returnText:'', returnErr:false})));
+    }
+    if(role==='clerk' && d.status==='Согласован'){
+      out.push(mk('Зарегистрировать','register',dark,()=>this.toast('Документу присвоен номер '+d.num)));
+      out.push(mk('Отправить в архив','archive',ghost,()=>this.confirmArchive(d)));
+    }
+    if((d.status==='Черновик'||d.status==='Возвращён') && (role==='employee'||role==='admin')){
+      out.push(mk(d.status==='Черновик'?'Отправить на согласование':'Отправить повторно','send',dark,()=>{ const ds=Object.assign({},this.state.docState); ds[d.id]=Object.assign({},ds[d.id],{status:'На согласовании'}); this.setState({docState:ds}); this.toast('Документ отправлен на согласование'); }));
+      out.push(mk('Редактировать','edit',ghost,()=>this.go('create')));
+    }
+    out.push(mk('Скачать файл','download',ghost,()=>this.toast('Файл «'+d.num+'.pdf» скачан')));
+    return out;
+  }
+
+  setSet(key){ return (e)=>{ const s = Object.assign({}, this.state.settings); s[key]=e.target.value; this.setState({settings:s}); }; }
+  setToggle(key){ return ()=>{ const s = Object.assign({}, this.state.settings); s[key]=!s[key]; this.setState({settings:s}); }; }
+  sf(label, hint, kind, key, options){
+    const v = this.state.settings[key];
+    const f = {label, hint, isText:kind==='text', isSelect:kind==='select', isToggle:kind==='toggle', isTags:kind==='tags',
+      value: kind==='tags'?'':v, options:options||[], tags: kind==='tags'?v:[], align: kind==='toggle'?'center':'flex-start'};
+    f.set = kind==='toggle' ? this.setToggle(key) : this.setSet(key);
+    if(kind==='toggle'){ f.tBg = v?'#09090b':'#ececee'; f.tBd = v?'#09090b':'#d4d4d8'; f.tJc = v?'flex-end':'flex-start'; }
+    return f;
+  }
+  settingsSection(){
+    const tab = this.state.setTab, S = this.sf.bind(this);
+    if(tab==='university') return {title:'Данные университета', desc:'Реквизиты, которые подставляются в шапку документов и уведомления.', fields:[
+      S('Полное название','Официальное наименование организации','text','uniName'),
+      S('Сокращение','Используется в номерах документов','text','uniShort'),
+      S('Юридический адрес','','text','uniAddr'),
+      S('Руководитель','Подписывает приказы верхнего уровня','text','uniHead'),
+      S('Телефон канцелярии','','text','uniPhone'),
+      S('Официальная почта','Адрес отправителя системных писем','text','uniEmail'),
+    ]};
+    if(tab==='numbering') return {title:'Правила нумерации', desc:'Формат регистрационных номеров документов.', fields:[
+      S('Шаблон номера','Доступные переменные: {КОД}, {ГОД}, {НОМЕР}','text','numPattern'),
+      S('Разрядность счётчика','','select','numDigits',['3 знака','4 знака','5 знаков']),
+      S('Сброс счётчика','','select','numReset',['Ежегодно','Ежеквартально','Не сбрасывать']),
+      S('Пример номера','Так будет выглядеть номер следующего документа','text','numExample'),
+    ]};
+    if(tab==='statuses') return {title:'Статусы документов', desc:'Правила перехода между статусами в MVP.', fields:[
+      S('Строгая последовательность маршрута','Следующий согласующий получает документ только после решения предыдущего','toggle','stStrict'),
+      S('Отмечать просроченные документы','Документы с истёкшим дедлайном выделяются в реестрах','toggle','stOverdue'),
+      S('Автоматически архивировать исполненные','Через 30 дней после исполнения','toggle','stAutoArchive'),
+      S('Используемые статусы','Набор статусов задан системой','tags','statusList'),
+    ]};
+    if(tab==='email') return {title:'Email-уведомления', desc:'Письма на корпоративную почту сотрудников.', fields:[
+      S('Отправка на согласование','Согласующий получает письмо о новом документе','toggle','mailSend'),
+      S('Согласование документа','Автор получает письмо о решении','toggle','mailApproval'),
+      S('Возврат на доработку','Автор получает письмо с причиной возврата','toggle','mailReturn'),
+      S('Приближение дедлайна','Письмо за 2 дня до срока','toggle','mailDeadline'),
+      S('Ежедневная сводка','Одно письмо утром вместо отдельных уведомлений','toggle','mailDigest'),
+    ]};
+    if(tab==='formats') return {title:'Допустимые форматы файлов', desc:'Расширения, которые можно загружать в карточку документа.', fields:[
+      S('Разрешённые форматы','Файлы других форматов будут отклонены','tags','formats'),
+      S('Строгая проверка формата','Проверять содержимое файла, а не только расширение','toggle','formatStrict'),
+    ]};
+    if(tab==='limits') return {title:'Ограничения размера файлов', desc:'Лимиты на загрузку вложений.', fields:[
+      S('Максимальный размер файла','','select','maxSize',['10 МБ','20 МБ','50 МБ']),
+      S('Количество файлов в документе','','select','maxFiles',['5 файлов','10 файлов','20 файлов']),
+      S('Суммарный размер вложений','','select','maxTotal',['50 МБ','100 МБ','250 МБ']),
+    ]};
+    return {title:'Общие настройки', desc:'Базовые параметры работы системы.', fields:[
+      S('Название системы','Отображается в шапке и письмах','text','sysName'),
+      S('Язык интерфейса','','select','lang',['Русский','Кыргызча','English']),
+      S('Часовой пояс','','select','tz',['UTC+6 Бишкек','UTC+3 Москва','UTC+0']),
+      S('Формат даты','','select','dateFmt',['ДД.ММ.ГГГГ','ГГГГ-ММ-ДД']),
+      S('Автоматический выход','Завершение сессии при отсутствии активности','select','autoLogout',['15 минут','30 минут','1 час','Не выходить']),
+    ]};
+  }
+
+  renderVals(){
+    const S = this.state, scr = this.screen, role = this.role;
+    const me = Object.assign({}, ME[role]);
+    me.postDep = me.post + ' · ' + me.dep;
+    const t = TABLE_SCREENS.indexOf(scr) >= 0 ? this.table() : {cols:'1fr',head:[],rows:[],isEmpty:false,hasRows:false,range:'',searchHint:'',padY:14,pageCount:1};
+    const notifs = NOTIFS.map(n=>({
+      id:n.id, title:n.title, doc:n.doc, time:n.time, type:n.type,
+      unread: n.unread && !S.notifRead[n.id],
+      bg: (n.unread && !S.notifRead[n.id]) ? '#fafafa' : '#ffffff',
+      icon: this.icon(n.icon,16),
+      open: ()=>{ const r = Object.assign({},S.notifRead); r[n.id]=true; this.setState({notifRead:r, notifOpen:false}); this.openDoc(n.docId); },
+    }));
+    const unread = notifs.filter(n=>n.unread).length;
+    const myDocs = DOCS.filter(d=>d.author==='Иброхим Абдраимов');
+    const metricDefs = [
+      {label:'Всего моих документов', value:String(myDocs.length), hint:'в системе', icon:'docs', color:'#09090b', ic:'#a1a1aa', go:()=>this.go('my')},
+      {label:'На согласовании', value:String(DOCS.filter(d=>d.status==='На согласовании').length), hint:'ожидают', icon:'approve', color:'#09090b', ic:'#a1a1aa', go:()=>this.go('approval')},
+      {label:'Возвращено на доработку', value:String(DOCS.filter(d=>d.status==='Возвращён').length), hint:'требует правок', icon:'returned', color:'#c24400', ic:'#ff5a00', go:()=>this.go('returned')},
+      {label:'Просрочено', value:String(DOCS.filter(d=>d.status==='Просрочен').length), hint:'вне срока', icon:'warn', color:'#c24400', ic:'#ff5a00', go:()=>this.go('documents')},
+      {label:'Исполнено', value:String(DOCS.filter(d=>d.status==='Исполнен').length), hint:'за июль', icon:'check', color:'#09090b', ic:'#a1a1aa', go:()=>this.go('archive')},
+    ];
+    const attentionDocs = DOCS.filter(d=>d.status==='Возвращён'||d.status==='Просрочен'||d.status==='На согласовании').slice(0,5);
+    const dist = [
+      {label:'Черновик', value:1, color:'#d4d4d8'},
+      {label:'На согласовании', value:5, color:'#18181b'},
+      {label:'Возвращён', value:2, color:'#ff5a00'},
+      {label:'Исполнен', value:2, color:'#52525b'},
+      {label:'Архивирован', value:1, color:'#ececee'},
+    ];
+    const distMax = 5;
+    const filterOpts = {
+      status:['Все','Черновик','На согласовании','Возвращён','Согласован','Исполнен','Просрочен','Архивирован'],
+      cat:['Все'].concat(CATS.map(c=>c.name)),
+      author:['Все'].concat(USERS.map(u=>u.name)),
+      dep:['Все'].concat(DEPS.map(d=>d.name)),
+      resp:['Все'].concat(USERS.map(u=>u.name)),
+    };
+    const setFilter = (k)=>(e)=>{ const f = Object.assign({},S.filters); f[k]=e.target.value; this.setState({filters:f, page:1}); };
+    const filterFields = [
+      {label:'Статус', isSelect:true, isDate:false, value:S.filters.status, options:filterOpts.status, set:setFilter('status')},
+      {label:'Категория', isSelect:true, isDate:false, value:S.filters.cat, options:filterOpts.cat, set:setFilter('cat')},
+      {label:'Автор', isSelect:true, isDate:false, value:S.filters.author, options:filterOpts.author, set:setFilter('author')},
+      {label:'Подразделение', isSelect:true, isDate:false, value:S.filters.dep, options:filterOpts.dep, set:setFilter('dep')},
+      {label:'Ответственный', isSelect:true, isDate:false, value:S.filters.resp, options:filterOpts.resp, set:setFilter('resp')},
+      {label:'Дата создания от', isSelect:false, isDate:true, value:'2026-07-01', set:()=>{}},
+      {label:'Дедлайн до', isSelect:false, isDate:true, value:'2026-08-31', set:()=>{}},
+    ];
+    const activeFilters = Object.keys(S.filters).filter(k=>S.filters[k]!=='Все').length;
+    const myTabs = [
+      {id:'all',label:'Все',count:myDocs.length},
+      {id:'draft',label:'Черновики',count:myDocs.filter(d=>d.status==='Черновик').length},
+      {id:'approval',label:'На согласовании',count:myDocs.filter(d=>d.status==='На согласовании').length},
+      {id:'returned',label:'Возвращённые',count:myDocs.filter(d=>d.status==='Возвращён').length},
+      {id:'done',label:'Исполненные',count:myDocs.filter(d=>d.status==='Исполнен').length},
+    ].map(x=>({label:x.label, count:String(x.count), hasCount:true, go:()=>this.setState({myTab:x.id,page:1}),
+      bg: S.myTab===x.id?'#09090b':'transparent', fg: S.myTab===x.id?'#ffffff':'#3f3f46',
+      cBg: S.myTab===x.id?'rgba(255,255,255,.16)':'#f4f4f5', cFg: S.myTab===x.id?'#ffffff':'#71717a'}));
+    const docNow = this.activeDocument();
+    const docSt = ST[docNow.status] || ST['Черновик'];
+    const docPr = ST[docNow.prio] || ST['Средний'];
+    let drawerData = null;
+    if(S.drawer && S.drawer.kind==='user'){
+      const u = S.drawer.user || {name:'',email:'',phone:'',post:'',dep:'IT-отдел',role:'Сотрудник',status:'Активен'};
+      drawerData = {kind:'user',
+        title: S.drawer.user ? 'Редактирование пользователя' : 'Новый пользователь',
+        desc: S.drawer.user ? u.name+' · '+u.dep : 'Сотрудник получит временный пароль на корпоративную почту',
+        label: S.drawer.user ? 'Сохранить изменения' : 'Создать пользователя',
+        warn: (S.drawer.user && u.status==='Заблокирован') ? 'Пользователь заблокирован: вход в систему недоступен, документы и история действий сохранены.' : '',
+        fields: [
+          {label:'ФИО', isText:true, isSelect:false, value:u.name, ph:'Иброхим Абдраимов', set:()=>{}, hasHint:false, hint:''},
+          {label:'Корпоративная почта', isText:true, isSelect:false, value:u.email, ph:'name@salymbekov.edu.kg', set:()=>{}, hasHint:true, hint:'Используется как логин'},
+          {label:'Телефон', isText:true, isSelect:false, value:u.phone, ph:'+996 555 000 000', set:()=>{}, hasHint:false, hint:''},
+          {label:'Должность', isText:true, isSelect:false, value:u.post, ph:'Специалист', set:()=>{}, hasHint:false, hint:''},
+          {label:'Подразделение', isText:false, isSelect:true, value:u.dep, options:DEPS.map(d=>d.name), set:()=>{}, hasHint:false, hint:''},
+          {label:'Руководитель', isText:false, isSelect:true, value:'Нурбек Абдиев', options:USERS.map(x=>x.name), set:()=>{}, hasHint:false, hint:''},
+          {label:'Роль в системе', isText:false, isSelect:true, value:u.role, options:['Сотрудник','Руководитель','Канцелярия','Администратор'], set:()=>{}, hasHint:true, hint:'Роль определяет доступные разделы и действия'},
+          {label:'Статус', isText:false, isSelect:true, value:u.status, options:['Активен','Заблокирован'], set:()=>{}, hasHint:false, hint:''},
+          {label:'Временный пароль', isText:true, isSelect:false, value:'Su-2026-tmp', ph:'', set:()=>{}, hasHint:true, hint:'Пользователь сменит пароль при первом входе'},
+        ]};
+    }
+    if(S.drawer && S.drawer.kind==='cat'){
+      const c = S.drawer.cat || {name:'',code:'',desc:'',keep:'5 лет',route:'Автор → Руководитель',status:'Активен'};
+      drawerData = {kind:'cat',
+        title: S.drawer.cat ? 'Редактирование категории' : 'Новая категория',
+        desc: S.drawer.cat ? c.name+' · код '+c.code : 'Категория задаёт базовый маршрут и срок хранения',
+        label: S.drawer.cat ? 'Сохранить изменения' : 'Создать категорию', warn:'',
+        fields: [
+          {label:'Название категории', isText:true, isSelect:false, value:c.name, ph:'Приказы', set:()=>{}, hasHint:false, hint:''},
+          {label:'Код', isText:true, isSelect:false, value:c.code, ph:'ORD', set:()=>{}, hasHint:true, hint:'Используется в регистрационном номере'},
+          {label:'Описание', isText:true, isSelect:false, value:c.desc, ph:'', set:()=>{}, hasHint:false, hint:''},
+          {label:'Срок хранения', isText:false, isSelect:true, value:c.keep, options:['3 года','5 лет','10 лет','75 лет','Постоянно'], set:()=>{}, hasHint:false, hint:''},
+          {label:'Базовый маршрут', isText:true, isSelect:false, value:c.route, ph:'', set:()=>{}, hasHint:true, hint:'Последовательное согласование'},
+          {label:'Доступные подразделения', isText:false, isSelect:true, value:'Все подразделения', options:['Все подразделения'].concat(DEPS.map(d=>d.name)), set:()=>{}, hasHint:false, hint:''},
+          {label:'Статус', isText:false, isSelect:true, value:c.status, options:['Активен','Заблокирован'], set:()=>{}, hasHint:false, hint:''},
+        ]};
+    }
+    const pages = [];
+    for(let i=1;i<=Math.min(t.pageCount,5);i++){
+      pages.push({label:String(i), go:()=>this.setState({page:i}),
+        bg: S.page===i?'#09090b':'#ffffff', fg: S.page===i?'#ffffff':'#3f3f46', bd: S.page===i?'#09090b':'#ececee'});
+    }
+
+    return {
+      icons: {
+        search:this.icon('search',18), filter:this.icon('filter',16), bell:this.icon('bell',19),
+        chev:this.icon('chev',16), chevL:this.icon('chevL',16), chevD:this.icon('chevD',16), chevS:this.icon('chevS',12),
+        dots:this.icon('dots',18,2.4), logout:this.icon('logout',17), settings:this.icon('settings',16),
+        collapse:this.icon('collapse',16), empty:this.icon('empty',28,1.4), x:this.icon('x',15),
+        clockS:this.icon('clock',14), warn:this.icon('warn',18), warnS:this.icon('warn',14),
+        send:this.icon('send',16), upload:this.icon('upload',20), downloadS:this.icon('download',14),
+        eyeBtn: this.icon(S.showPass?'eyeOff':'eye',17),
+      },
+      isLogin: scr==='login', isApp: scr!=='login',
+      loginEmail:S.loginEmail, loginPass:S.loginPass, loginErr:S.loginErr, loginBusy:S.loginBusy,
+      passType: S.showPass?'text':'password', remember:S.remember,
+      loginLabel: S.loginBusy?'Выполняется вход…':'Войти в систему', loginOpacity: S.loginBusy?0.75:1,
+      me, role, sbW: this.showLabels()?264:76, showLabels:this.showLabels(),
+      navGroups: this.navGroups(), crumbs:this.crumbs(), page:this.pageMeta(),
+      q:S.q, sort:S.sort, filtersOpen:S.filtersOpen, filterFields,
+      filterBtnBg: S.filtersOpen?'#f4f4f5':'#ffffff', filterBtnFg:'#18181b', filterBtnBd: S.filtersOpen?'#d4d4d8':'#ececee',
+      hasActiveFilters: activeFilters>0, activeFilterCount:String(activeFilters),
+      loading:S.loading,
+      showDashboard: scr==='dashboard' && !S.loading,
+      showTable: TABLE_SCREENS.indexOf(scr)>=0 && !S.loading,
+      hasTabs: scr==='my', tabs: myTabs,
+      table:t, pages, perPage:String(S.perPage),
+      notifOpen:S.notifOpen, userMenuOpen:S.userMenuOpen, notifTop:notifs.slice(0,4),
+      hasUnread: unread>0, unreadCount:String(unread),
+      anyOverlay: S.notifOpen||S.userMenuOpen||!!S.rowMenu,
+      metrics: metricDefs.map(m=>Object.assign({}, m, {icon:this.icon(m.icon,16)})),
+      attention: attentionDocs.map(d=>{ const st=ST[d.status]; return {title:d.title,num:d.num,meta:d.num+' · '+d.cat+' · дедлайн '+d.due,status:d.status,sBg:st.bg,sFg:st.fg,sBd:st.bd,icon:this.icon('file',18),open:()=>this.openDoc(d.id)}; }),
+      attentionHint: 'Возвраты, просрочки и документы, ожидающие решения',
+      deadlines: DOCS.filter(d=>d.left!=='—').slice(0,4).map(d=>({title:d.title,num:d.num,left:d.left,color:d.warn?'#ff5a00':'#ffffff',open:()=>this.openDoc(d.id)})),
+      dist: dist.map(d=>({label:d.label, value:String(d.value), pct:String(Math.round(d.value/distMax*100)), color:d.color})),
+      recentActs: LOG.slice(0,5).map(l=>({text:l.act+' · '+l.doc, sub:l.user+' · '+l.time, dot: l.res==='Отказано'?'#ff5a00':'#18181b'})),
+      toast:S.toast, toastColor: S.toastKind==='warn'?'#ff5a00':'#ffffff', toastIcon: this.icon(S.toastKind==='warn'?'warn':'check',16),
+      showCreate: scr==='create' && !S.loading,
+      showDoc: scr==='doc' && !S.loading,
+      showNotifications: scr==='notifications' && !S.loading,
+      showRoles: scr==='roles' && !S.loading,
+      showSettings: scr==='settings' && !S.loading,
+
+      form:S.form, dirty:S.dirty,
+      fe:{
+        title: S.formErr.title?'#ff5a00':'#ececee', titleMsg: S.formErr.title?'Укажите название документа':'',
+        cat: S.formErr.cat?'#ff5a00':'#ececee', dep: S.formErr.dep?'#ff5a00':'#ececee', due: S.formErr.due?'#ff5a00':'#ececee',
+      },
+      catNames: CATS.map(c=>c.name), depNames: DEPS.map(d=>d.name), userNames: USERS.map(u=>u.name),
+      typeNames: ['Приказ','Договор','Служебная записка','Заявление','Отчёт','Заявка','Письмо'],
+      prios: ['Низкий','Средний','Высокий'].map(p=>({label:p, set:()=>this.setState({form:Object.assign({},S.form,{prio:p}), dirty:true}),
+        bg: S.form.prio===p?'#09090b':'transparent', fg: S.form.prio===p?'#ffffff':'#3f3f46'})),
+      dropBd: S.files.length?'#d4d4d8':'#d4d4d8', dropBg: S.files.length?'#ffffff':'#fafafa',
+      formFiles: S.files.map((f,i)=>({name:f.name, ext:f.ext, meta:f.meta, loading:f.pct<100, pct:String(f.pct),
+        remove:(e)=>{ e.stopPropagation(); const arr=S.files.slice(); arr.splice(i,1); this.setState({files:arr, dirty:true}); }})),
+      formRoute: (function(self){
+        const head = (DEPS.find(x=>x.name===S.form.dep) || {head:'Нурбек Абдиев'}).head;
+        const items = [
+          {n:'1', name:me.name, role:'Автор · '+S.form.dep},
+          {n:'2', name:head, role:'Руководитель подразделения'},
+          {n:'3', name:'Айбек Токтосунов', role:'Ректор'},
+          {n:'4', name:'Документ исполнен', role:'Завершение маршрута'},
+        ];
+        return items.map((r,i)=>Object.assign({}, r, {line:i<items.length-1,
+          bg:i===0?'#09090b':'#ffffff', fg:i===0?'#ffffff':'#71717a', bd:i===0?'#09090b':'#ececee'}));
+      })(this),
+
+      doc: Object.assign({}, docNow, {
+        sBg:docSt.bg, sFg:docSt.fg, sBd:docSt.bd, pBg:docPr.bg, pFg:docPr.fg, pBd:docPr.bd,
+        hasReason: !!docNow.reason, readonly: docNow.status==='Архивирован'||docNow.status==='Исполнен',
+        prioLabel: 'Приоритет: '+docNow.prio,
+        stageLine: 'В работе '+docNow.wait+' · срок до '+docNow.due,
+        returnHead: 'Возвращён на доработку — '+docNow.retBy+', '+docNow.retAt,
+      }),
+      docActions: this.docActionsFor(docNow),
+      docHeadMeta: [
+        {label:'Автор', value:docNow.author, color:'#18181b'},
+        {label:'Подразделение', value:docNow.dep, color:'#18181b'},
+        {label:'Дата создания', value:docNow.created, color:'#18181b'},
+        {label:'Дедлайн', value:docNow.due, color:docNow.warn?'#c24400':'#18181b'},
+        {label:'Ответственный', value:docNow.resp, color:'#18181b'},
+      ],
+      docMeta: [
+        {label:'Регистрационный номер', value:docNow.num},
+        {label:'Категория', value:docNow.cat},
+        {label:'Тип документа', value:docNow.type},
+        {label:'Подразделение-инициатор', value:docNow.dep},
+        {label:'Приоритет', value:docNow.prio},
+        {label:'Срок хранения', value:(CATS.find(c=>c.name===docNow.cat)||{keep:'5 лет'}).keep},
+        {label:'Текущий этап', value:docNow.stage},
+      ],
+      docPeople: [
+        {name:docNow.author, role:'Автор документа', initials:docNow.author.split(' ').map(w=>w[0]).slice(0,2).join('')},
+        {name:docNow.resp, role:'Ответственный исполнитель', initials:docNow.resp==='—'?'—':docNow.resp.split(' ').map(w=>w[0]).slice(0,2).join('')},
+        {name:(DEPS.find(x=>x.name===docNow.dep)||{head:'Нурбек Абдиев'}).head, role:'Согласующий · руководитель подразделения', initials:'НА'},
+        {name:'Айбек Токтосунов', role:'Согласующий · ректор', initials:'АТ'},
+      ],
+      docFiles: [
+        {name:docNow.num+'.pdf', ext:'PDF', main:true, meta:'412 КБ · загрузил '+docNow.author+' · '+docNow.created,
+          view:()=>this.toast('Просмотр файла '+docNow.num+'.pdf'), download:()=>this.toast('Файл скачан')},
+        {name:'Приложение_1_смета.xlsx', ext:'XLSX', main:false, meta:'86 КБ · загрузил '+docNow.author+' · '+docNow.created,
+          view:()=>this.toast('Просмотр вложения'), download:()=>this.toast('Файл скачан')},
+        {name:'Скан_подписи_руководителя.jpg', ext:'JPG', main:false, meta:'1,2 МБ · загрузил Мария Ким · 13.07.2026',
+          view:()=>this.toast('Просмотр вложения'), download:()=>this.toast('Файл скачан')},
+      ],
+      docRoute: this.routeFor(docNow),
+      docHistory: this.historyFor(docNow),
+      docComments: [
+        {name:(DEPS.find(x=>x.name===docNow.dep)||{head:'Нурбек Абдиев'}).head, role:'Руководитель подразделения', time:'13.07.2026, 11:04', text:'Согласовано. Прошу учесть, что ответственные должны пройти инструктаж до конца месяца.', initials:'НА'},
+        {name:'Мария Ким', role:'Специалист канцелярии', time:'14.07.2026, 09:20', text:'Документ принят к регистрации, номер присвоен автоматически.', initials:'МК'},
+      ].concat(S.comments),
+      docTabs: [
+        {id:'main', label:'Основная информация'},
+        {id:'files', label:'Файлы', count:'3'},
+        {id:'route', label:'Согласование'},
+        {id:'comments', label:'Комментарии', count:String(2+S.comments.length)},
+        {id:'history', label:'История'},
+      ].map(t=>({label:t.label, count:t.count||'', hasCount:!!t.count, go:()=>this.setState({docTab:t.id}),
+        bd: S.docTab===t.id?'#09090b':'transparent', fg: S.docTab===t.id?'#09090b':'#71717a', fw: S.docTab===t.id?500:400})),
+      docTab: {main:S.docTab==='main', files:S.docTab==='files', route:S.docTab==='route', comments:S.docTab==='comments', history:S.docTab==='history'},
+      newComment:S.newComment,
+
+      notifChips: ['Все','Возврат','Согласование','Дедлайн','Просрочка','Комментарий'].map(x=>({
+        label:x, count: x==='Все'?String(NOTIFS.length):String(NOTIFS.filter(n=>n.type===x).length),
+        go:()=>this.setState({notifFilter:x}),
+        bg: S.notifFilter===x?'#09090b':'#ffffff', fg: S.notifFilter===x?'#ffffff':'#3f3f46', bd: S.notifFilter===x?'#09090b':'#ececee'})),
+      notifList: notifs.filter(n=>S.notifFilter==='Все' || n.type===S.notifFilter),
+      notifEmpty: notifs.filter(n=>S.notifFilter==='Все' || n.type===S.notifFilter).length===0,
+
+      roleCols: ['Администратор','Руководитель','Сотрудник','Канцелярия'],
+      perms: [
+        ['Создание документов',1,1,1,1],
+        ['Просмотр всех документов',1,0,0,1],
+        ['Просмотр документов подразделения',1,1,0,1],
+        ['Редактирование своих черновиков',1,1,1,1],
+        ['Согласование документов',1,1,0,0],
+        ['Возврат на доработку',1,1,0,0],
+        ['Регистрация документов',1,0,0,1],
+        ['Архивирование',1,0,0,1],
+        ['Просмотр журнала действий',1,0,0,0],
+        ['Управление пользователями',1,0,0,0],
+        ['Управление категориями',1,0,0,0],
+        ['Управление подразделениями',1,0,0,0],
+      ].map(r=>({label:r[0], cells:[r[1],r[2],r[3],r[4]].map(v=>({icon:this.icon(v?'check':'minus',16,v?2:1.6), color:v?'#09090b':'#d4d4d8'}))})),
+
+      setTabs: [
+        {id:'general',label:'Общие'},{id:'university',label:'Университет'},{id:'numbering',label:'Нумерация'},
+        {id:'statuses',label:'Статусы'},{id:'email',label:'Email-уведомления'},{id:'formats',label:'Форматы файлов'},{id:'limits',label:'Ограничения размера'},
+      ].map(t=>({label:t.label, go:()=>this.setState({setTab:t.id}),
+        bg: S.setTab===t.id?'#09090b':'transparent', fg: S.setTab===t.id?'#ffffff':'#3f3f46'})),
+      setSection: this.settingsSection(),
+
+      returnModal:S.returnModal, returnText:S.returnText, returnErr:S.returnErr, returnBd: S.returnErr?'#ff5a00':'#ececee',
+      confirm: S.confirm ? Object.assign({}, S.confirm, {act:S.confirm.act}) : null,
+      drawer: drawerData,
+
+      on: {
+        fTitle:(e)=>this.setState({form:Object.assign({},S.form,{title:e.target.value}), dirty:true, formErr:Object.assign({},S.formErr,{title:false})}),
+        fCat:(e)=>this.setState({form:Object.assign({},S.form,{cat:e.target.value}), dirty:true, formErr:Object.assign({},S.formErr,{cat:false})}),
+        fType:(e)=>this.setState({form:Object.assign({},S.form,{type:e.target.value}), dirty:true}),
+        fDesc:(e)=>this.setState({form:Object.assign({},S.form,{desc:e.target.value}), dirty:true}),
+        fDep:(e)=>this.setState({form:Object.assign({},S.form,{dep:e.target.value}), dirty:true, formErr:Object.assign({},S.formErr,{dep:false})}),
+        fResp:(e)=>this.setState({form:Object.assign({},S.form,{resp:e.target.value}), dirty:true}),
+        fDue:(e)=>this.setState({form:Object.assign({},S.form,{due:e.target.value}), dirty:true, formErr:Object.assign({},S.formErr,{due:false})}),
+        fComment:(e)=>this.setState({form:Object.assign({},S.form,{comment:e.target.value}), dirty:true}),
+        addFile:()=>{
+          const demo = [{name:'Приказ_ИБ_2026.pdf',ext:'PDF',meta:'PDF · 412 КБ · основной файл'},{name:'Приложение_1_смета.xlsx',ext:'XLSX',meta:'XLSX · 86 КБ · вложение'},{name:'Коммерческое_предложение.pdf',ext:'PDF',meta:'PDF · 240 КБ · вложение'}];
+          const next = demo[S.files.length % demo.length];
+          const arr = S.files.concat([Object.assign({pct:35}, next)]);
+          this.setState({files:arr, dirty:true});
+          setTimeout(()=>{ const a=this.state.files.slice(); if(a.length){ a[a.length-1]=Object.assign({},a[a.length-1],{pct:100}); this.setState({files:a}); this.toast('Файл загружен'); } }, 600);
+        },
+        dropFile:(e)=>{ e.preventDefault(); this.setState({}); const arr = S.files.concat([{name:'Документ_с_рабочего_стола.pdf',ext:'PDF',meta:'PDF · 318 КБ · вложение',pct:100}]); this.setState({files:arr, dirty:true}); this.toast('Файл добавлен перетаскиванием'); },
+        dragOver:(e)=>e.preventDefault(),
+        saveDraft:()=>{ this.setState({dirty:false}); this.toast('Черновик сохранён'); },
+        submitDoc:()=>{
+          const f = S.form, err = {title:!f.title.trim(), cat:!f.cat, dep:!f.dep, due:!f.due};
+          if(err.title||err.cat||err.dep||err.due){ this.setState({formErr:err}); this.toast('Заполните обязательные поля','warn'); return; }
+          this.setState({dirty:false, formErr:{}});
+          this.toast('Документ отправлен на согласование');
+          this.go('my');
+        },
+        cancelCreate:()=>{
+          if(S.dirty){ this.setState({confirm:{title:'Выйти без сохранения?',text:'В форме есть несохранённые изменения. Черновик не будет создан.',label:'Выйти без сохранения',act:()=>{ this.setState({confirm:null, dirty:false}); this.go('documents'); }}}); }
+          else this.go('documents');
+        },
+        comment:(e)=>this.setState({newComment:e.target.value}),
+        addComment:()=>{
+          if(!S.newComment.trim()){ this.toast('Введите текст комментария','warn'); return; }
+          const c = {name:me.name, role:me.post+' · '+me.dep, time:'сегодня, 10:42', text:S.newComment.trim(), initials:me.initials};
+          this.setState({comments:S.comments.concat([c]), newComment:''});
+          this.toast('Комментарий добавлен');
+        },
+        returnText:(e)=>this.setState({returnText:e.target.value, returnErr:false}),
+        closeReturn:()=>this.setState({returnModal:false, returnErr:false}),
+        confirmReturn:()=>{
+          if(!S.returnText.trim()){ this.setState({returnErr:true}); return; }
+          const ds = Object.assign({}, S.docState);
+          ds[docNow.id] = Object.assign({}, ds[docNow.id], {status:'Возвращён', reason:S.returnText.trim(), retBy:me.name, retAt:'25.07.2026'});
+          this.setState({docState:ds, returnModal:false, returnText:'', docTab:'route'});
+          this.toast('Документ возвращён автору на доработку','warn');
+        },
+        closeConfirm:()=>this.setState({confirm:null}),
+        closeDrawer:()=>this.setState({drawer:null}),
+        saveDrawer:()=>{ const kind = S.drawer ? S.drawer.kind : ''; this.setState({drawer:null}); this.toast(kind==='user'?'Пользователь сохранён':'Категория сохранена'); },
+        saveSettings:()=>this.toast('Настройки сохранены'),
+        resetSettings:()=>this.toast('Изменения отменены','warn'),
+        loginEmail:(e)=>this.setState({loginEmail:e.target.value, loginErr:''}),
+        loginPass:(e)=>this.setState({loginPass:e.target.value, loginErr:''}),
+        togglePass:()=>this.setState({showPass:!S.showPass}),
+        remember:(e)=>this.setState({remember:e.target.checked}),
+        forgot:()=>this.toast('Ссылка для восстановления отправлена на корпоративную почту'),
+        login:()=>{
+          if(!S.loginPass.trim() || !S.loginEmail.trim()){ this.setState({loginErr:'Введите корпоративную почту и пароль'}); return; }
+          this.setState({loginBusy:true, loginErr:''});
+          setTimeout(()=>{ this.setState({loginBusy:false}); this.go('dashboard'); }, 750);
+        },
+        logout:()=>this.setState({confirm:{title:'Выйти из системы?',text:'Несохранённые изменения в открытых формах будут потеряны.',label:'Выйти',act:()=>this.setState({confirm:null, screen:'login', notifOpen:false, userMenuOpen:false})}}),
+        toggleSb:()=>this.setState({collapsed: this.showLabels()}),
+        role:(e)=>this.setState({roleOverride:e.target.value, screen: this.screen==='doc'?'doc':this.screen, rowMenu:null}),
+        q:(e)=>this.setState({q:e.target.value, page:1}),
+        sort:(e)=>this.setState({sort:e.target.value}),
+        filters:()=>this.setState({filtersOpen:!S.filtersOpen}),
+        applyFilters:()=>{ this.setState({filtersOpen:false, page:1}); this.toast('Фильтры применены'); },
+        resetFilters:()=>this.setState({filters:{status:'Все',cat:'Все',author:'Все',dep:'Все',resp:'Все'}, q:'', page:1}),
+        perPage:(e)=>this.setState({perPage:Number(e.target.value), page:1}),
+        prevPage:()=>this.setState({page:Math.max(1,S.page-1)}),
+        nextPage:()=>this.setState({page:Math.min(t.pageCount,S.page+1)}),
+        notifToggle:()=>this.setState({notifOpen:!S.notifOpen, userMenuOpen:false}),
+        userMenu:()=>this.setState({userMenuOpen:!S.userMenuOpen, notifOpen:false}),
+        closeAll:()=>this.setState({notifOpen:false, userMenuOpen:false, rowMenu:null}),
+        closeToast:()=>this.setState({toast:null}),
+        readAll:()=>this.readAll(),
+        goNotifications:()=>this.go('notifications'),
+        goDocuments:()=>this.go('documents'),
+        goSettings:()=>this.go('settings'),
+        goLog:()=>this.go('log'),
+      },
+    };
+  }
+}
+
+</script>
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
