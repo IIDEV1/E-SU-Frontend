@@ -14,8 +14,19 @@ export function Sidebar({ isCollapsed, isDrawerOpen, onCloseDrawer }: SidebarPro
 
   return (
     <>
+      {/* 1. Затемненный фон рендерится ПЕРВЫМ и имеет z-index ниже (z-40) */}
+      {isDrawerOpen && (
+        <div
+          className="drawer-backdrop fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onCloseDrawer}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* 2. Возвращаем ваш оригинальный дизайн с классами sidebar, 
+          но добавляем z-50, чтобы сайдбар был поверх фона и кнопки нажимались */}
       <aside
-        className={`sidebar ${isCollapsed ? "sidebar--collapsed" : ""} ${isDrawerOpen ? "sidebar--open" : ""}`}
+        className={`sidebar z-50 ${isCollapsed ? "sidebar--collapsed" : ""} ${isDrawerOpen ? "sidebar--open" : ""}`}
       >
         <div className="sidebar__brand">
           <span className="logo-mark">ES</span>
@@ -46,14 +57,6 @@ export function Sidebar({ isCollapsed, isDrawerOpen, onCloseDrawer }: SidebarPro
             ))}
         </nav>
       </aside>
-      {isDrawerOpen && (
-        <button
-          className="drawer-backdrop"
-          type="button"
-          aria-label="Закрыть меню"
-          onClick={onCloseDrawer}
-        />
-      )}
     </>
   );
 }

@@ -1,5 +1,14 @@
 export type UserRole = "admin" | "rector" | "department_head" | "employee" | "approver";
 
+export type Permission = 
+  | "document:create"
+  | "document:read"
+  | "document:update"
+  | "document:delete"
+  | "document:approve"
+  | "settings:manage"
+  | "audit:read";
+
 export interface Department {
   id: string;
   name: string;
@@ -14,10 +23,11 @@ export interface User {
   department: Department;
   position: string;
   avatarUrl?: string;
+  permissions?: Permission[];
 }
 
 export type DocumentStatus =
-  "draft" | "in_review" | "returned" | "approved" | "completed" | "overdue" | "archived";
+  | "draft" | "in_review" | "returned" | "approved" | "completed" | "overdue" | "archived" | "rejected";
 
 export type DocumentPriority = "low" | "normal" | "high" | "urgent";
 
@@ -39,7 +49,7 @@ export interface DocumentFile {
 export interface ApprovalStep {
   id: string;
   approver: User;
-  status: "pending" | "approved" | "returned";
+  status: "pending" | "approved" | "returned" | "rejected";
   comment?: string;
   date?: string;
 }
@@ -70,6 +80,55 @@ export interface Document {
   comments: Comment[];
   history: string[];
   returnReason?: string;
+}
+
+export interface Notification {
+  id: string;
+  type: "approved" | "deadline" | "comment" | "system";
+  title: string;
+  message: string;
+  time: string;
+  isRead: boolean;
+  documentId?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  dateTime: string;
+  user: string;
+  role: string;
+  action: string;
+  object: string;
+  document: string;
+  department: string;
+  result: "success" | "error";
+}
+
+export interface SystemSettings {
+  general: {
+    systemName: string;
+    timezone: string;
+    language: string;
+  };
+  university: {
+    name: string;
+    rector: string;
+    address: string;
+    email: string;
+  };
+  numbering: {
+    prefix: string;
+    format: string;
+    startNumber: string;
+  };
+  fileFormats: {
+    pdf: boolean;
+    docx: boolean;
+    xlsx: boolean;
+    png: boolean;
+    jpg: boolean;
+  };
+  maxFileSizeMb: number;
 }
 
 export interface PaginatedResponse<T> {

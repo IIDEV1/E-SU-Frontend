@@ -160,3 +160,31 @@ export const documents: Document[] = [
     history: ["Согласован", "Исполнен", "Архивирован"],
   },
 ];
+
+// Дополнительные mock-данные (уведомления, роли, журнал аудита, настройки)
+export const mockNotifications = [
+  { id: '1', type: 'approved', title: 'Документ согласован', message: 'Приказ №45-У успешно прошел все этапы согласования.', time: '14:20', isRead: false, documentId: 'doc-1' },
+  { id: '2', type: 'deadline', title: 'Приближается дедлайн', message: 'Срок рассмотрения служебной записки истекает завтра.', time: '11:05', isRead: false, documentId: 'doc-2' },
+  { id: '3', type: 'comment', title: 'Добавлен комментарий', message: 'Оставлено замечание к проекту договора подряда.', time: 'Вчера', isRead: true, documentId: 'doc-3' },
+];
+
+export const mockRoles = [
+  { id: 'admin', name: 'Администратор системы', description: 'Полный доступ ко всем модулям и настройкам', usersCount: 1 },
+  { id: 'department_head', name: 'Руководитель', description: 'Согласование и утверждение документов', usersCount: 1 },
+  { id: 'approver', name: 'Согласующий / Контролер', description: 'Проверка финансовых и юридических аспектов', usersCount: 1 },
+  { id: 'employee', name: 'Сотрудник', description: 'Создание и отправка внутренних документов', usersCount: 1 },
+];
+
+export const mockAuditLogs = [
+  { id: '1', dateTime: '2026-07-27 14:20:15', user: 'Айдана Садыкова', role: 'Руководитель', action: 'Согласование', object: 'Документ', document: 'Приказ ESU-2026-001', department: 'Учебный отдел', result: 'success' },
+  { id: '2', dateTime: '2026-07-27 11:05:40', user: 'Нурбек Алиев', role: 'Контролер', action: 'Создание', object: 'Документ', document: 'Заявка ESU-2026-020', department: 'Финансовый отдел', result: 'success' },
+  { id: '3', dateTime: '2026-07-26 16:45:10', user: 'Мээрим Осмонова', role: 'Сотрудник', action: 'Возврат', object: 'Документ', document: 'Договор ESU-2026-014', department: 'IT департамент', result: 'error' },
+];
+
+export const mockSettings = {
+  general: { systemName: 'Электронный документооборот ВУЗа', timezone: 'UTC+6 (Бишкек)', language: 'Русский' },
+  university: { name: 'Международный Университет', rector: 'Садыков Б. К.', address: 'ул. Манаса 42', email: 'info@esu.kg' },
+  numbering: { prefix: 'ESU', format: '[PREFIX]-[YEAR]-[ID]', startNumber: '101' },
+  fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
+  maxFileSizeMb: 25,
+};

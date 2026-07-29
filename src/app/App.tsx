@@ -10,6 +10,13 @@ import { DocumentDetailPage } from "@/pages/documents/DocumentDetailPage";
 import { DocumentEditPage } from "@/pages/documents/DocumentEditPage";
 import { DocumentsPage } from "@/pages/documents/DocumentsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { UsersPage } from '../pages/users/UsersPage';
+import { DepartmentsPage } from '../pages/departments/DepartmentsPage';
+import CategoriesPage from '../pages/categories/CategoriesPage';
+import { RolesPage } from '../pages/roles/RolesPage';
+import { NotificationsPage } from '../pages/notifications/NotificationsPage';
+import { AuditPage } from '../pages/audit/AuditPage';
+import { SettingsPage } from '../pages/settings/SettingsPage';
 
 export function App() {
   return (
@@ -30,6 +37,13 @@ export function App() {
           <Route path="/documents/create" element={<DocumentCreatePage />} />
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
           <Route path="/documents/:id/edit" element={<DocumentEditPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/roles" element={<RolesPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/audit" element={<AuditPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />
