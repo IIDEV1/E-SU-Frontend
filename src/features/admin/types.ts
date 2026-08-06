@@ -22,7 +22,17 @@ export interface AdminDepartment {
   name: string;
   code: string;
   headId?: string;
+  parentId?: string;
   description?: string;
+  status: "active" | "disabled";
+}
+
+export interface AdminCategory extends DocumentCategory {
+  description: string;
+  retentionPeriod: string;
+  departmentIds: string[];
+  status: "active" | "disabled";
+  documentCount: number;
 }
 
 export type AdminPermission =
@@ -67,7 +77,7 @@ export interface AdminAuditLog {
 export interface AdminState {
   users: AdminUser[];
   departments: AdminDepartment[];
-  categories: DocumentCategory[];
+  categories: AdminCategory[];
   roles: AdminRole[];
   notifications: AdminNotification[];
   auditLogs: AdminAuditLog[];
