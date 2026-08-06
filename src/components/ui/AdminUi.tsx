@@ -1,13 +1,15 @@
 import { AlertCircle, CheckCircle2, LoaderCircle, X } from "lucide-react";
-import { useEffect, useId, type ReactNode } from "react";
+import { forwardRef, useEffect, useId, type ReactNode } from "react";
 import { Button, IconButton } from "./Button";
 
 export interface FormFieldProps { label: string; htmlFor?: string; error?: string; hint?: string; children: ReactNode; className?: string; }
 export function FormField({ label, htmlFor, error, hint, children, className = "" }: FormFieldProps) { return <div className={`ui-field ${className}`}>{label && <label htmlFor={htmlFor}>{label}</label>}{children}{hint && <span className="ui-field__hint">{hint}</span>}{error && <span className="ui-field__error">{error}</span>}</div>; }
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> { label?: string; error?: string; }
-export function Textarea({ label, error, className = "", id, ...props }: TextareaProps) { const textareaId = id ?? props.name; return <FormField label={label ?? ""} htmlFor={textareaId} error={error}><textarea id={textareaId} className={`ui-control ${error ? "ui-control--error" : ""} ${className}`} aria-invalid={Boolean(error)} {...props} /></FormField>; }
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea({ label, error, className = "", id, ...props }, ref) { const textareaId = id ?? props.name; return <FormField label={label ?? ""} htmlFor={textareaId} error={error}><textarea ref={ref} id={textareaId} className={`ui-control ${error ? "ui-control--error" : ""} ${className}`} aria-invalid={Boolean(error)} {...props} /></FormField>; });
+Textarea.displayName = "Textarea";
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> { label: ReactNode; }
-export function Checkbox({ label, className = "", id, ...props }: CheckboxProps) { const generatedId = useId(); const checkboxId = id ?? props.name ?? generatedId; return <label className={`ui-checkbox ${className}`} htmlFor={checkboxId}><input id={checkboxId} type="checkbox" {...props} /><span>{label}</span></label>; }
+export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox({ label, className = "", id, ...props }, ref) { const generatedId = useId(); const checkboxId = id ?? props.name ?? generatedId; return <label className={`ui-checkbox ${className}`} htmlFor={checkboxId}><input ref={ref} id={checkboxId} type="checkbox" {...props} /><span>{label}</span></label>; });
+Checkbox.displayName = "Checkbox";
 
 interface OverlayProps { isOpen: boolean; onClose: () => void; title: string; children: ReactNode; className?: string; }
 function useEscape(isOpen: boolean, onClose: () => void) { useEffect(() => { if (!isOpen) return; const handler = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler); }, [isOpen, onClose]); }

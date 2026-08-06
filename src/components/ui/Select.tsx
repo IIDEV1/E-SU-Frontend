@@ -1,4 +1,4 @@
-import type { SelectHTMLAttributes } from "react";
+import { forwardRef, type SelectHTMLAttributes } from "react";
 
 export interface SelectOption {
   value: string | number;
@@ -11,12 +11,16 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: SelectOption[];
 }
 
-export function Select({ label, error, options, className = "", id, ...props }: SelectProps) {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { label, error, options, className = "", id, ...props },
+  ref,
+) {
   const selectId = id ?? props.name;
   return (
     <div className="ui-field">
       {label && <label htmlFor={selectId}>{label}</label>}
       <select
+        ref={ref}
         id={selectId}
         aria-invalid={Boolean(error)}
         className={`ui-control ${error ? "ui-control--error" : ""} ${className}`}
@@ -34,4 +38,6 @@ export function Select({ label, error, options, className = "", id, ...props }: 
       {error && <span className="ui-field__error">{error}</span>}
     </div>
   );
-}
+});
+
+Select.displayName = "Select";
