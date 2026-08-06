@@ -39,15 +39,17 @@ export function App() {
           <Route path="/documents/create" element={<DocumentCreatePage />} />
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
           <Route path="/documents/:id/edit" element={<DocumentEditPage />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/create" element={<UserCreatePage />} />
-          <Route path="/users/:id/edit" element={<UserEditPage />} />
-          <Route path="/departments" element={<DepartmentsPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/roles" element={<RolesPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/audit" element={<AuditPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route element={<RoleRoute roles={["admin"]} />}>
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/create" element={<UserCreatePage />} />
+            <Route path="/users/:id/edit" element={<UserEditPage />} />
+            <Route path="/departments" element={<DepartmentsPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/roles" element={<RolesPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/audit" element={<AuditPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />

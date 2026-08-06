@@ -736,6 +736,7 @@ td {
     transform: translateX(-105%);
     transition: transform 180ms ease;
     width: calc(100% - 48px);
+    z-index: 40;
   }
 
   .sidebar--open {
