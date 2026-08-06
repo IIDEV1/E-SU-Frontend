@@ -10,7 +10,7 @@ const roleNames: Record<UserRole, string> = {
 const initialDepartments: AdminDepartment[] = departments.map((department) => ({ ...department }));
 const initialUsers: AdminUser[] = users.map((user) => ({
   id: user.id, fullName: user.name, email: user.email, position: user.position,
-  departmentId: user.department.id, role: user.role, status: "active", lastActive: "Сейчас", avatarUrl: user.avatarUrl,
+  phone: `+996 555 00 0${user.id.at(-1) ?? "0"}`, departmentId: user.department.id, role: user.role, status: "active", lastActive: "Сейчас", avatarUrl: user.avatarUrl,
 }));
 const initialRoles: AdminRole[] = (Object.keys(roleNames) as UserRole[]).map((id) => {
   const source = mockRoles.find((role) => role.id === id);

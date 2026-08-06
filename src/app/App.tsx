@@ -11,6 +11,8 @@ import { DocumentEditPage } from "@/pages/documents/DocumentEditPage";
 import { DocumentsPage } from "@/pages/documents/DocumentsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { UsersPage } from '../pages/users/UsersPage';
+import { UserCreatePage } from '../pages/users/UserCreatePage';
+import { UserEditPage } from '../pages/users/UserEditPage';
 import { DepartmentsPage } from '../pages/departments/DepartmentsPage';
 import CategoriesPage from '../pages/categories/CategoriesPage';
 import { RolesPage } from '../pages/roles/RolesPage';
@@ -38,6 +40,8 @@ export function App() {
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
           <Route path="/documents/:id/edit" element={<DocumentEditPage />} />
           <Route path="/users" element={<UsersPage />} />
+          <Route path="/users/create" element={<UserCreatePage />} />
+          <Route path="/users/:id/edit" element={<UserEditPage />} />
           <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/roles" element={<RolesPage />} />

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { adminStore, useAdminStore } from "./store";
 
 export const useAdminUsers = () => useAdminStore((state) => state.users);
+export const useAdminUser = (id: string | undefined) => useAdminStore((state) => state.users.find((user) => user.id === id));
 export const useAdminDepartments = () => useAdminStore((state) => state.departments);
 export const useAdminCategories = () => useAdminStore((state) => state.categories);
 export const useAdminRoles = () => useAdminStore((state) => state.roles);

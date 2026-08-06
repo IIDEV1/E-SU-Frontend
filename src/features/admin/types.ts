@@ -7,11 +7,14 @@ export interface AdminUser {
   fullName: string;
   email: string;
   position: string;
+  phone: string;
   departmentId: string;
+  managerId?: string;
   role: UserRole;
   status: AdminUserStatus;
   lastActive: string;
   avatarUrl?: string;
+  temporaryPassword?: string;
 }
 
 export interface AdminDepartment {
