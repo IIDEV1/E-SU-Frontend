@@ -36,13 +36,8 @@ export interface AdminCategory extends DocumentCategory {
 }
 
 export type AdminPermission =
-  | "users:manage"
-  | "departments:manage"
-  | "categories:manage"
-  | "roles:manage"
-  | "audit:read"
-  | "settings:manage"
-  | "documents:read";
+  | "documents:read" | "documents:create" | "documents:update" | "documents:approve" | "documents:return" | "documents:archive"
+  | "users:manage" | "departments:manage" | "categories:manage" | "audit:read" | "settings:manage";
 
 export interface AdminRole {
   id: UserRole;
@@ -71,6 +66,9 @@ export interface AdminAuditLog {
   action: "created" | "updated" | "deleted" | "read" | "role_changed" | "settings_changed";
   entity: "user" | "department" | "category" | "role" | "settings" | "document";
   entityLabel: string;
+  object: string;
+  document: string;
+  department: string;
   result: "success" | "error";
 }
 
