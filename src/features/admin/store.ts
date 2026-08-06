@@ -14,7 +14,13 @@ const initialUsers: AdminUser[] = users.map((user) => ({
   phone: `+996 555 00 0${user.id.at(-1) ?? "0"}`, departmentId: user.department.id, role: user.role, status: "active", lastActive: "Сейчас", avatarUrl: user.avatarUrl,
 }));
 const initialRoles: AdminRole[] = (["admin", "employee", "department_head", "approver"] as UserRole[]).map((id) => ({ id, name: roleNames[id], description: "Системная роль", permissions: id === "admin" ? ["documents:read", "documents:create", "documents:update", "documents:approve", "documents:return", "documents:archive", "users:manage", "departments:manage", "categories:manage", "audit:read", "settings:manage"] : ["documents:read"] }));
-const initialNotifications: AdminNotification[] = mockNotifications.map((item) => ({ id: item.id, type: item.type as AdminNotification["type"], title: item.title, message: item.message, createdAt: item.time, isRead: item.isRead, documentId: item.documentId }));
+const initialNotifications: AdminNotification[] = [
+  ...mockNotifications.map((item) => ({ id: item.id, type: item.type as AdminNotification["type"], title: item.title, message: item.message, createdAt: item.time, isRead: item.isRead, documentId: item.documentId })),
+  { id: "notification-sent", type: "sent", title: "Документ отправлен", message: "Приказ передан на согласование.", createdAt: "Сегодня, 10:30", isRead: false, documentId: "doc-101" },
+  { id: "notification-returned", type: "returned", title: "Документ возвращён", message: "Документ возвращён на доработку.", createdAt: "Вчера, 16:10", isRead: true, documentId: "doc-102" },
+  { id: "notification-overdue", type: "overdue", title: "Документ просрочен", message: "Срок согласования документа истёк.", createdAt: "Вчера, 09:00", isRead: false, documentId: "doc-103" },
+  { id: "notification-assigned", type: "assigned", title: "Назначен ответственный", message: "Вы назначены ответственным за рассмотрение документа.", createdAt: "02.08.2026, 13:45", isRead: true, documentId: "doc-104" },
+];
 const initialAuditLogs: AdminAuditLog[] = Array.from({ length: 30 }, (_, index) => {
   const source = mockAuditLogs[index % mockAuditLogs.length];
   return { id: `audit-${index + 1}`, dateTime: source.dateTime, userName: source.user, role: index % 3 === 0 ? "admin" : "employee", action: index % 5 === 0 ? "settings_changed" : index % 2 ? "updated" : "created", entity: index % 4 === 0 ? "settings" : index % 3 === 0 ? "department" : "user", entityLabel: source.document, object: source.object, document: source.document, department: source.department, result: source.result as AdminAuditLog["result"] };

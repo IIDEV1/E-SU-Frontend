@@ -46,7 +46,7 @@ export interface AdminRole {
   permissions: AdminPermission[];
 }
 
-export type AdminNotificationType = "approved" | "deadline" | "comment" | "system" | "assigned";
+export type AdminNotificationType = "sent" | "approved" | "returned" | "deadline" | "overdue" | "assigned" | "comment" | "system";
 
 export interface AdminNotification {
   id: string;
