@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button, FormField, Input, PageError, Select, UnsavedChangesDialog } from "@/components/ui";
 import { useAdminActions, useAdminDepartments, useAdminUsers } from "@/features/admin/hooks";
 import type { AdminUser } from "@/features/admin/types";
-import { useUnsavedChangesGuard } from "./useUnsavedChangesGuard";
+import { useUnsavedChangesGuard } from "@/features/admin/useUnsavedChangesGuard";
 
 const schema = z.object({ fullName: z.string().min(2, "Укажите ФИО"), email: z.string().email("Введите корректный email"), phone: z.string().min(5, "Укажите телефон"), position: z.string().min(2, "Укажите должность"), departmentId: z.string().min(1, "Выберите подразделение"), managerId: z.string().optional(), role: z.enum(["admin", "rector", "department_head", "employee", "approver"]), status: z.enum(["active", "blocked", "pending"]), temporaryPassword: z.string() });
 type UserFormValues = z.infer<typeof schema>;
