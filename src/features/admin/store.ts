@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { categories, currentUser, departments, mockAuditLogs, mockNotifications, mockSettings, users } from "@/mocks/data";
-import type { SystemSettings, UserRole } from "@/types";
-import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminNotification, AdminRole, AdminState, AdminUser } from "./types";
+import type { UserRole } from "@/types";
+import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminNotification, AdminRole, AdminSettings, AdminState, AdminUser } from "./types";
 
 const roleNames: Record<UserRole, string> = {
   admin: "Администратор", rector: "Ректор", department_head: "Руководитель", employee: "Сотрудник", approver: "Канцелярия",
@@ -20,7 +20,8 @@ const initialAuditLogs: AdminAuditLog[] = Array.from({ length: 30 }, (_, index) 
   return { id: `audit-${index + 1}`, dateTime: source.dateTime, userName: source.user, role: index % 3 === 0 ? "admin" : "employee", action: index % 5 === 0 ? "settings_changed" : index % 2 ? "updated" : "created", entity: index % 4 === 0 ? "settings" : index % 3 === 0 ? "department" : "user", entityLabel: source.document, object: source.object, document: source.document, department: source.department, result: source.result as AdminAuditLog["result"] };
 });
 
-let state: AdminState = { users: initialUsers, departments: initialDepartments, categories: initialCategories, roles: initialRoles, notifications: initialNotifications, auditLogs: initialAuditLogs, settings: structuredClone(mockSettings) };
+const initialSettings: AdminSettings = { ...structuredClone(mockSettings), general: { ...mockSettings.general, dateFormat: "DD.MM.YYYY" }, university: { ...mockSettings.university, shortName: "SU", phone: "+996 312 00-00-00" }, numbering: { ...mockSettings.numbering, includeYear: true, includeDepartment: false, includeSequence: true }, documentStatuses: [{ id: "draft", name: "Черновик", color: "gray", active: true, order: 1 }, { id: "review", name: "На согласовании", color: "orange", active: true, order: 2 }, { id: "approved", name: "Утвержден", color: "green", active: true, order: 3 }], emailNotifications: { enabled: true, assigned: true, approved: true, returned: true, deadlineReminder: true }, allowedExtensions: ["pdf", "docx", "xlsx"], fileLimits: { maxSizeMb: 25, maxFiles: 10 } };
+let state: AdminState = { users: initialUsers, departments: initialDepartments, categories: initialCategories, roles: initialRoles, notifications: initialNotifications, auditLogs: initialAuditLogs, settings: initialSettings };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((listener) => listener());
 const update = (updater: (previous: AdminState) => AdminState) => { state = updater(state); emit(); };
@@ -45,7 +46,7 @@ export const adminStore = {
   },
   roles: { update: (roleId: UserRole, value: Partial<AdminRole>) => update((s) => ({ ...s, roles: s.roles.map((item) => item.id === roleId ? { ...item, ...value } : item) })) },
   notifications: { markRead: (notificationId: string) => update((s) => ({ ...s, notifications: s.notifications.map((item) => item.id === notificationId ? { ...item, isRead: true } : item) })), markAllRead: () => update((s) => ({ ...s, notifications: s.notifications.map((item) => ({ ...item, isRead: true })) })) },
-  settings: { update: (value: SystemSettings) => update((s) => ({ ...s, settings: value })) },
+  settings: { update: (value: AdminSettings) => update((s) => ({ ...s, settings: value })) },
 };
 
 export function useAdminStore<T>(selector: (snapshot: AdminState) => T): T {
