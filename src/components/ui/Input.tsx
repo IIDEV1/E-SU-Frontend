@@ -1,23 +1,22 @@
-import React, { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes } from "react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => {
+export function Input({ label, error, className = "", id, ...props }: InputProps) {
+  const inputId = id ?? props.name;
   return (
-    <div className="flex flex-col gap-1 w-full">
-      {label && <label className="text-sm font-medium text-zinc-700">{label}</label>}
+    <div className="ui-field">
+      {label && <label htmlFor={inputId}>{label}</label>}
       <input
-        className={`px-3 py-2 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors shadow-sm
-          ${error ? 'border-red-500' : 'border-zinc-200'}
-          disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed
-          ${className}
-        `}
+        id={inputId}
+        aria-invalid={Boolean(error)}
+        className={`ui-control ${error ? "ui-control--error" : ""} ${className}`}
         {...props}
       />
-      {error && <span className="text-xs text-red-500">{error}</span>}
+      {error && <span className="ui-field__error">{error}</span>}
     </div>
   );
-};
+}

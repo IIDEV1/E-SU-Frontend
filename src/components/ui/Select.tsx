@@ -1,26 +1,25 @@
-import React, { SelectHTMLAttributes } from 'react';
+import type { SelectHTMLAttributes } from "react";
 
-interface SelectOption {
+export interface SelectOption {
   value: string | number;
   label: string;
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   options: SelectOption[];
 }
 
-export const Select: React.FC<SelectProps> = ({ label, error, options, className = '', ...props }) => {
+export function Select({ label, error, options, className = "", id, ...props }: SelectProps) {
+  const selectId = id ?? props.name;
   return (
-    <div className="flex flex-col gap-1 w-full">
-      {label && <label className="text-sm font-medium text-zinc-700">{label}</label>}
+    <div className="ui-field">
+      {label && <label htmlFor={selectId}>{label}</label>}
       <select
-        className={`px-3 py-2 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors shadow-sm appearance-none
-          ${error ? 'border-red-500' : 'border-zinc-200'}
-          disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed
-          ${className}
-        `}
+        id={selectId}
+        aria-invalid={Boolean(error)}
+        className={`ui-control ${error ? "ui-control--error" : ""} ${className}`}
         {...props}
       >
         <option value="" disabled hidden>
@@ -32,7 +31,7 @@ export const Select: React.FC<SelectProps> = ({ label, error, options, className
           </option>
         ))}
       </select>
-      {error && <span className="text-xs text-red-500">{error}</span>}
+      {error && <span className="ui-field__error">{error}</span>}
     </div>
   );
-};
+}
