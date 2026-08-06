@@ -15,10 +15,11 @@ export function Button({
   icon,
   loading = false,
   variant = "primary",
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
-    <button className={`button button--${variant} ${className}`} disabled={loading || props.disabled} {...props}>
+    <button className={`button button--${variant} ${className}`} type={type} disabled={loading || props.disabled} aria-busy={loading || undefined} {...props}>
       {loading ? <LoaderCircle aria-hidden="true" className="ui-spinner" size={16} /> : icon}
       <span>{children}</span>
     </button>

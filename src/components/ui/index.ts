@@ -1,4 +1,5 @@
 export * from "./AdminUi";
+export * from "./AdminPrimitives";
 export * from "./Badge";
 export * from "./Button";
 export * from "./Input";
