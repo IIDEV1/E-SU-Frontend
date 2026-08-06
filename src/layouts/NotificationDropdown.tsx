@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, ExternalLink } from 'lucide-react';
+import { Bell, ExternalLink } from 'lucide-react';
 
 export const NotificationDropdown: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
