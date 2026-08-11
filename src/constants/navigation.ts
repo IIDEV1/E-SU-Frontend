@@ -2,19 +2,19 @@ import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
 import {
   Archive,
+  Bell,
   Building2,
   ClipboardCheck,
   FileClock,
   FilePlus2,
   Files,
   FolderTree,
-  Shield,
+  History,
   LayoutDashboard,
   RotateCcw,
-  Users, 
-  Bell,
-  History,
   Settings,
+  Shield,
+  Users,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 
@@ -38,45 +38,11 @@ export const navigationItems: NavItem[] = [
   { label: "Возвращенные", path: "/documents/returned", icon: RotateCcw },
   { label: "Архив", path: "/documents/archive", icon: Archive },
   { label: "Создать", path: "/documents/create", icon: FilePlus2 },
-  { 
-    label: "Подразделения", 
-    path: "/departments", 
-    icon: Building2, 
-    roles: ["admin"], 
-  },
-  { 
-    label: "Пользователи", 
-    path: "/users", 
-    icon: Users, 
-    roles: ["admin"], 
-  },
-  { 
-    label: "Категории документов", 
-    path: "/categories", 
-    icon: FolderTree, 
-    roles: ["admin"], 
-  },
-  { 
-    label: "Роли и права", 
-    path: "/roles", 
-    icon: Shield, 
-    roles: ["admin"], 
-  },
-  { 
-  label: "Уведомления", 
-  path: "/notifications", 
-  icon: Bell, 
-},
-{ 
-    label: "Журнал действий", 
-    path: "/audit", 
-    icon: History, 
-    roles: ["admin"], 
-  },
-  { 
-  label: "Настройки", 
-  path: "/settings", 
-  icon: Settings, 
-  roles: ["admin"], 
-},
+  { label: "Уведомления", path: "/notifications", icon: Bell },
+  { label: "Подразделения", path: "/departments", icon: Building2, roles: ["admin"] },
+  { label: "Пользователи", path: "/users", icon: Users, roles: ["admin"] },
+  { label: "Категории документов", path: "/categories", icon: FolderTree, roles: ["admin"] },
+  { label: "Роли и права", path: "/roles", icon: Shield, roles: ["admin"] },
+  { label: "Журнал действий", path: "/audit", icon: History, roles: ["admin"] },
+  { label: "Настройки", path: "/settings", icon: Settings, roles: ["admin"] },
 ];

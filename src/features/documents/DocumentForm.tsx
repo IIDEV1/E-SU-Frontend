@@ -1,15 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Send, X } from "lucide-react";
+import { FilePlus2, Save, Send, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
+import { Toast } from "@/components/ui";
+import { useCreateDocument, useUpdateDocument } from "@/hooks/useDocuments";
 import { categories, departments, users } from "@/mocks/data";
-import type { Document } from "@/types";
+import type { Document, DocumentFile, DocumentStatus } from "@/types";
 
 const schema = z.object({
-  title: z.string().min(3, "Минимум 3 символа"),
+  title: z.string().min(3, "Укажите название документа"),
   categoryId: z.string().min(1, "Выберите категорию"),
   type: z.string().min(2, "Укажите тип"),
   description: z.string().min(10, "Опишите документ подробнее"),
@@ -18,21 +20,8 @@ const schema = z.object({
   deadline: z.string().min(1, "Укажите дедлайн"),
   priority: z.enum(["low", "normal", "high", "urgent"]),
   comment: z.string().optional(),
-  approvers: z.array(z.string()).min(1, "Выберите хотя бы одного согласующего"),
-  mainFile: z.instanceof(FileList).optional(),
-  extraFiles: z.instanceof(FileList).optional(),
+  approverIds: z.array(z.string()).min(1, "Выберите хотя бы одного согласующего"),
 });
-
-const allowedFileTypes = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/png",
-  "image/jpeg",
-];
-const maxFileSize = 20 * 1024 * 1024;
 
 type DocumentFormValues = z.infer<typeof schema>;
 
@@ -41,27 +30,61 @@ interface DocumentFormProps {
   mode: "create" | "edit";
 }
 
+const allowedFileExtensions = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg"];
+const maxFileSize = 25 * 1024 * 1024;
+
+function toDocumentFile(file: File): DocumentFile {
+  return {
+    id: `file-${crypto.randomUUID()}`,
+    name: file.name,
+    size: file.size,
+    type: file.type || "application/octet-stream",
+    url: "#",
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+function validateFile(file: File) {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!allowedFileExtensions.includes(extension)) {
+    throw new Error(`Формат .${extension || "unknown"} не поддерживается.`);
+  }
+  if (file.size > maxFileSize) {
+    throw new Error(`Файл ${file.name} больше 25 MB.`);
+  }
+}
+
 export function DocumentForm({ document, mode }: DocumentFormProps) {
   const navigate = useNavigate();
+  const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument(document?.id ?? "");
+  const [files, setFiles] = useState<DocumentFile[]>(document?.files ?? []);
+  const [fileError, setFileError] = useState("");
+  const [toast, setToast] = useState<string>();
   const isLocked = document ? ["completed", "archived"].includes(document.status) : false;
+
+  const defaultApprovers = useMemo(
+    () => document?.approvalSteps.map((step) => step.approver.id) ?? [users[1].id, users[4].id],
+    [document],
+  );
+
   const {
     formState: { errors, isDirty, isSubmitting },
     handleSubmit,
     register,
-    watch,
   } = useForm<DocumentFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: document?.title ?? "",
       categoryId: document?.category.id ?? categories[0].id,
-      type: document?.type ?? "",
+      type: document?.type ?? "Внутренний документ",
       description: document?.description ?? "",
       departmentId: document?.department.id ?? departments[0].id,
       responsibleId: document?.responsible.id ?? users[0].id,
       deadline: document?.deadline ?? "",
       priority: document?.priority ?? "normal",
       comment: "",
-      approvers: document?.approvalSteps.map((step) => step.approver.id) ?? [users[1].id],
+      approverIds: defaultApprovers,
     },
   });
 
@@ -76,36 +99,34 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [isDirty]);
 
-  const mainFile = watch("mainFile");
-  const extraFiles = watch("extraFiles");
-
-  const validateFiles = (fileList?: FileList) => {
-    const files = Array.from(fileList ?? []);
-    const oversizedFile = files.find((file) => file.size > maxFileSize);
-    const invalidFile = files.find((file) => !allowedFileTypes.includes(file.type));
-
-    if (oversizedFile) {
-      throw new Error(`Файл ${oversizedFile.name} больше 20 MB.`);
-    }
-
-    if (invalidFile) {
-      throw new Error(`Формат файла ${invalidFile.name} не поддерживается.`);
+  const addFiles = (fileList: FileList | null) => {
+    if (!fileList?.length) return;
+    setFileError("");
+    try {
+      const nextFiles = Array.from(fileList);
+      nextFiles.forEach(validateFile);
+      setFiles((current) => [...current, ...nextFiles.map(toDocumentFile)]);
+    } catch (error) {
+      setFileError(error instanceof Error ? error.message : "Не удалось добавить файл.");
     }
   };
 
-  const submit = handleSubmit(async (values) => {
-    validateFiles(values.mainFile);
-    validateFiles(values.extraFiles);
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    navigate("/documents");
-  });
+  const removeFile = (fileId: string) => setFiles((current) => current.filter((file) => file.id !== fileId));
 
-  const saveDraft = handleSubmit(async (values) => {
-    validateFiles(values.mainFile);
-    validateFiles(values.extraFiles);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    navigate("/documents/my");
-  });
+  const save = (status: Extract<DocumentStatus, "draft" | "in_review">) =>
+    handleSubmit(async (values) => {
+      if (mode === "create") {
+        const createdDocument = await createDocument.mutateAsync({ ...values, files, status });
+        setToast(status === "draft" ? "Черновик сохранен." : "Документ отправлен на согласование.");
+        setTimeout(() => navigate(`/documents/${createdDocument.id}`), 350);
+        return;
+      }
+
+      if (!document) return;
+      const updatedDocument = await updateDocument.mutateAsync({ ...values, files });
+      setToast("Изменения сохранены.");
+      setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 350);
+    })();
 
   if (isLocked) {
     return (
@@ -117,10 +138,8 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
   }
 
   return (
-    <form className="content-card document-form" onSubmit={submit}>
-      {document?.returnReason && (
-        <div className="form-warning">Причина возврата: {document.returnReason}</div>
-      )}
+    <form className="content-card document-form" onSubmit={(event) => event.preventDefault()}>
+      {document?.returnReason && <div className="form-warning">Причина возврата: {document.returnReason}</div>}
       <div className="form-grid">
         <label>
           Название
@@ -136,6 +155,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
               </option>
             ))}
           </select>
+          {errors.categoryId && <small>{errors.categoryId.message}</small>}
         </label>
         <label>
           Тип
@@ -151,6 +171,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
               </option>
             ))}
           </select>
+          {errors.departmentId && <small>{errors.departmentId.message}</small>}
         </label>
         <label>
           Ответственный
@@ -161,6 +182,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
               </option>
             ))}
           </select>
+          {errors.responsibleId && <small>{errors.responsibleId.message}</small>}
         </label>
         <label>
           Дедлайн
@@ -178,14 +200,14 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         </label>
         <label>
           Согласующие
-          <select multiple {...register("approvers")}>
+          <select multiple {...register("approverIds")}>
             {users.map((user) => (
               <option key={user.id} value={user.id}>
                 {user.name}
               </option>
             ))}
           </select>
-          {errors.approvers && <small>{errors.approvers.message}</small>}
+          {errors.approverIds && <small>{errors.approverIds.message}</small>}
         </label>
       </div>
       <label>
@@ -193,26 +215,31 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         <textarea rows={5} {...register("description")} />
         {errors.description && <small>{errors.description.message}</small>}
       </label>
-      <div className="upload-grid">
-        <label className="dropzone">
-          <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" {...register("mainFile")} />
-          <strong>Основной файл</strong>
-          <span>{mainFile?.[0]?.name ?? "Перетащите файл или выберите вручную. До 20 MB."}</span>
-        </label>
-        <label className="dropzone">
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
-            {...register("extraFiles")}
-          />
-          <strong>Дополнительные файлы</strong>
-          <span>
-            {extraFiles?.length
-              ? `${extraFiles.length} файлов выбрано`
-              : "Можно добавить несколько вложений."}
-          </span>
-        </label>
+      <label className="dropzone document-uploader">
+        <input
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+          onChange={(event) => addFiles(event.target.files)}
+        />
+        <FilePlus2 size={22} />
+        <strong>Файлы документа</strong>
+        <span>Перетащите файлы или выберите вручную. PDF, DOCX, XLSX, PNG/JPG до 25 MB.</span>
+      </label>
+      {fileError && <div className="form-error">{fileError}</div>}
+      <div className="uploaded-files">
+        {files.length ? (
+          files.map((file) => (
+            <div key={file.id}>
+              <span>{file.name}</span>
+              <Button variant="ghost" icon={<Trash2 size={15} />} onClick={() => removeFile(file.id)}>
+                Удалить
+              </Button>
+            </div>
+          ))
+        ) : (
+          <p>Файлы пока не добавлены.</p>
+        )}
       </div>
       <label>
         Комментарий
@@ -221,19 +248,26 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       <div className="form-actions">
         <Button
           variant="secondary"
-          type="button"
           icon={<Save size={18} />}
-          onClick={() => void saveDraft()}
+          loading={createDocument.isPending && mode === "create"}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          onClick={() => void save("draft")}
         >
           Сохранить черновик
         </Button>
-        <Button disabled={isSubmitting} type="submit" icon={<Send size={18} />}>
-          {mode === "edit" ? "Повторно отправить" : "Отправить на согласование"}
+        <Button
+          icon={<Send size={18} />}
+          loading={createDocument.isPending || updateDocument.isPending}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          onClick={() => void save("in_review")}
+        >
+          {mode === "edit" ? "Сохранить и отправить" : "Отправить на согласование"}
         </Button>
-        <Button variant="ghost" type="button" icon={<X size={18} />} onClick={() => navigate(-1)}>
+        <Button variant="ghost" icon={<X size={18} />} onClick={() => navigate(-1)}>
           Отмена
         </Button>
       </div>
+      {toast && <Toast kind="success" message={toast} onClose={() => setToast(undefined)} />}
     </form>
   );
 }

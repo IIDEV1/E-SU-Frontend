@@ -11,8 +11,8 @@ export const authApi = {
   async login(payload: LoginPayload): Promise<{ user: User; token: string }> {
     await new Promise((resolve) => setTimeout(resolve, 450));
 
-    if (!payload.email || payload.password.length < 4) {
-      throw new Error("Проверьте email и пароль.");
+    if (payload.email !== "aidana@esu.kg" || payload.password !== "demo1234") {
+      throw new Error("Неверный email или пароль. Для demo используйте aidana@esu.kg / demo1234.");
     }
 
     return { user: currentUser, token: "mock-esu-token" };
