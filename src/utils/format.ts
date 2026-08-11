@@ -8,6 +8,7 @@ export const statusLabels: Record<DocumentStatus, string> = {
   completed: "Исполнен",
   overdue: "Просрочен",
   archived: "Архив",
+  rejected: "Отклонён",
 };
 
 export const priorityLabels: Record<DocumentPriority, string> = {

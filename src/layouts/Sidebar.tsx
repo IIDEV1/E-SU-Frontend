@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
+import { useEffect } from "react";
 import { navigationItems } from "@/constants/navigation";
 import { useAuth } from "@/features/auth/AuthContext";
 
@@ -11,22 +12,20 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, isDrawerOpen, onCloseDrawer }: SidebarProps) {
   const { hasRole } = useAuth();
+  useEffect(() => { const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onCloseDrawer(); }; if (isDrawerOpen) window.addEventListener("keydown", closeOnEscape); return () => window.removeEventListener("keydown", closeOnEscape); }, [isDrawerOpen, onCloseDrawer]);
 
   return (
     <>
-      {/* 1. Затемненный фон рендерится ПЕРВЫМ и имеет z-index ниже (z-40) */}
       {isDrawerOpen && (
         <div
-          className="drawer-backdrop fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="drawer-backdrop"
           onClick={onCloseDrawer}
           aria-hidden="true"
         />
       )}
 
-      {/* 2. Возвращаем ваш оригинальный дизайн с классами sidebar, 
-          но добавляем z-50, чтобы сайдбар был поверх фона и кнопки нажимались */}
       <aside
-        className={`sidebar z-50 ${isCollapsed ? "sidebar--collapsed" : ""} ${isDrawerOpen ? "sidebar--open" : ""}`}
+        className={`sidebar ${isCollapsed ? "sidebar--collapsed" : ""} ${isDrawerOpen ? "sidebar--open" : ""}`}
       >
         <div className="sidebar__brand">
           <span className="logo-mark">ES</span>

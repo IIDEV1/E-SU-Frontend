@@ -11,7 +11,7 @@ export const users: User[] = [
     id: "u-1",
     name: "Айдана Садыкова",
     email: "aidana@esu.kg",
-    role: "department_head",
+    role: "admin",
     department: departments[0],
     position: "Руководитель учебного отдела",
   },
