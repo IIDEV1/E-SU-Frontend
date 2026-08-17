@@ -1,6 +1,6 @@
 export type UserRole = "admin" | "rector" | "department_head" | "employee" | "approver";
 
-export type Permission = 
+export type Permission =
   | "document:create"
   | "document:read"
   | "document:update"
@@ -27,7 +27,14 @@ export interface User {
 }
 
 export type DocumentStatus =
-  | "draft" | "in_review" | "returned" | "approved" | "completed" | "overdue" | "archived" | "rejected";
+  | "draft"
+  | "in_review"
+  | "returned"
+  | "approved"
+  | "completed"
+  | "overdue"
+  | "archived"
+  | "rejected";
 
 export type DocumentPriority = "low" | "normal" | "high" | "urgent";
 
@@ -79,12 +86,23 @@ export interface Document {
   approvalSteps: ApprovalStep[];
   comments: Comment[];
   history: string[];
+  currentStage: string;
   returnReason?: string;
 }
 
+export type NotificationType =
+  | "sent"
+  | "approved"
+  | "returned"
+  | "deadline"
+  | "overdue"
+  | "assigned"
+  | "comment"
+  | "system";
+
 export interface Notification {
   id: string;
-  type: "approved" | "deadline" | "comment" | "system";
+  type: NotificationType;
   title: string;
   message: string;
   time: string;

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { documentsApi, type DocumentsParams } from "@/services/endpoints/documents.api";
-import type { Document } from "@/types";
+import { documentsApi, type DocumentFormPayload, type DocumentsParams } from "@/services/endpoints/documents.api";
 
 export const documentKeys = {
   all: ["documents"] as const,
@@ -24,32 +23,59 @@ export function useDocument(id: string) {
   });
 }
 
-export function useCreateDocument() {
+function useDocumentInvalidation(id?: string) {
   const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: documentKeys.all });
+    if (id) {
+      void queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) });
+    }
+  };
+}
 
+export function useCreateDocument() {
+  const invalidate = useDocumentInvalidation();
   return useMutation({
-    mutationFn: (payload: Partial<Document>) => documentsApi.createDocument(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all }),
+    mutationFn: (payload: DocumentFormPayload & { status: "draft" | "in_review" }) => documentsApi.createDocument(payload),
+    onSuccess: invalidate,
   });
 }
 
 export function useUpdateDocument(id: string) {
-  const queryClient = useQueryClient();
-
+  const invalidate = useDocumentInvalidation(id);
   return useMutation({
-    mutationFn: (payload: Partial<Document>) => documentsApi.updateDocument(id, payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: documentKeys.all });
-      void queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) });
+    mutationFn: (payload: Partial<DocumentFormPayload>) => documentsApi.updateDocument(id, payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSubmitDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: () => documentsApi.submitDocument(id), onSuccess: invalidate });
+}
+
+export function useApproveDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: () => documentsApi.approveDocument(id), onSuccess: invalidate });
+}
+
+export function useReturnDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: (reason: string) => documentsApi.returnDocument(id, reason), onSuccess: invalidate });
+}
+
+export function useArchiveDocument() {
+  const invalidate = useDocumentInvalidation();
+  return useMutation({
+    mutationFn: (id: string) => documentsApi.archiveDocument(id),
+    onSuccess: (_, id) => {
+      invalidate();
+      void documentsApi.getDocument(id).catch(() => undefined);
     },
   });
 }
 
-export function useArchiveDocument() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => documentsApi.archiveDocument(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all }),
-  });
+export function useAddDocumentComment(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: (text: string) => documentsApi.addComment(id, text), onSuccess: invalidate });
 }

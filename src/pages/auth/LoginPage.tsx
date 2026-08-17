@@ -22,8 +22,7 @@ export function LoginPage() {
   const { isAuthenticated, isLoading, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from =
-    (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? "/dashboard";
+  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? "/dashboard";
   const {
     formState: { errors, isValid },
     handleSubmit,
@@ -53,7 +52,7 @@ export function LoginPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <span className="accent-badge">Вход</span>
         <h2>Добро пожаловать</h2>
-        <p>Используйте корпоративную учетную запись для доступа к документам.</p>
+        <p>Используйте demo-аккаунт для проверки документов, согласований и уведомлений.</p>
         <label>
           Email
           <input type="email" {...register("email")} />
@@ -66,7 +65,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setIsPasswordVisible((value) => !value)}
-              aria-label="Показать пароль"
+              aria-label={isPasswordVisible ? "Скрыть пароль" : "Показать пароль"}
             >
               {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -81,8 +80,8 @@ export function LoginPage() {
           <Link to="/forgot-password">Забыли пароль?</Link>
         </div>
         {error && <div className="form-error">{error}</div>}
-        <Button disabled={!isValid || isLoading} icon={<LogIn size={18} />} type="submit">
-          {isLoading ? "Входим..." : "Войти"}
+        <Button disabled={!isValid || isLoading} loading={isLoading} icon={<LogIn size={18} />} type="submit">
+          Войти
         </Button>
       </form>
     </AuthLayout>

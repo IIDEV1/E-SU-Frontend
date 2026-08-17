@@ -5,8 +5,8 @@ import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
-import { authApi } from "@/services/endpoints/auth.api";
 import { AuthLayout } from "@/layouts/AuthLayout";
+import { authApi } from "@/services/endpoints/auth.api";
 
 const schema = z.object({ email: z.string().email("Введите корректный email") });
 
@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
           {errors.email && <small>{errors.email.message}</small>}
         </label>
         {message && <div className="form-success">{message}</div>}
-        <Button disabled={isSubmitting} icon={<Mail size={18} />} type="submit">
+        <Button loading={isSubmitting} disabled={isSubmitting} icon={<Mail size={18} />} type="submit">
           Отправить
         </Button>
         <Link to="/login">Вернуться ко входу</Link>

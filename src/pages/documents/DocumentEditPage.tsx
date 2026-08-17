@@ -8,18 +8,11 @@ export function DocumentEditPage() {
   const { data, isError, isLoading } = useDocument(id);
 
   if (isLoading) {
-    return (
-      <StateBlock title="Загружаем документ" description="Подготавливаем форму редактирования." />
-    );
+    return <StateBlock title="Загружаем документ" description="Подготавливаем форму редактирования." />;
   }
 
   if (isError || !data) {
-    return (
-      <StateBlock
-        title="Документ не найден"
-        description="Проверьте ссылку или вернитесь к списку."
-      />
-    );
+    return <StateBlock title="Документ не найден" description="Проверьте ссылку или вернитесь к списку." />;
   }
 
   return (
