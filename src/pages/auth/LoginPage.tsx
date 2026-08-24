@@ -30,7 +30,7 @@ export function LoginPage() {
   } = useForm<LoginForm>({
     resolver: zodResolver(schema),
     mode: "onChange",
-    defaultValues: { email: "aidana@esu.kg", password: "demo1234", remember: true },
+    defaultValues: { email: "employee@esu.kg", password: "DemoPass123!", remember: true },
   });
 
   if (isAuthenticated) {

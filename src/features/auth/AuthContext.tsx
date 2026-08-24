@@ -1,54 +1,90 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authApi, type LoginPayload } from "@/services/endpoints/auth.api";
-import type { User, UserRole } from "@/types";
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/services/tokenStorage";
+import type { Permission, User } from "@/types";
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
-  logout: () => void;
-  hasRole: (roles?: UserRole[]) => boolean;
+  logout: () => Promise<void>;
+  can: (permission?: Permission | Permission[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem("esu_user") ?? sessionStorage.getItem("esu_user");
-    return storedUser ? (JSON.parse(storedUser) as User) : null;
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function restoreSession() {
+      if (!getAccessToken()) {
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+
+      try {
+        const currentUser = await authApi.me();
+        if (isMounted) setUser(currentUser);
+      } catch {
+        clearTokens();
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    void restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const login = useCallback(async (payload: LoginPayload) => {
     setIsLoading(true);
     try {
       const response = await authApi.login(payload);
-      const storage = payload.remember ? localStorage : sessionStorage;
-      storage.setItem("esu_token", response.token);
-      storage.setItem("esu_user", JSON.stringify(response.user));
-      setUser(response.user);
+      setTokens({ access: response.access, refresh: response.refresh }, payload.remember);
+      const currentUser = await authApi.me().catch(() => response.user);
+      setUser(currentUser);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("esu_token");
-    localStorage.removeItem("esu_user");
-    sessionStorage.removeItem("esu_token");
-    sessionStorage.removeItem("esu_user");
-    setUser(null);
-  }, []);
+  const logout = useCallback(async () => {
+    const refresh = getRefreshToken();
+    try {
+      if (refresh) {
+        await authApi.logout(refresh);
+      }
+    } finally {
+      clearTokens();
+      setUser(null);
+      queryClient.clear();
+    }
+  }, [queryClient]);
 
-  const hasRole = useCallback(
-    (roles?: UserRole[]) => !roles?.length || (!!user && roles.includes(user.role)),
+  const can = useCallback(
+    (permission?: Permission | Permission[]) => {
+      if (!permission) return true;
+      if (!user) return false;
+      const required = Array.isArray(permission) ? permission : [permission];
+      return required.every((item) => user.permissions.includes(item));
+    },
     [user],
   );
 
   const value = useMemo(
-    () => ({ user, isAuthenticated: Boolean(user), isLoading, login, logout, hasRole }),
-    [hasRole, isLoading, login, logout, user],
+    () => ({ user, isAuthenticated: Boolean(user), isLoading, login, logout, can }),
+    [can, isLoading, login, logout, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

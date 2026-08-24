@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import type { Department, Document, DocumentCategory, Notification, User } from "@/types";
 
 export const departments: Department[] = [

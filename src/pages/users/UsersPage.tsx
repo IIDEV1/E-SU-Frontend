@@ -6,7 +6,7 @@ import { useAdminActions, useAdminDepartments, useAdminUsers } from "@/features/
 import type { AdminUser, AdminUserStatus } from "@/features/admin/types";
 
 const PAGE_SIZE = 8;
-const roleLabels: Record<AdminUser["role"], string> = { admin: "Администратор", rector: "Ректор", department_head: "Руководитель", employee: "Сотрудник", approver: "Согласующий" };
+const roleLabels: Record<string, string> = { admin: "Администратор", manager: "Менеджер", office: "Канцелярия", employee: "Сотрудник" };
 
 export function UsersPage() {
   const users = useAdminUsers();

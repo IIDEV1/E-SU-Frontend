@@ -17,6 +17,16 @@ import { notificationTypeLabels } from "@/utils/format";
 import { Button } from "./Button";
 
 const notificationIcons: Record<AdminNotification["type"], LucideIcon> = {
+  document_submitted: Send,
+  document_approved: CheckCircle2,
+  document_returned: RotateCcw,
+  deadline_approaching: Clock,
+  document_overdue: AlertTriangle,
+  responsible_assigned: UserPlus,
+  comment_added: MessageSquare,
+  approval_required: Check,
+  document_registered: CheckCircle2,
+  document_archived: Bell,
   sent: Send,
   approved: CheckCircle2,
   returned: RotateCcw,

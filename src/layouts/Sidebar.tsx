@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, isDrawerOpen, onCloseDrawer }: SidebarProps) {
-  const { hasRole } = useAuth();
+  const { can } = useAuth();
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -34,7 +34,7 @@ export function Sidebar({ isCollapsed, isDrawerOpen, onCloseDrawer }: SidebarPro
         </div>
         <nav className="sidebar__nav">
           {navigationItems
-            .filter((item) => hasRole(item.roles))
+            .filter((item) => can(item.requiredPermissions))
             .map((item) => (
               <NavLink key={item.path} to={item.path} end className="sidebar__link" onClick={onCloseDrawer}>
                 <item.icon size={18} />
