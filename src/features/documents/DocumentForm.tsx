@@ -6,8 +6,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui";
+import { useCategories } from "@/hooks/useCategories";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/useDocuments";
-import { categories, departments, users } from "@/mocks/data";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useUsers } from "@/hooks/useUsers";
 import type { Document, DocumentFile, DocumentStatus } from "@/types";
 
 const schema = z.object({
@@ -41,6 +43,7 @@ function toDocumentFile(file: File): DocumentFile {
     type: file.type || "application/octet-stream",
     url: "#",
     uploadedAt: new Date().toISOString(),
+    sourceFile: file,
   };
 }
 
@@ -58,14 +61,17 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
   const navigate = useNavigate();
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(document?.id ?? "");
+  const { data: categories = [] } = useCategories();
+  const { data: departments = [] } = useDepartments();
+  const { data: users = [] } = useUsers();
   const [files, setFiles] = useState<DocumentFile[]>(document?.files ?? []);
   const [fileError, setFileError] = useState("");
   const [toast, setToast] = useState<string>();
   const isLocked = document ? ["completed", "archived"].includes(document.status) : false;
 
   const defaultApprovers = useMemo(
-    () => document?.approvalSteps.map((step) => step.approver.id) ?? [users[1].id, users[4].id],
-    [document],
+    () => document?.approvalSteps.map((step) => step.approver.id) ?? users.slice(0, 2).map((user) => user.id),
+    [document, users],
   );
 
   const {
@@ -76,11 +82,11 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       title: document?.title ?? "",
-      categoryId: document?.category.id ?? categories[0].id,
-      type: document?.type ?? "Внутренний документ",
+      categoryId: document?.category.id ?? categories[0]?.id ?? "",
+      type: document?.type ?? "document",
       description: document?.description ?? "",
-      departmentId: document?.department.id ?? departments[0].id,
-      responsibleId: document?.responsible.id ?? users[0].id,
+      departmentId: document?.department.id ?? departments[0]?.id ?? "",
+      responsibleId: document?.responsible.id ?? users[0]?.id ?? "",
       deadline: document?.deadline ?? "",
       priority: document?.priority ?? "normal",
       comment: "",

@@ -5,10 +5,9 @@ export const statusLabels: Record<DocumentStatus, string> = {
   in_review: "На согласовании",
   returned: "Возвращен",
   approved: "Согласован",
-  completed: "Исполнен",
+  completed: "Завершен",
   overdue: "Просрочен",
   archived: "Архив",
-  rejected: "Отклонен",
 };
 
 export const priorityLabels: Record<DocumentPriority, string> = {
@@ -19,6 +18,16 @@ export const priorityLabels: Record<DocumentPriority, string> = {
 };
 
 export const notificationTypeLabels: Record<NotificationType, string> = {
+  document_submitted: "Документ отправлен",
+  document_approved: "Документ согласован",
+  document_returned: "Документ возвращен",
+  deadline_approaching: "Приближается дедлайн",
+  document_overdue: "Документ просрочен",
+  responsible_assigned: "Назначен ответственный",
+  comment_added: "Добавлен комментарий",
+  approval_required: "Требуется согласование",
+  document_registered: "Документ зарегистрирован",
+  document_archived: "Документ архивирован",
   sent: "Документ отправлен",
   approved: "Документ согласован",
   returned: "Документ возвращен",
@@ -29,7 +38,8 @@ export const notificationTypeLabels: Record<NotificationType, string> = {
   system: "Системное уведомление",
 };
 
-export function formatDate(value: string) {
+export function formatDate(value?: string) {
+  if (!value) return "-";
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "short",
@@ -37,7 +47,8 @@ export function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function formatDateTime(value: string) {
+export function formatDateTime(value?: string) {
+  if (!value) return "-";
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "short",

@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
-import type { UserRole } from "@/types";
+import type { Permission } from "@/types";
 
-export function RoleRoute({ roles }: { roles: UserRole[] }) {
-  const { hasRole } = useAuth();
+export function RoleRoute({ permissions }: { permissions: Permission[] }) {
+  const { can } = useAuth();
 
-  if (!hasRole(roles)) {
+  if (!can(permissions)) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -1,161 +1,37 @@
 import { useSyncExternalStore } from "react";
-import { categories, currentUser, departments, mockAuditLogs, mockNotifications, mockSettings, users } from "@/mocks/data";
-import type { UserRole } from "@/types";
-import type {
-  AdminAuditLog,
-  AdminCategory,
-  AdminDepartment,
-  AdminNotification,
-  AdminRole,
-  AdminSettings,
-  AdminState,
-  AdminUser,
-} from "./types";
+import type { AdminSettings, AdminState } from "./types";
 
-const roleNames: Record<UserRole, string> = {
-  admin: "Администратор",
-  rector: "Ректор",
-  department_head: "Руководитель",
-  employee: "Сотрудник",
-  approver: "Канцелярия",
-};
-
-const initialDepartments: AdminDepartment[] = departments.map((department) => ({ ...department, status: "active" }));
-const initialCategories: AdminCategory[] = categories.map((category, index) => ({
-  ...category,
-  description: "Категория документов университета",
-  retentionPeriod: index === 0 ? "5 лет" : "10 лет",
-  departmentIds: departments.slice(0, Math.min(index + 1, departments.length)).map((department) => department.id),
-  status: "active",
-  documentCount: index + 3,
-}));
-const initialUsers: AdminUser[] = users.map((user) => ({
-  id: user.id,
-  fullName: user.name,
-  email: user.email,
-  position: user.position,
-  phone: `+996 555 00 0${user.id.at(-1) ?? "0"}`,
-  departmentId: user.department.id,
-  role: user.role,
-  status: "active",
-  lastActive: "Сейчас",
-  avatarUrl: user.avatarUrl,
-}));
-const initialRoles: AdminRole[] = (["admin", "employee", "department_head", "approver"] as UserRole[]).map((id) => ({
-  id,
-  name: roleNames[id],
-  description: "Системная роль",
-  permissions:
-    id === "admin"
-      ? [
-          "documents:read",
-          "documents:create",
-          "documents:update",
-          "documents:approve",
-          "documents:return",
-          "documents:archive",
-          "users:manage",
-          "departments:manage",
-          "categories:manage",
-          "audit:read",
-          "settings:manage",
-        ]
-      : ["documents:read"],
-}));
-const initialNotifications: AdminNotification[] = mockNotifications.map((item) => ({
-  id: item.id,
-  type: item.type,
-  title: item.title,
-  message: item.message,
-  createdAt: item.time,
-  isRead: item.isRead,
-  documentId: item.documentId,
-}));
-const initialAuditLogs: AdminAuditLog[] = Array.from({ length: 30 }, (_, index) => {
-  const source = mockAuditLogs[index % mockAuditLogs.length];
-  return {
-    id: `audit-${index + 1}`,
-    dateTime: source.dateTime,
-    userName: source.user,
-    role: index % 3 === 0 ? "admin" : "employee",
-    action: index % 5 === 0 ? "settings_changed" : index % 2 ? "updated" : "created",
-    entity: index % 4 === 0 ? "settings" : index % 3 === 0 ? "department" : "user",
-    entityLabel: source.document,
-    object: source.object,
-    document: source.document,
-    department: source.department,
-    result: source.result as AdminAuditLog["result"],
-  };
-});
-
-const initialSettings: AdminSettings = {
-  ...structuredClone(mockSettings),
-  general: { ...mockSettings.general, dateFormat: "DD.MM.YYYY" },
-  university: { ...mockSettings.university, shortName: "SU", phone: "+996 312 00-00-00" },
-  numbering: { ...mockSettings.numbering, includeYear: true, includeDepartment: false, includeSequence: true },
-  documentStatuses: [
-    { id: "draft", name: "Черновик", color: "gray", active: true, order: 1 },
-    { id: "review", name: "На согласовании", color: "orange", active: true, order: 2 },
-    { id: "approved", name: "Утвержден", color: "green", active: true, order: 3 },
-  ],
+const emptySettings: AdminSettings = {
+  general: { systemName: "E-SU", timezone: "Asia/Bishkek", language: "ru", dateFormat: "DD.MM.YYYY" },
+  university: { name: "Salymbekov University", rector: "", address: "", email: "", shortName: "SU", phone: "" },
+  numbering: { prefix: "ESU", format: "{prefix}-{department}-{year}-{number}", startNumber: "1", includeYear: true, includeDepartment: true, includeSequence: true },
+  fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
+  maxFileSizeMb: 25,
+  documentStatuses: [],
   emailNotifications: { enabled: true, assigned: true, approved: true, returned: true, deadlineReminder: true },
-  allowedExtensions: ["pdf", "docx", "xlsx"],
+  allowedExtensions: ["pdf", "docx", "xlsx", "png", "jpg"],
   fileLimits: { maxSizeMb: 25, maxFiles: 10 },
 };
 
-let state: AdminState = {
-  users: initialUsers,
-  departments: initialDepartments,
-  categories: initialCategories,
-  roles: initialRoles,
-  notifications: initialNotifications,
-  auditLogs: initialAuditLogs,
-  settings: initialSettings,
+const state: AdminState = {
+  users: [],
+  departments: [],
+  categories: [],
+  roles: [],
+  notifications: [],
+  auditLogs: [],
+  settings: emptySettings,
 };
-
-const listeners = new Set<() => void>();
-const emit = () => listeners.forEach((listener) => listener());
-const update = (updater: (previous: AdminState) => AdminState) => {
-  state = updater(state);
-  emit();
-};
-const id = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
 export const adminStore = {
   getSnapshot: () => state,
-  subscribe: (listener: () => void) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  },
-  users: {
-    create: (value: Omit<AdminUser, "id">) => update((s) => ({ ...s, users: [{ ...value, id: id("user") }, ...s.users] })),
-    update: (userId: string, value: Partial<AdminUser>) =>
-      update((s) => ({ ...s, users: s.users.map((item) => (item.id === userId ? { ...item, ...value } : item)) })),
-  },
-  departments: {
-    create: (value: Omit<AdminDepartment, "id">) =>
-      update((s) => ({ ...s, departments: [{ ...value, id: id("department") }, ...s.departments] })),
-    update: (departmentId: string, value: Partial<AdminDepartment>) =>
-      update((s) => ({ ...s, departments: s.departments.map((item) => (item.id === departmentId ? { ...item, ...value } : item)) })),
-    remove: (departmentId: string) => update((s) => ({ ...s, departments: s.departments.filter((item) => item.id !== departmentId) })),
-  },
-  categories: {
-    create: (value: Omit<AdminCategory, "id">) =>
-      update((s) => ({ ...s, categories: [{ ...value, id: id("category") }, ...s.categories] })),
-    update: (categoryId: string, value: Partial<AdminCategory>) =>
-      update((s) => ({ ...s, categories: s.categories.map((item) => (item.id === categoryId ? { ...item, ...value } : item)) })),
-    remove: (categoryId: string) => update((s) => ({ ...s, categories: s.categories.filter((item) => item.id !== categoryId) })),
-  },
-  roles: {
-    update: (roleId: UserRole, value: Partial<AdminRole>) =>
-      update((s) => ({ ...s, roles: s.roles.map((item) => (item.id === roleId ? { ...item, ...value } : item)) })),
-  },
-  notifications: {
-    markRead: (notificationId: string) =>
-      update((s) => ({ ...s, notifications: s.notifications.map((item) => (item.id === notificationId ? { ...item, isRead: true } : item)) })),
-    markAllRead: () => update((s) => ({ ...s, notifications: s.notifications.map((item) => ({ ...item, isRead: true })) })),
-  },
-  settings: { update: (value: AdminSettings) => update((s) => ({ ...s, settings: value })) },
+  subscribe: () => () => undefined,
+  users: { create: () => undefined, update: () => undefined },
+  departments: { create: () => undefined, update: () => undefined, remove: () => undefined },
+  categories: { create: () => undefined, update: () => undefined, remove: () => undefined },
+  roles: { update: () => undefined },
+  notifications: { markRead: () => undefined, markAllRead: () => undefined },
+  settings: { update: () => undefined },
 };
 
 export function useAdminStore<T>(selector: (snapshot: AdminState) => T): T {
@@ -166,4 +42,4 @@ export function useAdminStore<T>(selector: (snapshot: AdminState) => T): T {
   );
 }
 
-export const currentAdminUser = initialUsers.find((user) => user.id === currentUser.id);
+export const currentAdminUser = undefined;

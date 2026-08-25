@@ -10,7 +10,8 @@ export interface AdminUser {
   phone: string;
   departmentId: string;
   managerId?: string;
-  role: UserRole;
+  role: string;
+  roleId?: string;
   status: AdminUserStatus;
   lastActive: string;
   avatarUrl?: string;
@@ -36,17 +37,36 @@ export interface AdminCategory extends DocumentCategory {
 }
 
 export type AdminPermission =
-  | "documents:read" | "documents:create" | "documents:update" | "documents:approve" | "documents:return" | "documents:archive"
-  | "users:manage" | "departments:manage" | "categories:manage" | "audit:read" | "settings:manage";
+  | "documents.view" | "documents.create" | "documents.edit" | "documents.approve" | "documents.return" | "documents.archive" | "documents.register"
+  | "users.manage" | "departments.manage" | "categories.manage" | "audit.view" | "settings.manage";
 
 export interface AdminRole {
-  id: UserRole;
+  id: string;
+  code: string;
   name: string;
   description: string;
   permissions: AdminPermission[];
 }
 
-export type AdminNotificationType = "sent" | "approved" | "returned" | "deadline" | "overdue" | "assigned" | "comment" | "system";
+export type AdminNotificationType =
+  | "document_submitted"
+  | "document_approved"
+  | "document_returned"
+  | "deadline_approaching"
+  | "document_overdue"
+  | "responsible_assigned"
+  | "comment_added"
+  | "approval_required"
+  | "document_registered"
+  | "document_archived"
+  | "sent"
+  | "approved"
+  | "returned"
+  | "deadline"
+  | "overdue"
+  | "assigned"
+  | "comment"
+  | "system";
 
 export interface AdminNotification {
   id: string;

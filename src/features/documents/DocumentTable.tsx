@@ -4,7 +4,9 @@ import { ArrowDownUp, Eye, Pencil, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { StateBlock } from "@/components/ui/StateBlock";
-import { categories, departments, users } from "@/mocks/data";
+import { useCategories } from "@/hooks/useCategories";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useUsers } from "@/hooks/useUsers";
 import type { Document, DocumentStatus } from "@/types";
 import { formatDate, statusLabels } from "@/utils/format";
 
@@ -18,6 +20,9 @@ interface DocumentTableProps {
 type SortDirection = "asc" | "desc";
 
 export function DocumentTable({ documents, fixedStatus, isError, isLoading }: DocumentTableProps) {
+  const { data: categories = [] } = useCategories();
+  const { data: departments = [] } = useDepartments();
+  const { data: users = [] } = useUsers();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DocumentStatus | "all">(fixedStatus ?? "all");
   const [categoryId, setCategoryId] = useState("all");

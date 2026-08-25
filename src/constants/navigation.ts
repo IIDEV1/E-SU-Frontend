@@ -16,33 +16,28 @@ import {
   Shield,
   Users,
 } from "lucide-react";
-import type { UserRole } from "@/types";
+import type { Permission } from "@/types";
 
 export interface NavItem {
   label: string;
   path: string;
   icon: ComponentType<LucideProps>;
-  roles?: UserRole[];
+  requiredPermissions?: Permission[];
 }
 
 export const navigationItems: NavItem[] = [
   { label: "Панель управления", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Все документы", path: "/documents", icon: Files },
-  { label: "Мои документы", path: "/documents/my", icon: FileClock },
-  {
-    label: "На согласовании",
-    path: "/documents/approval",
-    icon: ClipboardCheck,
-    roles: ["admin", "rector", "department_head", "approver"],
-  },
-  { label: "Возвращенные", path: "/documents/returned", icon: RotateCcw },
-  { label: "Архив", path: "/documents/archive", icon: Archive },
-  { label: "Создать", path: "/documents/create", icon: FilePlus2 },
+  { label: "Все документы", path: "/documents", icon: Files, requiredPermissions: ["documents.view"] },
+  { label: "Мои документы", path: "/documents/my", icon: FileClock, requiredPermissions: ["documents.view"] },
+  { label: "На согласовании", path: "/documents/approval", icon: ClipboardCheck, requiredPermissions: ["documents.approve"] },
+  { label: "Возвращенные", path: "/documents/returned", icon: RotateCcw, requiredPermissions: ["documents.view"] },
+  { label: "Архив", path: "/documents/archive", icon: Archive, requiredPermissions: ["documents.view"] },
+  { label: "Создать", path: "/documents/create", icon: FilePlus2, requiredPermissions: ["documents.create"] },
   { label: "Уведомления", path: "/notifications", icon: Bell },
-  { label: "Подразделения", path: "/departments", icon: Building2, roles: ["admin"] },
-  { label: "Пользователи", path: "/users", icon: Users, roles: ["admin"] },
-  { label: "Категории документов", path: "/categories", icon: FolderTree, roles: ["admin"] },
-  { label: "Роли и права", path: "/roles", icon: Shield, roles: ["admin"] },
-  { label: "Журнал действий", path: "/audit", icon: History, roles: ["admin"] },
-  { label: "Настройки", path: "/settings", icon: Settings, roles: ["admin"] },
+  { label: "Подразделения", path: "/departments", icon: Building2, requiredPermissions: ["departments.manage"] },
+  { label: "Пользователи", path: "/users", icon: Users, requiredPermissions: ["users.manage"] },
+  { label: "Категории документов", path: "/categories", icon: FolderTree, requiredPermissions: ["categories.manage"] },
+  { label: "Роли и права", path: "/roles", icon: Shield, requiredPermissions: ["users.manage"] },
+  { label: "Журнал действий", path: "/audit", icon: History, requiredPermissions: ["audit.view"] },
+  { label: "Настройки", path: "/settings", icon: Settings, requiredPermissions: ["settings.manage"] },
 ];

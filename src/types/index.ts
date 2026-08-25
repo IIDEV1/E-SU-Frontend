@@ -1,29 +1,73 @@
-export type UserRole = "admin" | "rector" | "department_head" | "employee" | "approver";
+export type UserRole = "admin" | "manager" | "office" | "employee";
 
 export type Permission =
-  | "document:create"
-  | "document:read"
-  | "document:update"
-  | "document:delete"
-  | "document:approve"
-  | "settings:manage"
-  | "audit:read";
+  | "documents.view"
+  | "documents.create"
+  | "documents.edit"
+  | "documents.approve"
+  | "documents.return"
+  | "documents.archive"
+  | "documents.register"
+  | "users.manage"
+  | "departments.manage"
+  | "categories.manage"
+  | "audit.view"
+  | "settings.manage";
 
 export interface Department {
   id: string;
   name: string;
   code: string;
+  parent?: Department | null;
+  status?: string;
+}
+
+export interface Role {
+  id: string;
+  code: UserRole | string;
+  name: string;
+}
+
+export interface UserShort {
+  id: string;
+  email: string;
+  full_name: string;
+  position?: string;
+  name: string;
 }
 
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: UserRole;
-  department: Department;
-  position: string;
-  avatarUrl?: string;
-  permissions?: Permission[];
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  full_name: string;
+  short_name?: string;
+  name: string;
+  phone?: string;
+  position?: string;
+  department: Department | null;
+  manager?: UserShort | null;
+  role: Role | null;
+  status: string;
+  is_active?: boolean;
+  is_staff?: boolean;
+  is_superuser?: boolean;
+  last_login?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  permissions: Permission[];
+  available_actions?: {
+    can_manage_users: boolean;
+    can_manage_departments: boolean;
+    can_manage_categories: boolean;
+    can_manage_settings: boolean;
+    can_view_audit: boolean;
+    can_create_documents: boolean;
+    can_approve_documents: boolean;
+    can_archive_documents: boolean;
+  };
 }
 
 export type DocumentStatus =
@@ -33,8 +77,7 @@ export type DocumentStatus =
   | "approved"
   | "completed"
   | "overdue"
-  | "archived"
-  | "rejected";
+  | "archived";
 
 export type DocumentPriority = "low" | "normal" | "high" | "urgent";
 
@@ -42,6 +85,8 @@ export interface DocumentCategory {
   id: string;
   name: string;
   code: string;
+  description?: string;
+  status?: string;
 }
 
 export interface DocumentFile {
@@ -51,34 +96,43 @@ export interface DocumentFile {
   type: string;
   url: string;
   uploadedAt: string;
+  original_name?: string;
+  file?: string;
+  is_main?: boolean;
+  sourceFile?: File;
 }
 
 export interface ApprovalStep {
   id: string;
-  approver: User;
+  approver: UserShort;
   status: "pending" | "approved" | "returned" | "rejected";
   comment?: string;
   date?: string;
+  order?: number;
 }
 
 export interface Comment {
   id: string;
-  author: User;
+  author: UserShort;
   text: string;
   createdAt: string;
+  comment_type?: string;
 }
 
 export interface Document {
   id: string;
   number: string;
+  registration_number?: string | null;
   title: string;
   category: DocumentCategory;
   type: string;
+  document_type?: string;
   description: string;
-  author: User;
+  author: UserShort;
   department: Department;
-  responsible: User;
+  responsible: UserShort;
   createdAt: string;
+  updatedAt?: string;
   deadline: string;
   status: DocumentStatus;
   priority: DocumentPriority;
@@ -91,14 +145,24 @@ export interface Document {
 }
 
 export type NotificationType =
+  | "document_submitted"
+  | "document_approved"
+  | "document_returned"
+  | "deadline_approaching"
+  | "document_overdue"
+  | "responsible_assigned"
+  | "comment_added"
+  | "approval_required"
+  | "document_registered"
+  | "document_archived"
+  | "system"
   | "sent"
   | "approved"
   | "returned"
   | "deadline"
   | "overdue"
   | "assigned"
-  | "comment"
-  | "system";
+  | "comment";
 
 export interface Notification {
   id: string;
@@ -106,6 +170,7 @@ export interface Notification {
   title: string;
   message: string;
   time: string;
+  createdAt: string;
   isRead: boolean;
   documentId?: string;
 }
@@ -159,5 +224,5 @@ export interface PaginatedResponse<T> {
 export interface ApiError {
   message: string;
   status?: number;
-  details?: Record<string, string[]>;
+  details?: Record<string, string[] | string>;
 }
