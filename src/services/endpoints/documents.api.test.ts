@@ -123,7 +123,31 @@ describe("Release 1 document data layer", () => {
       currentStage: "Шаг 2",
     });
     expect(document.author.id).toBe(detailDto.author.id);
-    expect(document.responsible.id).toBe(detailDto.responsible?.id);
+    expect(document.responsible?.id).toBe(detailDto.responsible?.id);
+  });
+
+  it("maps a valid draft detail with no responsible user or deadline", () => {
+    const draftDetail: DocumentDetailDto = {
+      ...detailDto,
+      id: "draft-1",
+      status: "draft",
+      responsible: null,
+      deadline: null,
+      current_approval_step: null,
+    };
+
+    const document = mapDocumentDetail(draftDetail);
+
+    expect(document.responsible).toBeNull();
+    expect(document.deadline).toBeNull();
+  });
+
+  it("rejects a genuinely invalid detail payload", () => {
+    const invalidDetail: DocumentDetailDto = { ...detailDto, id: "" };
+
+    expect(() => mapDocumentDetail(invalidDetail)).toThrow(
+      "Invalid document detail response: required fields are missing",
+    );
   });
 
   it("uses the create write response only for its id and then returns hydrated detail", async () => {

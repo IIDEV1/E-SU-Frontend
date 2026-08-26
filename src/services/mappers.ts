@@ -117,18 +117,20 @@ export function mapDocumentList(document: DocumentListDto): DocumentListItem {
 }
 
 export function mapDocumentDetail(document: DocumentDetailDto): Document {
-  if (!document.responsible) {
-    throw new Error(`Document ${document.id} does not have a responsible user`);
-  }
-  if (!document.deadline) {
-    throw new Error(`Document ${document.id} does not have a deadline`);
+  if (
+    !document.id ||
+    !document.title ||
+    !document.status ||
+    !document.category?.id ||
+    !document.author?.id ||
+    !document.department?.id
+  ) {
+    throw new Error("Invalid document detail response: required fields are missing");
   }
 
   return {
     ...mapDocumentBase(document),
     description: document.description,
-    responsible: mapDocumentUser(document.responsible),
-    deadline: document.deadline,
   };
 }
 

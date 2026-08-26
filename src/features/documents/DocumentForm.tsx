@@ -86,7 +86,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       type: document?.type ?? "document",
       description: document?.description ?? "",
       departmentId: document?.department.id ?? departments[0]?.id ?? "",
-      responsibleId: document?.responsible.id ?? users[0]?.id ?? "",
+      responsibleId: document?.responsible?.id ?? "",
       deadline: document?.deadline ?? "",
       priority: document?.priority ?? "normal",
       comment: "",

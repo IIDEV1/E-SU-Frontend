@@ -130,10 +130,10 @@ export interface Document {
   description?: string;
   author: UserShort;
   department: Department;
-  responsible: UserShort;
+  responsible: UserShort | null;
   createdAt: string;
   updatedAt?: string;
-  deadline: string;
+  deadline: string | null;
   status: DocumentStatus;
   priority: DocumentPriority;
   files: DocumentFile[];
@@ -144,10 +144,7 @@ export interface Document {
   returnReason?: string;
 }
 
-export type DocumentListItem = Omit<Document, "description" | "responsible" | "deadline"> & {
-  responsible: UserShort | null;
-  deadline: string | null;
-};
+export type DocumentListItem = Omit<Document, "description">;
 
 export type NotificationType =
   | "document_submitted"

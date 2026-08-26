@@ -126,9 +126,9 @@ export function DocumentDetailPage() {
         {[
           ["Автор", document.author.name],
           ["Подразделение", document.department.name],
-          ["Ответственный", document.responsible.name],
+          ["Ответственный", document.responsible?.name ?? "Не назначен"],
           ["Дата создания", formatDate(document.createdAt)],
-          ["Дедлайн", formatDate(document.deadline)],
+          ["Дедлайн", formatDate(document.deadline ?? undefined)],
         ].map(([label, value]) => (
           <article key={label} className="summary-card">
             <span>{label}</span>
