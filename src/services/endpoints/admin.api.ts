@@ -164,6 +164,10 @@ export const adminApi = {
     return mapAdminCategory(unwrapResponse(response) as DocumentCategory & Record<string, unknown>);
   },
 
+  async deleteCategory(id: string): Promise<void> {
+    await api.delete(`/document-categories/${id}/`);
+  },
+
   async getRoles() {
     const response = await api.get<ApiEnvelope<ApiPagination<BackendRole>>>("/roles/", { params: { page_size: 100 } });
     return unwrapResponse(response).results.map(mapAdminRole);
