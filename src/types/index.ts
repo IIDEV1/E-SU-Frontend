@@ -127,7 +127,7 @@ export interface Document {
   category: DocumentCategory;
   type: string;
   document_type?: string;
-  description: string;
+  description?: string;
   author: UserShort;
   department: Department;
   responsible: UserShort;

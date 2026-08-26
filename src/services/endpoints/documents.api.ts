@@ -1,6 +1,15 @@
 import { api, unwrapResponse } from "@/services/api";
-import { mapComment, mapDocument, mapDocumentFile } from "@/services/mappers";
-import type { ApiEnvelope, ApiPagination } from "@/services/types";
+import { mapComment, mapDocumentDetail, mapDocumentFile, mapDocumentList } from "@/services/mappers";
+import type {
+  ApiEnvelope,
+  ApiPagination,
+  DocumentCommentDto,
+  DocumentDetailDto,
+  DocumentFileDto,
+  DocumentHistoryDto,
+  DocumentWriteResponseDto,
+  PaginatedDocumentDto,
+} from "@/services/types";
 import type { Document, DocumentStatus, PaginatedResponse } from "@/types";
 
 export interface DocumentsParams {
@@ -69,11 +78,13 @@ function toWritePayload(payload: Partial<DocumentFormPayload>) {
 }
 
 async function uploadPendingFiles(documentId: string, files: Document["files"] = []) {
-  const pendingFiles = files.filter((file) => file.sourceFile);
+  const pendingFiles = files.filter(
+    (file): file is typeof file & { sourceFile: File } => file.sourceFile !== undefined,
+  );
   await Promise.all(
     pendingFiles.map((file, index) => {
       const formData = new FormData();
-      formData.append("file", file.sourceFile as File);
+      formData.append("file", file.sourceFile);
       formData.append("is_main", String(index === 0));
       return api.post(`/documents/${documentId}/files/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -85,17 +96,15 @@ async function uploadPendingFiles(documentId: string, files: Document["files"] =
 async function hydrateDocument(document: Document): Promise<Document> {
   const [files, comments, history] = await Promise.all([
     api
-      .get<ApiEnvelope<ApiPagination<unknown> | unknown[]>>(`/documents/${document.id}/files/`)
+      .get<ApiEnvelope<ApiPagination<DocumentFileDto> | DocumentFileDto[]>>(`/documents/${document.id}/files/`)
       .then((response) => unwrapResponse(response))
-      .then((data) => (Array.isArray(data) ? data : data.results).map((item) => mapDocumentFile(item as Parameters<typeof mapDocumentFile>[0])))
-      .catch(() => []),
+      .then((data) => (Array.isArray(data) ? data : data.results).map(mapDocumentFile)),
     api
-      .get<ApiEnvelope<ApiPagination<unknown> | unknown[]>>(`/documents/${document.id}/comments/`)
+      .get<ApiEnvelope<ApiPagination<DocumentCommentDto> | DocumentCommentDto[]>>(`/documents/${document.id}/comments/`)
       .then((response) => unwrapResponse(response))
-      .then((data) => (Array.isArray(data) ? data : data.results).map((item) => mapComment(item as Parameters<typeof mapComment>[0])))
-      .catch(() => []),
+      .then((data) => (Array.isArray(data) ? data : data.results).map(mapComment)),
     api
-      .get<ApiEnvelope<ApiPagination<{ description?: string; created_at?: string }> | { description?: string; created_at?: string }[]>>(
+      .get<ApiEnvelope<ApiPagination<DocumentHistoryDto> | DocumentHistoryDto[]>>(
         `/documents/${document.id}/history/`,
       )
       .then((response) => unwrapResponse(response))
@@ -103,8 +112,7 @@ async function hydrateDocument(document: Document): Promise<Document> {
         (Array.isArray(data) ? data : data.results).map((item) =>
           [item.created_at, item.description].filter(Boolean).join(" - "),
         ),
-      )
-      .catch(() => []),
+      ),
   ]);
 
   return { ...document, files, comments, history };
@@ -112,10 +120,10 @@ async function hydrateDocument(document: Document): Promise<Document> {
 
 export const documentsApi = {
   async getDocuments(params: DocumentsParams = {}): Promise<PaginatedResponse<Document>> {
-    const response = await api.get<ApiEnvelope<ApiPagination<unknown>>>(endpointFor(params), { params: toQueryParams(params) });
+    const response = await api.get<ApiEnvelope<PaginatedDocumentDto>>(endpointFor(params), { params: toQueryParams(params) });
     const page = unwrapResponse(response);
     return {
-      data: page.results.map((item) => mapDocument(item as Parameters<typeof mapDocument>[0])),
+      data: page.results.map(mapDocumentList),
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 20,
       total: page.count,
@@ -123,35 +131,35 @@ export const documentsApi = {
   },
 
   async getDocument(id: string): Promise<Document> {
-    const response = await api.get<ApiEnvelope<unknown>>(`/documents/${id}/`);
-    return hydrateDocument(mapDocument(unwrapResponse(response) as Parameters<typeof mapDocument>[0]));
+    const response = await api.get<ApiEnvelope<DocumentDetailDto>>(`/documents/${id}/`);
+    return hydrateDocument(mapDocumentDetail(unwrapResponse(response)));
   },
 
   async createDocument(payload: DocumentFormPayload & { status: Extract<DocumentStatus, "draft" | "in_review"> }) {
-    const response = await api.post<ApiEnvelope<unknown>>("/documents/", toWritePayload(payload));
-    let document = mapDocument(unwrapResponse(response) as Parameters<typeof mapDocument>[0]);
+    const response = await api.post<ApiEnvelope<DocumentWriteResponseDto>>("/documents/", toWritePayload(payload));
+    const documentId = unwrapResponse(response).id;
 
     if (payload.comment) {
-      await api.post(`/documents/${document.id}/comments/`, { text: payload.comment });
+      await api.post(`/documents/${documentId}/comments/`, { text: payload.comment });
     }
 
-    await uploadPendingFiles(document.id, payload.files);
+    await uploadPendingFiles(documentId, payload.files);
 
     if (payload.status === "in_review") {
-      await api.post(`/documents/${document.id}/submit/`, { approvers: payload.approverIds });
-      document = await this.getDocument(document.id);
+      await api.post(`/documents/${documentId}/submit/`, { approvers: payload.approverIds });
     }
 
-    return document;
+    return this.getDocument(documentId);
   },
 
   async updateDocument(id: string, payload: Partial<DocumentFormPayload>): Promise<Document> {
-    const response = await api.patch<ApiEnvelope<unknown>>(`/documents/${id}/`, toWritePayload(payload));
+    const response = await api.patch<ApiEnvelope<DocumentWriteResponseDto>>(`/documents/${id}/`, toWritePayload(payload));
+    const documentId = unwrapResponse(response).id;
     if (payload.comment) {
-      await api.post(`/documents/${id}/comments/`, { text: payload.comment });
+      await api.post(`/documents/${documentId}/comments/`, { text: payload.comment });
     }
-    await uploadPendingFiles(id, payload.files);
-    return hydrateDocument(mapDocument(unwrapResponse(response) as Parameters<typeof mapDocument>[0]));
+    await uploadPendingFiles(documentId, payload.files);
+    return this.getDocument(documentId);
   },
 
   async submitDocument(id: string): Promise<Document> {

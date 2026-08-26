@@ -1,14 +1,18 @@
 import type {
   AuditLog,
   Comment,
-  Department,
   Document,
-  DocumentCategory,
   DocumentFile,
   Notification,
   User,
   UserShort,
 } from "@/types";
+import type {
+  DocumentDetailDto,
+  DocumentFileDto,
+  DocumentListDto,
+  DocumentUserShortDto,
+} from "@/services/types";
 
 interface BackendUserShort {
   id: string;
@@ -17,35 +21,6 @@ interface BackendUserShort {
   first_name?: string;
   last_name?: string;
   position?: string;
-}
-
-interface BackendDocument {
-  id: string;
-  registration_number?: string | null;
-  title: string;
-  document_type?: string;
-  category?: DocumentCategory | null;
-  author?: BackendUserShort | null;
-  department?: Department | null;
-  responsible?: BackendUserShort | null;
-  priority: Document["priority"];
-  status: Document["status"];
-  deadline?: string | null;
-  description?: string;
-  current_approval_step?: string | number | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface BackendDocumentFile {
-  id: string;
-  file?: string;
-  original_name?: string;
-  file_type?: string;
-  mime_type?: string;
-  size?: number;
-  is_main?: boolean;
-  created_at?: string;
 }
 
 interface BackendComment {
@@ -100,23 +75,40 @@ export function mapUser(user: User): User {
   };
 }
 
-export function mapDocument(document: BackendDocument): Document {
+function mapDocumentUser(user: DocumentUserShortDto): UserShort {
+  return {
+    id: user.id,
+    email: user.email,
+    full_name: user.full_name,
+    name: user.full_name,
+    position: user.position,
+  };
+}
+
+function mapDocumentBase(document: DocumentListDto, description?: string): Document {
+  if (!document.responsible) {
+    throw new Error(`Document ${document.id} does not have a responsible user`);
+  }
+  if (!document.deadline) {
+    throw new Error(`Document ${document.id} does not have a deadline`);
+  }
+
   const number = document.registration_number || "Без номера";
   return {
     id: document.id,
     number,
     registration_number: document.registration_number,
     title: document.title,
-    category: document.category ?? { id: "", name: "Без категории", code: "" },
-    type: document.document_type || "document",
+    category: document.category,
+    type: document.document_type,
     document_type: document.document_type,
-    description: document.description ?? "",
-    author: mapUserShort(document.author),
-    department: document.department ?? { id: "", name: "Без подразделения", code: "" },
-    responsible: mapUserShort(document.responsible),
-    createdAt: document.created_at ?? "",
+    description,
+    author: mapDocumentUser(document.author),
+    department: document.department,
+    responsible: mapDocumentUser(document.responsible),
+    createdAt: document.created_at,
     updatedAt: document.updated_at,
-    deadline: document.deadline ?? "",
+    deadline: document.deadline,
     status: document.status,
     priority: document.priority,
     files: [],
@@ -127,14 +119,22 @@ export function mapDocument(document: BackendDocument): Document {
   };
 }
 
-export function mapDocumentFile(file: BackendDocumentFile): DocumentFile {
+export function mapDocumentList(document: DocumentListDto): Document {
+  return mapDocumentBase(document);
+}
+
+export function mapDocumentDetail(document: DocumentDetailDto): Document {
+  return mapDocumentBase(document, document.description);
+}
+
+export function mapDocumentFile(file: DocumentFileDto): DocumentFile {
   return {
     id: file.id,
-    name: file.original_name ?? "Файл",
-    size: file.size ?? 0,
-    type: file.mime_type ?? file.file_type ?? "application/octet-stream",
-    url: file.file ?? "#",
-    uploadedAt: file.created_at ?? "",
+    name: file.original_name,
+    size: file.size,
+    type: file.mime_type,
+    url: file.file,
+    uploadedAt: file.created_at,
     original_name: file.original_name,
     file: file.file,
     is_main: file.is_main,
