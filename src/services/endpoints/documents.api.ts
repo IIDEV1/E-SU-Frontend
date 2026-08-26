@@ -1,5 +1,5 @@
 import { api, unwrapResponse } from "@/services/api";
-import { mapComment, mapDocumentDetail, mapDocumentFile, mapDocumentList } from "@/services/mappers";
+import { mapComment, mapDocumentDetail, mapDocumentFile, mapDocumentHistoryEntry, mapDocumentList } from "@/services/mappers";
 import type {
   ApiEnvelope,
   ApprovalRouteDto,
@@ -11,7 +11,7 @@ import type {
   DocumentWriteResponseDto,
   PaginatedDocumentDto,
 } from "@/services/types";
-import type { Document, DocumentListItem, DocumentStatus, PaginatedResponse } from "@/types";
+import type { Comment, Document, DocumentFile, DocumentHistoryEntry, DocumentListItem, DocumentStatus, PaginatedResponse } from "@/types";
 
 export type DocumentListScope = "all" | "my" | "approval" | "returned" | "overdue" | "archive";
 export type DocumentOrdering =
@@ -100,7 +100,24 @@ function toWritePayload(payload: Partial<DocumentFormPayload>) {
   };
 }
 
-async function uploadPendingFiles(documentId: string, files: Document["files"] = []) {
+function pageResults<T>(data: ApiPagination<T> | T[]) {
+  return Array.isArray(data) ? data : data.results;
+}
+
+export interface DownloadedDocumentFile {
+  blob: Blob;
+  filename: string;
+}
+
+function filenameFromContentDisposition(value: string | undefined, fallback: string) {
+  const encodedMatch = value?.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch?.[1]) return decodeURIComponent(encodedMatch[1]);
+
+  const plainMatch = value?.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1] ?? fallback;
+}
+
+export async function uploadPendingFiles(documentId: string, files: Document["files"] = []) {
   const pendingFiles = files.filter(
     (file): file is typeof file & { sourceFile: File } => file.sourceFile !== undefined,
   );
@@ -109,36 +126,9 @@ async function uploadPendingFiles(documentId: string, files: Document["files"] =
       const formData = new FormData();
       formData.append("file", file.sourceFile);
       formData.append("is_main", String(index === 0));
-      return api.post(`/documents/${documentId}/files/`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      return api.post(`/documents/${documentId}/files/`, formData);
     }),
   );
-}
-
-async function hydrateDocument(document: Document): Promise<Document> {
-  const [files, comments, history] = await Promise.all([
-    api
-      .get<ApiEnvelope<ApiPagination<DocumentFileDto> | DocumentFileDto[]>>(`/documents/${document.id}/files/`)
-      .then((response) => unwrapResponse(response))
-      .then((data) => (Array.isArray(data) ? data : data.results).map(mapDocumentFile)),
-    api
-      .get<ApiEnvelope<ApiPagination<DocumentCommentDto> | DocumentCommentDto[]>>(`/documents/${document.id}/comments/`)
-      .then((response) => unwrapResponse(response))
-      .then((data) => (Array.isArray(data) ? data : data.results).map(mapComment)),
-    api
-      .get<ApiEnvelope<ApiPagination<DocumentHistoryDto> | DocumentHistoryDto[]>>(
-        `/documents/${document.id}/history/`,
-      )
-      .then((response) => unwrapResponse(response))
-      .then((data) =>
-        (Array.isArray(data) ? data : data.results).map((item) =>
-          [item.created_at, item.description].filter(Boolean).join(" - "),
-        ),
-      ),
-  ]);
-
-  return { ...document, files, comments, history };
 }
 
 export const documentsApi = {
@@ -159,7 +149,49 @@ export const documentsApi = {
 
   async getDocument(id: string): Promise<Document> {
     const response = await api.get<ApiEnvelope<DocumentDetailDto>>(`/documents/${id}/`);
-    return hydrateDocument(mapDocumentDetail(unwrapResponse(response)));
+    return mapDocumentDetail(unwrapResponse(response));
+  },
+
+  async getDocumentFiles(id: string): Promise<DocumentFile[]> {
+    const response = await api.get<ApiEnvelope<ApiPagination<DocumentFileDto> | DocumentFileDto[]>>(`/documents/${id}/files/`);
+    return pageResults(unwrapResponse(response)).map(mapDocumentFile);
+  },
+
+  async getDocumentComments(id: string): Promise<Comment[]> {
+    const response = await api.get<ApiEnvelope<ApiPagination<DocumentCommentDto> | DocumentCommentDto[]>>(`/documents/${id}/comments/`);
+    return pageResults(unwrapResponse(response)).map(mapComment);
+  },
+
+  async getDocumentHistory(id: string): Promise<DocumentHistoryEntry[]> {
+    const response = await api.get<ApiEnvelope<ApiPagination<DocumentHistoryDto> | DocumentHistoryDto[]>>(`/documents/${id}/history/`);
+    return pageResults(unwrapResponse(response)).map(mapDocumentHistoryEntry);
+  },
+
+  async uploadDocumentFile(id: string, file: File, isMain = false): Promise<DocumentFile> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("is_main", String(isMain));
+    const response = await api.post<ApiEnvelope<DocumentFileDto>>(`/documents/${id}/files/`, formData);
+    return mapDocumentFile(unwrapResponse(response));
+  },
+
+  async downloadDocumentFile(id: string, fallbackFilename: string): Promise<DownloadedDocumentFile> {
+    const response = await api.get<Blob>(`/document-files/${id}/download/`, { responseType: "blob" });
+    const header = response.headers["content-disposition"];
+    const contentDisposition = typeof header === "string" ? header : undefined;
+    return {
+      blob: response.data,
+      filename: filenameFromContentDisposition(contentDisposition, fallbackFilename),
+    };
+  },
+
+  async deleteDocumentFile(id: string): Promise<void> {
+    await api.delete(`/document-files/${id}/`);
+  },
+
+  async makeDocumentFileMain(id: string): Promise<DocumentFile> {
+    const response = await api.post<ApiEnvelope<DocumentFileDto>>(`/document-files/${id}/make-main/`, {});
+    return mapDocumentFile(unwrapResponse(response));
   },
 
   async createDocument(payload: DocumentFormPayload & { status: Extract<DocumentStatus, "draft" | "in_review"> }) {
@@ -242,8 +274,8 @@ export const documentsApi = {
     return this.getDocument(id);
   },
 
-  async addComment(id: string, text: string): Promise<Document> {
-    await api.post(`/documents/${id}/comments/`, { text });
-    return this.getDocument(id);
+  async addComment(id: string, text: string): Promise<Comment> {
+    const response = await api.post<ApiEnvelope<DocumentCommentDto>>(`/documents/${id}/comments/`, { text });
+    return mapComment(unwrapResponse(response));
   },
 };

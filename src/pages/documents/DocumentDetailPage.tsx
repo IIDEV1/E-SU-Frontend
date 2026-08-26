@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Archive, CheckCircle2, ClipboardCheck, FileCheck2, MessageSquarePlus, Pencil, RotateCcw, Send, Undo2 } from "lucide-react";
+import { Archive, CheckCircle2, ClipboardCheck, Download, FileCheck2, MessageSquarePlus, Pencil, RotateCcw, Send, Star, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog, Toast } from "@/components/ui";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
@@ -13,6 +13,12 @@ import {
   useCompleteDocument,
   useDocument,
   useDocumentApprovalRoute,
+  useDocumentComments,
+  useDocumentFiles,
+  useDocumentHistory,
+  useDeleteDocumentFile,
+  useDownloadDocumentFile,
+  useMakeDocumentFileMain,
   useRegisterDocument,
   useReturnDocument,
   useRestoreDocument,
@@ -82,6 +88,9 @@ export function DocumentDetailPage() {
   const { can } = useAuth();
   const { data: notifications = [] } = useNotifications();
   const approvalRoute = useDocumentApprovalRoute(id);
+  const filesQuery = useDocumentFiles(id);
+  const commentsQuery = useDocumentComments(id);
+  const historyQuery = useDocumentHistory(id);
   const submitDocument = useSubmitDocument(id);
   const approveDocument = useApproveDocument(id);
   const returnDocument = useReturnDocument(id);
@@ -90,6 +99,9 @@ export function DocumentDetailPage() {
   const completeDocument = useCompleteDocument(id);
   const restoreDocument = useRestoreDocument(id);
   const addComment = useAddDocumentComment(id);
+  const deleteDocumentFile = useDeleteDocumentFile(id);
+  const makeDocumentFileMain = useMakeDocumentFileMain(id);
+  const downloadDocumentFile = useDownloadDocumentFile();
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
@@ -159,10 +171,50 @@ export function DocumentDetailPage() {
 
   const addNewComment = async () => {
     if (commentText.trim().length < 2) return;
-    await addComment.mutateAsync(commentText.trim());
-    setCommentText("");
-    setActiveTab("comments");
-    setToast("Комментарий добавлен.");
+    try {
+      setActionError(undefined);
+      await addComment.mutateAsync(commentText.trim());
+      setCommentText("");
+      setActiveTab("comments");
+      setToast("Комментарий добавлен.");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    }
+  };
+
+  const downloadFile = async (fileId: string, filename: string) => {
+    try {
+      setActionError(undefined);
+      const downloaded = await downloadDocumentFile.mutateAsync({ fileId, filename });
+      const objectUrl = URL.createObjectURL(downloaded.blob);
+      const link = window.document.createElement("a");
+      link.href = objectUrl;
+      link.download = downloaded.filename;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    }
+  };
+
+  const removeServerFile = async (fileId: string) => {
+    try {
+      setActionError(undefined);
+      await deleteDocumentFile.mutateAsync(fileId);
+      setToast("Файл удалён.");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    }
+  };
+
+  const makeServerFileMain = async (fileId: string) => {
+    try {
+      setActionError(undefined);
+      await makeDocumentFileMain.mutateAsync(fileId);
+      setToast("Основной файл обновлён.");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    }
   };
 
   const returnCurrentDocument = async () => {
@@ -241,16 +293,20 @@ export function DocumentDetailPage() {
         )}
         {activeTab === "files" && (
           <div className="tab-panel file-list">
-            {document.files.length ? (
-              document.files.map((file) => (
+            {filesQuery.isLoading && <StateBlock title="Загружаем файлы" description="Получаем список вложений документа." />}
+            {filesQuery.isError && <StateBlock title="Не удалось загрузить файлы" description={getApiErrorMessage(filesQuery.error)} />}
+            {filesQuery.data && filesQuery.data.length === 0 && <StateBlock title="Файлов нет" description="К документу пока не добавлены вложения." />}
+            {filesQuery.data?.map((file) => (
                 <div key={file.id}>
                   <strong>{file.name}</strong>
                   <span>{formatBytes(file.size)} · {file.type}</span>
+                  <div className="document-actions">
+                    <Button variant="ghost" icon={<Download size={16} />} loading={downloadDocumentFile.isPending} onClick={() => void downloadFile(file.id, file.name)}>Скачать</Button>
+                    {!file.is_main && canEdit && <Button variant="ghost" icon={<Star size={16} />} loading={makeDocumentFileMain.isPending} onClick={() => void makeServerFileMain(file.id)}>Основной</Button>}
+                    {canEdit && <Button variant="ghost" icon={<Trash2 size={16} />} loading={deleteDocumentFile.isPending} onClick={() => void removeServerFile(file.id)}>Удалить</Button>}
+                  </div>
                 </div>
-              ))
-            ) : (
-              <StateBlock title="Файлов нет" description="К документу пока не добавлены вложения." />
-            )}
+              ))}
           </div>
         )}
         {activeTab === "approval" && (
@@ -287,26 +343,29 @@ export function DocumentDetailPage() {
               </Button>
             </div>
             <div className="timeline-list">
-              {document.comments.length ? (
-                document.comments.map((comment) => (
+              {commentsQuery.isLoading && <StateBlock title="Загружаем комментарии" description="Получаем обсуждение документа." />}
+              {commentsQuery.isError && <StateBlock title="Не удалось загрузить комментарии" description={getApiErrorMessage(commentsQuery.error)} />}
+              {commentsQuery.data && commentsQuery.data.length === 0 && <StateBlock title="Комментариев нет" description="Обсуждение по документу еще не началось." />}
+              {commentsQuery.data?.map((comment) => (
                   <div key={comment.id}>
                     <span>{formatDate(comment.createdAt)}</span>
                     <strong>{comment.author.name}</strong>
                     <p>{comment.text}</p>
                   </div>
-                ))
-              ) : (
-                <StateBlock title="Комментариев нет" description="Обсуждение по документу еще не началось." />
-              )}
+                ))}
             </div>
           </div>
         )}
         {activeTab === "history" && (
           <div className="tab-panel timeline-list">
-            {document.history.map((item, index) => (
-              <div key={`${item}-${index}`}>
-                <span>Событие</span>
-                <strong>{item}</strong>
+            {historyQuery.isLoading && <StateBlock title="Загружаем историю" description="Получаем журнал изменений документа." />}
+            {historyQuery.isError && <StateBlock title="Не удалось загрузить историю" description={getApiErrorMessage(historyQuery.error)} />}
+            {historyQuery.data && historyQuery.data.length === 0 && <StateBlock title="История пуста" description="Backend не вернул записей истории для документа." />}
+            {historyQuery.data?.map((item) => (
+              <div key={item.id}>
+                <span>{formatDate(item.createdAt)} · {item.action}</span>
+                {item.user && <strong>{item.user.name}</strong>}
+                <p>{item.description}</p>
               </div>
             ))}
           </div>

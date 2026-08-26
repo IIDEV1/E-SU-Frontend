@@ -5,11 +5,7 @@ import { documentsApi, type DocumentFormPayload } from "@/services/endpoints/doc
 import { mapDocumentDetail } from "@/services/mappers";
 import type {
   ApiEnvelope,
-  ApiPagination,
-  DocumentCommentDto,
   DocumentDetailDto,
-  DocumentFileDto,
-  DocumentHistoryDto,
   DocumentWriteResponseDto,
 } from "@/services/types";
 
@@ -33,10 +29,6 @@ function response<T>(data: T): AxiosResponse<ApiEnvelope<T>> {
     headers: new AxiosHeaders(),
     config: { headers: new AxiosHeaders() },
   };
-}
-
-function emptyPage<T>(): ApiPagination<T> {
-  return { count: 0, next: null, previous: null, results: [] };
 }
 
 const detailDto: DocumentDetailDto = {
@@ -96,17 +88,13 @@ const formPayload: DocumentFormPayload = {
   files: [],
 };
 
-function mockFullDocumentHydration() {
-  vi.mocked(api.get)
-    .mockResolvedValueOnce(response(detailDto))
-    .mockResolvedValueOnce(response(emptyPage<DocumentFileDto>()))
-    .mockResolvedValueOnce(response(emptyPage<DocumentCommentDto>()))
-    .mockResolvedValueOnce(response(emptyPage<DocumentHistoryDto>()));
+function mockDocumentDetail() {
+  vi.mocked(api.get).mockResolvedValueOnce(response(detailDto));
 }
 
 describe("Release 1 document data layer", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it("maps the confirmed full detail DTO without fallback identifiers", () => {
@@ -152,7 +140,7 @@ describe("Release 1 document data layer", () => {
 
   it("uses the create write response only for its id and then returns hydrated detail", async () => {
     vi.mocked(api.post).mockResolvedValueOnce(response(writeResponseDto));
-    mockFullDocumentHydration();
+    mockDocumentDetail();
 
     const document = await documentsApi.createDocument({ ...formPayload, status: "draft" });
 
@@ -165,7 +153,7 @@ describe("Release 1 document data layer", () => {
 
   it("uses the update write response only for its id and then returns hydrated detail", async () => {
     vi.mocked(api.patch).mockResolvedValueOnce(response(writeResponseDto));
-    mockFullDocumentHydration();
+    mockDocumentDetail();
 
     const document = await documentsApi.updateDocument(writeResponseDto.id, formPayload);
 
@@ -178,11 +166,7 @@ describe("Release 1 document data layer", () => {
     "rejects %s when the required detail hydration fails",
     async (operation) => {
       const hydrationError = new Error("detail hydration failed");
-      vi.mocked(api.get)
-        .mockResolvedValueOnce(response(detailDto))
-        .mockRejectedValueOnce(hydrationError)
-        .mockResolvedValueOnce(response(emptyPage<DocumentCommentDto>()))
-        .mockResolvedValueOnce(response(emptyPage<DocumentHistoryDto>()));
+      vi.mocked(api.get).mockRejectedValueOnce(hydrationError);
 
       if (operation === "create") {
         vi.mocked(api.post).mockResolvedValueOnce(response(writeResponseDto));

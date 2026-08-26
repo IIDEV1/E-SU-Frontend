@@ -2,6 +2,7 @@ import type {
   AuditLog,
   Comment,
   Document,
+  DocumentHistoryEntry,
   DocumentListItem,
   DocumentFile,
   Notification,
@@ -155,6 +156,22 @@ export function mapComment(comment: BackendComment): Comment {
     text: comment.text,
     createdAt: comment.created_at ?? "",
     comment_type: comment.comment_type,
+  };
+}
+
+export function mapDocumentHistoryEntry(history: {
+  id: string;
+  user: BackendUserShort | null;
+  action: string;
+  description: string;
+  created_at: string;
+}): DocumentHistoryEntry {
+  return {
+    id: history.id,
+    user: history.user ? mapUserShort(history.user) : null,
+    action: history.action,
+    description: history.description,
+    createdAt: history.created_at,
   };
 }
 

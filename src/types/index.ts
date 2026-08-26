@@ -144,6 +144,14 @@ export interface Document {
   returnReason?: string;
 }
 
+export interface DocumentHistoryEntry {
+  id: string;
+  user: UserShort | null;
+  action: string;
+  description: string;
+  createdAt: string;
+}
+
 export type DocumentListItem = Omit<Document, "description">;
 
 export type NotificationType =

@@ -7,12 +7,8 @@ import { api } from "@/services/api";
 import { documentsApi, type DocumentFormPayload } from "@/services/endpoints/documents.api";
 import type {
   ApiEnvelope,
-  ApiPagination,
   ApprovalRouteDto,
-  DocumentCommentDto,
   DocumentDetailDto,
-  DocumentFileDto,
-  DocumentHistoryDto,
   DocumentWriteResponseDto,
 } from "@/services/types";
 
@@ -36,10 +32,6 @@ function response<T>(data: T): AxiosResponse<ApiEnvelope<T>> {
     headers: new AxiosHeaders(),
     config: { headers: new AxiosHeaders() },
   };
-}
-
-function emptyPage<T>(): ApiPagination<T> {
-  return { count: 0, next: null, previous: null, results: [] };
 }
 
 const detailDto: DocumentDetailDto = {
@@ -103,16 +95,12 @@ const formPayload: DocumentFormPayload = {
   files: [],
 };
 
-function mockHydration() {
-  vi.mocked(api.get)
-    .mockResolvedValueOnce(response(detailDto))
-    .mockResolvedValueOnce(response(emptyPage<DocumentFileDto>()))
-    .mockResolvedValueOnce(response(emptyPage<DocumentCommentDto>()))
-    .mockResolvedValueOnce(response(emptyPage<DocumentHistoryDto>()));
+function mockDocumentDetail() {
+  vi.mocked(api.get).mockResolvedValueOnce(response(detailDto));
 }
 
 describe("Release 1 document workflow API", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("loads the approval route through its separate confirmed endpoint", async () => {
     vi.mocked(api.get).mockResolvedValueOnce(response(routeDto));
@@ -131,7 +119,7 @@ describe("Release 1 document workflow API", () => {
     ["restore", (id: string) => documentsApi.restoreDocument(id), "/restore/", {}],
   ] as const)("uses POST %s workflow endpoint", async (_, action, suffix, body) => {
     vi.mocked(api.post).mockResolvedValueOnce(response(routeDto));
-    mockHydration();
+    mockDocumentDetail();
 
     await action(detailDto.id);
 
@@ -141,7 +129,7 @@ describe("Release 1 document workflow API", () => {
   it("updates the same returned document before submitting it again", async () => {
     vi.mocked(api.patch).mockResolvedValueOnce(response(writeResponse));
     vi.mocked(api.post).mockResolvedValueOnce(response(routeDto));
-    mockHydration();
+    mockDocumentDetail();
 
     await documentsApi.updateAndSubmitDocument(detailDto.id, formPayload);
 
@@ -162,6 +150,8 @@ describe("Release 1 document workflow API", () => {
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.lists() });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.detail(detailDto.id) });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.files(detailDto.id) });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.comments(detailDto.id) });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.approval(detailDto.id) });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: documentKeys.history(detailDto.id) });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["dashboard"] });

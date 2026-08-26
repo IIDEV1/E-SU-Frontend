@@ -24,6 +24,8 @@ export const documentKeys = {
       },
     ] as const,
   detail: (id: string) => [...documentKeys.all, "detail", id] as const,
+  files: (id: string) => [...documentKeys.all, "files", id] as const,
+  comments: (id: string) => [...documentKeys.all, "comments", id] as const,
   approval: (id: string) => [...documentKeys.all, "approval", id] as const,
   history: (id: string) => [...documentKeys.all, "history", id] as const,
 };
@@ -51,10 +53,36 @@ export function useDocumentApprovalRoute(id: string) {
   });
 }
 
+export function useDocumentFiles(id: string) {
+  return useQuery({
+    queryKey: documentKeys.files(id),
+    queryFn: () => documentsApi.getDocumentFiles(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useDocumentComments(id: string) {
+  return useQuery({
+    queryKey: documentKeys.comments(id),
+    queryFn: () => documentsApi.getDocumentComments(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useDocumentHistory(id: string) {
+  return useQuery({
+    queryKey: documentKeys.history(id),
+    queryFn: () => documentsApi.getDocumentHistory(id),
+    enabled: Boolean(id),
+  });
+}
+
 export async function invalidateDocumentWorkflow(queryClient: ReturnType<typeof useQueryClient>, id: string) {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: documentKeys.lists() }),
     queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) }),
+    queryClient.invalidateQueries({ queryKey: documentKeys.files(id) }),
+    queryClient.invalidateQueries({ queryKey: documentKeys.comments(id) }),
     queryClient.invalidateQueries({ queryKey: documentKeys.approval(id) }),
     queryClient.invalidateQueries({ queryKey: documentKeys.history(id) }),
     queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
@@ -143,4 +171,30 @@ export function useRestoreDocument(id: string) {
 export function useAddDocumentComment(id: string) {
   const invalidate = useDocumentInvalidation(id);
   return useMutation({ mutationFn: (text: string) => documentsApi.addComment(id, text), onSuccess: invalidate });
+}
+
+export function useUploadDocumentFile(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({
+    mutationFn: ({ file, isMain = false }: { file: File; isMain?: boolean }) =>
+      documentsApi.uploadDocumentFile(id, file, isMain),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteDocumentFile(documentId: string) {
+  const invalidate = useDocumentInvalidation(documentId);
+  return useMutation({ mutationFn: documentsApi.deleteDocumentFile, onSuccess: invalidate });
+}
+
+export function useMakeDocumentFileMain(documentId: string) {
+  const invalidate = useDocumentInvalidation(documentId);
+  return useMutation({ mutationFn: documentsApi.makeDocumentFileMain, onSuccess: invalidate });
+}
+
+export function useDownloadDocumentFile() {
+  return useMutation({
+    mutationFn: ({ fileId, filename }: { fileId: string; filename: string }) =>
+      documentsApi.downloadDocumentFile(fileId, filename),
+  });
 }
