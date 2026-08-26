@@ -1,40 +1,45 @@
-import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { DocumentTable } from "@/features/documents/DocumentTable";
-import { useDocuments } from "@/hooks/useDocuments";
+import type { DocumentListScope } from "@/services/endpoints/documents.api";
 import type { DocumentStatus } from "@/types";
 
-const pageCopy: Record<string, { title: string; description: string; status?: DocumentStatus; owner?: "me"; endpointScope?: "approval" | "returned" | "archive" }> = {
+interface DocumentPageCopy {
+  title: string;
+  description: string;
+  fixedStatus?: DocumentStatus;
+}
+
+const pageCopy: Record<DocumentListScope, DocumentPageCopy> = {
   all: { title: "Документы", description: "Единый журнал документов университета." },
-  my: {
-    title: "Мои документы",
-    description: "Черновики и отправленные вами документы.",
-    owner: "me",
-  },
+  my: { title: "Мои документы", description: "Созданные вами документы." },
   approval: {
     title: "На согласовании",
-    description: "Документы, ожидающие решения ответственных сотрудников.",
-    status: "in_review",
-    endpointScope: "approval",
+    description: "Документы, ожидающие вашего решения.",
+    fixedStatus: "in_review",
   },
   returned: {
-    title: "Возвращенные",
-    description: "Документы, требующие доработки и повторной отправки.",
-    status: "returned",
-    endpointScope: "returned",
+    title: "Возвращённые",
+    description: "Созданные вами документы, требующие доработки.",
+    fixedStatus: "returned",
+  },
+  overdue: {
+    title: "Просроченные",
+    description: "Доступные вам документы с истёкшим дедлайном.",
+    fixedStatus: "overdue",
   },
   archive: {
     title: "Архив",
-    description: "Завершенные и архивные документы.",
-    status: "archived",
-    endpointScope: "archive",
+    description: "Архивные документы.",
+    fixedStatus: "archived",
   },
 };
 
-export function DocumentsPage({ scope = "all" }: { scope?: keyof typeof pageCopy }) {
-  const copy = pageCopy[scope];
-  const { data, isError, isLoading } = useDocuments({ status: copy.status, owner: copy.owner, scope: copy.endpointScope });
+export function DocumentsPage({ scope = "all" }: { scope?: DocumentListScope }) {
+  const [searchParams] = useSearchParams();
+  const effectiveScope = scope === "all" && searchParams.get("scope") === "overdue" ? "overdue" : scope;
+  const copy = pageCopy[effectiveScope];
 
   return (
     <div className="page-stack">
@@ -48,7 +53,7 @@ export function DocumentsPage({ scope = "all" }: { scope?: keyof typeof pageCopy
           <Button icon={<Plus size={18} />}>Создать документ</Button>
         </Link>
       </section>
-      <DocumentTable documents={data?.data ?? []} fixedStatus={copy.status} isError={isError} isLoading={isLoading} />
+      <DocumentTable key={effectiveScope} scope={effectiveScope} fixedStatus={copy.fixedStatus} />
     </div>
   );
 }

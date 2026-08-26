@@ -2,6 +2,7 @@ import type {
   AuditLog,
   Comment,
   Document,
+  DocumentListItem,
   DocumentFile,
   Notification,
   User,
@@ -85,14 +86,7 @@ function mapDocumentUser(user: DocumentUserShortDto): UserShort {
   };
 }
 
-function mapDocumentBase(document: DocumentListDto, description?: string): Document {
-  if (!document.responsible) {
-    throw new Error(`Document ${document.id} does not have a responsible user`);
-  }
-  if (!document.deadline) {
-    throw new Error(`Document ${document.id} does not have a deadline`);
-  }
-
+function mapDocumentBase(document: DocumentListDto): DocumentListItem {
   const number = document.registration_number || "Без номера";
   return {
     id: document.id,
@@ -102,10 +96,9 @@ function mapDocumentBase(document: DocumentListDto, description?: string): Docum
     category: document.category,
     type: document.document_type,
     document_type: document.document_type,
-    description,
     author: mapDocumentUser(document.author),
     department: document.department,
-    responsible: mapDocumentUser(document.responsible),
+    responsible: document.responsible ? mapDocumentUser(document.responsible) : null,
     createdAt: document.created_at,
     updatedAt: document.updated_at,
     deadline: document.deadline,
@@ -119,12 +112,24 @@ function mapDocumentBase(document: DocumentListDto, description?: string): Docum
   };
 }
 
-export function mapDocumentList(document: DocumentListDto): Document {
+export function mapDocumentList(document: DocumentListDto): DocumentListItem {
   return mapDocumentBase(document);
 }
 
 export function mapDocumentDetail(document: DocumentDetailDto): Document {
-  return mapDocumentBase(document, document.description);
+  if (!document.responsible) {
+    throw new Error(`Document ${document.id} does not have a responsible user`);
+  }
+  if (!document.deadline) {
+    throw new Error(`Document ${document.id} does not have a deadline`);
+  }
+
+  return {
+    ...mapDocumentBase(document),
+    description: document.description,
+    responsible: mapDocumentUser(document.responsible),
+    deadline: document.deadline,
+  };
 }
 
 export function mapDocumentFile(file: DocumentFileDto): DocumentFile {

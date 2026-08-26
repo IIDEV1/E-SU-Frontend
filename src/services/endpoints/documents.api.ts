@@ -10,20 +10,37 @@ import type {
   DocumentWriteResponseDto,
   PaginatedDocumentDto,
 } from "@/services/types";
-import type { Document, DocumentStatus, PaginatedResponse } from "@/types";
+import type { Document, DocumentListItem, DocumentStatus, PaginatedResponse } from "@/types";
+
+export type DocumentListScope = "all" | "my" | "approval" | "returned" | "overdue" | "archive";
+export type DocumentOrdering =
+  | "created_at"
+  | "-created_at"
+  | "updated_at"
+  | "-updated_at"
+  | "deadline"
+  | "-deadline"
+  | "title"
+  | "-title"
+  | "priority"
+  | "-priority"
+  | "status"
+  | "-status"
+  | "registration_number"
+  | "-registration_number";
 
 export interface DocumentsParams {
   status?: DocumentStatus;
-  owner?: "me";
-  scope?: "my" | "approval" | "returned" | "archive" | "overdue";
-  query?: string;
-  categoryId?: string;
-  departmentId?: string;
-  authorId?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  scope?: DocumentListScope;
+  search?: string;
+  category?: string;
+  department?: string;
+  author?: string;
+  createdFrom?: string;
+  createdTo?: string;
   page?: number;
   pageSize?: number;
+  ordering?: DocumentOrdering;
 }
 
 export interface DocumentFormPayload {
@@ -40,27 +57,32 @@ export interface DocumentFormPayload {
   files: Document["files"];
 }
 
-function endpointFor(params: DocumentsParams) {
-  if (params.owner === "me" || params.scope === "my") return "/documents/my/";
-  if (params.scope === "approval") return "/documents/for-approval/";
-  if (params.scope === "returned") return "/documents/returned/";
-  if (params.scope === "archive") return "/documents/archive/";
-  if (params.scope === "overdue") return "/documents/overdue/";
+export function documentListEndpoint(scope: DocumentListScope = "all") {
+  if (scope === "my") return "/documents/my/";
+  if (scope === "approval") return "/documents/for-approval/";
+  if (scope === "returned") return "/documents/returned/";
+  if (scope === "archive") return "/documents/archive/";
+  if (scope === "overdue") return "/documents/overdue/";
   return "/documents/";
 }
 
-function toQueryParams(params: DocumentsParams) {
+function toIsoBoundary(value: string | undefined, endOfDay: boolean) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return value || undefined;
+  return `${value}T${endOfDay ? "23:59:59.999" : "00:00:00"}`;
+}
+
+export function serializeDocumentQueryParams(params: DocumentsParams) {
   return {
-    search: params.query || undefined,
+    search: params.search?.trim() || undefined,
     status: params.status,
-    category: params.categoryId === "all" ? undefined : params.categoryId,
-    department: params.departmentId === "all" ? undefined : params.departmentId,
-    author: params.authorId === "all" ? undefined : params.authorId,
-    created_from: params.dateFrom || undefined,
-    created_to: params.dateTo || undefined,
+    category: params.category || undefined,
+    department: params.department || undefined,
+    author: params.author || undefined,
+    created_from: toIsoBoundary(params.createdFrom, false),
+    created_to: toIsoBoundary(params.createdTo, true),
     page: params.page,
     page_size: params.pageSize,
-    ordering: "-created_at",
+    ordering: params.ordering,
   };
 }
 
@@ -119,14 +141,18 @@ async function hydrateDocument(document: Document): Promise<Document> {
 }
 
 export const documentsApi = {
-  async getDocuments(params: DocumentsParams = {}): Promise<PaginatedResponse<Document>> {
-    const response = await api.get<ApiEnvelope<PaginatedDocumentDto>>(endpointFor(params), { params: toQueryParams(params) });
+  async getDocuments(params: DocumentsParams = {}): Promise<PaginatedResponse<DocumentListItem>> {
+    const response = await api.get<ApiEnvelope<PaginatedDocumentDto>>(documentListEndpoint(params.scope), {
+      params: serializeDocumentQueryParams(params),
+    });
     const page = unwrapResponse(response);
     return {
       data: page.results.map(mapDocumentList),
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 20,
       total: page.count,
+      next: page.next,
+      previous: page.previous,
     };
   },
 

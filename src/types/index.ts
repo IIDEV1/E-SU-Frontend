@@ -144,6 +144,11 @@ export interface Document {
   returnReason?: string;
 }
 
+export type DocumentListItem = Omit<Document, "description" | "responsible" | "deadline"> & {
+  responsible: UserShort | null;
+  deadline: string | null;
+};
+
 export type NotificationType =
   | "document_submitted"
   | "document_approved"
@@ -219,6 +224,8 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   total: number;
+  next: string | null;
+  previous: string | null;
 }
 
 export interface ApiError {

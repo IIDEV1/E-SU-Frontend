@@ -4,7 +4,23 @@ import { documentsApi, type DocumentFormPayload, type DocumentsParams } from "@/
 export const documentKeys = {
   all: ["documents"] as const,
   lists: () => [...documentKeys.all, "list"] as const,
-  list: (params: DocumentsParams) => [...documentKeys.lists(), params] as const,
+  list: (params: DocumentsParams) =>
+    [
+      ...documentKeys.lists(),
+      {
+        scope: params.scope ?? "all",
+        search: params.search ?? "",
+        status: params.status ?? "",
+        category: params.category ?? "",
+        department: params.department ?? "",
+        author: params.author ?? "",
+        createdFrom: params.createdFrom ?? "",
+        createdTo: params.createdTo ?? "",
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? 20,
+        ordering: params.ordering ?? "-created_at",
+      },
+    ] as const,
   detail: (id: string) => [...documentKeys.all, "detail", id] as const,
 };
 
