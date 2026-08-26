@@ -36,9 +36,7 @@ export interface AdminCategory extends DocumentCategory {
   documentCount: number;
 }
 
-export type AdminPermission =
-  | "documents.view" | "documents.create" | "documents.edit" | "documents.approve" | "documents.return" | "documents.archive" | "documents.register"
-  | "users.manage" | "departments.manage" | "categories.manage" | "audit.view" | "settings.manage";
+export type AdminPermission = string;
 
 export interface AdminRole {
   id: string;
@@ -46,6 +44,14 @@ export interface AdminRole {
   name: string;
   description: string;
   permissions: AdminPermission[];
+}
+
+export interface AdminPermissionDefinition {
+  id: string;
+  code: AdminPermission;
+  name: string;
+  group: string;
+  description: string;
 }
 
 export type AdminNotificationType =
@@ -107,7 +113,6 @@ export interface AdminState {
   users: AdminUser[];
   departments: AdminDepartment[];
   categories: AdminCategory[];
-  roles: AdminRole[];
   notifications: AdminNotification[];
   auditLogs: AdminAuditLog[];
   settings: AdminSettings;

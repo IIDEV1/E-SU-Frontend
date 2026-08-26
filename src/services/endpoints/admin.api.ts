@@ -1,7 +1,7 @@
 import { api, unwrapResponse } from "@/services/api";
 import { mapAuditLog } from "@/services/mappers";
 import type { ApiEnvelope, ApiPagination } from "@/services/types";
-import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminPermission, AdminRole, AdminSettings, AdminUser } from "@/features/admin/types";
+import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminPermission, AdminPermissionDefinition, AdminRole, AdminSettings, AdminUser } from "@/features/admin/types";
 import type { Department, DocumentCategory, Permission, User } from "@/types";
 
 interface BackendRole {
@@ -12,6 +12,7 @@ interface BackendRole {
   permissions: Permission[];
   users_count?: number;
 }
+interface BackendPermission { id: string; code: string; name: string; group: string; description: string; }
 
 interface BackendSetting {
   key: string;
@@ -106,7 +107,7 @@ export function mapAdminRole(role: BackendRole): AdminRole {
     code: role.code,
     name: role.name,
     description: role.description ?? "",
-    permissions: role.permissions as AdminPermission[],
+    permissions: role.permissions,
   };
 }
 
@@ -171,6 +172,11 @@ export const adminApi = {
   async getRoles() {
     const response = await api.get<ApiEnvelope<ApiPagination<BackendRole>>>("/roles/", { params: { page_size: 100 } });
     return unwrapResponse(response).results.map(mapAdminRole);
+  },
+
+  async getPermissions(): Promise<AdminPermissionDefinition[]> {
+    const response = await api.get<ApiEnvelope<ApiPagination<BackendPermission>>>("/permissions/", { params: { page_size: 100 } });
+    return unwrapResponse(response).results;
   },
 
   async setRolePermissions(roleId: string, permissions: AdminPermission[]) {

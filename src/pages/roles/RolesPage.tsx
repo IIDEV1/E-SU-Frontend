@@ -1,21 +1,94 @@
 import { RotateCcw, Save, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button, Checkbox, ConfirmDialog, DataTable, EmptyState, Input, RoleBadge, TableToolbar, Toast, type TableColumn } from "@/components/ui";
-import { useAdminActions, useAdminRoles } from "@/features/admin/hooks";
-import type { AdminPermission, AdminRole } from "@/features/admin/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button, Checkbox, DataTable, EmptyState, Input, PageError, PageLoader, RoleBadge, TableToolbar, Toast, type TableColumn } from "@/components/ui";
+import { adminKeys, useAdminActions, useAdminPermissions, useAdminRolesQuery } from "@/features/admin/hooks";
+import type { AdminPermission, AdminPermissionDefinition, AdminRole } from "@/features/admin/types";
+import { cloneRoles, rolePermissionsChanged, saveRolePermissionDraft } from "./rolePermissions";
 
-const permissions: { id: AdminPermission; label: string; critical?: boolean }[] = [
-  { id: "documents.view", label: "Просмотр документов" }, { id: "documents.create", label: "Создание документов" }, { id: "documents.edit", label: "Редактирование документов" }, { id: "documents.approve", label: "Согласование" }, { id: "documents.return", label: "Возврат" }, { id: "documents.archive", label: "Архивирование" }, { id: "documents.register", label: "Регистрация документов" }, { id: "users.manage", label: "Управление пользователями", critical: true }, { id: "departments.manage", label: "Управление подразделениями", critical: true }, { id: "categories.manage", label: "Управление категориями", critical: true }, { id: "audit.view", label: "Просмотр журнала" }, { id: "settings.manage", label: "Доступ к настройкам", critical: true },
-];
-const cloneRoles = (roles: AdminRole[]) => roles.map((role) => ({ ...role, permissions: [...role.permissions] }));
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export function RolesPage() {
-  const savedRoles = useAdminRoles(); const actions = useAdminActions();
-  const [draft, setDraft] = useState(() => cloneRoles(savedRoles)); const [query, setQuery] = useState(""); const [pending, setPending] = useState<{ roleId: AdminRole["id"]; permission: AdminPermission; checked: boolean } | null>(null); const [saving, setSaving] = useState(false); const [toast, setToast] = useState<string | null>(null);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(savedRoles); const rows = useMemo(() => permissions.filter((permission) => permission.label.toLowerCase().includes(query.trim().toLowerCase())), [query]);
-  const apply = (roleId: AdminRole["id"], permission: AdminPermission, checked: boolean) => setDraft((roles) => roles.map((role) => role.id === roleId ? { ...role, permissions: checked ? [...new Set([...role.permissions, permission])] : role.permissions.filter((item) => item !== permission) } : role));
-  const requestChange = (role: AdminRole, permission: typeof permissions[number]) => { const checked = !role.permissions.includes(permission.id); if (permission.critical) setPending({ roleId: role.id, permission: permission.id, checked }); else apply(role.id, permission.id, checked); };
-  const save = async () => { setSaving(true); await new Promise((resolve) => window.setTimeout(resolve, 150)); draft.forEach((role) => actions.roles.update(role.id, { permissions: role.permissions })); setSaving(false); setToast("Права ролей сохранены"); };
-  const columns: TableColumn<{ id: AdminPermission; label: string; critical?: boolean }>[] = [{ id: "permission", header: "Право", cell: (permission) => <span className="roles-permission">{permission.label}{permission.critical && <span className="roles-permission__critical">Критическое</span>}</span> }, ...draft.map((role) => ({ id: role.id, header: <RoleBadge role={role.name} />, cell: (permission: typeof permissions[number]) => <Checkbox aria-label={`${role.name}: ${permission.label}`} label="" checked={role.permissions.includes(permission.id)} onChange={() => requestChange(role, permission)} /> }))];
-  return <div className="page-stack admin-page roles-page"><section className="page-hero"><div><h1>Роли и права</h1><p>Матрица прав применяется только после сохранения.</p></div><div className="roles-header-actions"><Button variant="secondary" icon={<RotateCcw size={16} />} disabled={!dirty || saving} onClick={() => setDraft(cloneRoles(savedRoles))}>Отменить изменения</Button><Button icon={<Save size={16} />} loading={saving} disabled={!dirty || saving} onClick={save}>Сохранить</Button></div></section><section className="content-card"><div className="roles-list">{draft.map((role) => <RoleBadge key={role.id} role={role.name} />)}</div>{dirty && <p className="roles-dirty">Есть несохранённые изменения.</p>}<DataTable columns={columns} rows={rows} toolbar={<TableToolbar><Input aria-label="Поиск права" placeholder="Поиск права" value={query} onChange={(event) => setQuery(event.target.value)} /><Button variant="secondary" icon={<Search size={16} />} onClick={() => setQuery("")}>Сбросить</Button></TableToolbar>} empty={<EmptyState title="Права не найдены" />} /></section>{pending && <ConfirmDialog isOpen onClose={() => setPending(null)} title="Подтвердите критическое право" description="Это изменение попадёт в черновик и будет применено только после сохранения." confirmLabel="Подтвердить" onConfirm={() => { apply(pending.roleId, pending.permission, pending.checked); setPending(null); }} />}{toast && <Toast message={toast} kind="success" onClose={() => setToast(null)} />}</div>;
+  const rolesQuery = useAdminRolesQuery();
+  const permissionsQuery = useAdminPermissions();
+  const actions = useAdminActions();
+  const queryClient = useQueryClient();
+  const [draft, setDraft] = useState<AdminRole[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const savedRoles = rolesQuery.data ?? [];
+  const displayedRoles = draft ?? savedRoles;
+  const dirty = draft !== null && draft.some((role) => rolePermissionsChanged(savedRoles.find((savedRole) => savedRole.id === role.id), role));
+
+  const rows = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return (permissionsQuery.data ?? []).filter((permission) => (
+      !normalizedQuery
+      || permission.name.toLowerCase().includes(normalizedQuery)
+      || permission.code.toLowerCase().includes(normalizedQuery)
+      || permission.group.toLowerCase().includes(normalizedQuery)
+    ));
+  }, [permissionsQuery.data, query]);
+
+  const apply = (roleId: string, permission: AdminPermission, checked: boolean) => {
+    setDraft((currentDraft) => (currentDraft ?? cloneRoles(savedRoles)).map((role) => {
+      if (role.id !== roleId) {
+        return role;
+      }
+
+      return {
+        ...role,
+        permissions: checked
+          ? [...new Set([...role.permissions, permission])]
+          : role.permissions.filter((item) => item !== permission),
+      };
+    }));
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setToast(null);
+
+    try {
+      const updatedRoles = await saveRolePermissionDraft(
+        savedRoles,
+        draft ?? savedRoles,
+        (roleId, permissions) => actions.roles.update(roleId, { permissions }),
+      );
+      queryClient.setQueryData(adminKeys.roles, cloneRoles(updatedRoles));
+      setDraft(null);
+      setToast({ kind: "success", message: "Права ролей сохранены" });
+    } catch (error) {
+      setToast({ kind: "error", message: getErrorMessage(error, "Не удалось сохранить права ролей.") });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (rolesQuery.isLoading || permissionsQuery.isLoading) {
+    return <PageLoader label="Загрузка ролей и прав" />;
+  }
+
+  if (rolesQuery.isError || permissionsQuery.isError) {
+    const error = rolesQuery.isError ? rolesQuery.error : permissionsQuery.error;
+    return <PageError description={getErrorMessage(error, "Не удалось загрузить роли и права.")} action={<Button variant="secondary" onClick={() => void Promise.all([rolesQuery.refetch(), permissionsQuery.refetch()])}>Повторить</Button>} />;
+  }
+
+  const columns: TableColumn<AdminPermissionDefinition>[] = [
+    {
+      id: "permission",
+      header: "Право",
+      cell: (permission) => <span className="roles-permission"><strong>{permission.name}</strong>{permission.description && <small>{permission.description}</small>}</span>,
+    },
+    ...displayedRoles.map((role) => ({
+      id: role.id,
+      header: <RoleBadge role={role.name} />,
+      cell: (permission: AdminPermissionDefinition) => <Checkbox aria-label={`${role.name}: ${permission.name}`} label="" checked={role.permissions.includes(permission.code)} disabled={saving} onChange={(event) => apply(role.id, permission.code, event.target.checked)} />,
+    })),
+  ];
+
+  return <div className="page-stack admin-page roles-page"><section className="page-hero"><div><h1>Роли и права</h1><p>Матрица прав применяется только после сохранения.</p></div><div className="roles-header-actions"><Button variant="secondary" icon={<RotateCcw size={16} />} disabled={!dirty || saving} onClick={() => setDraft(null)}>Отменить изменения</Button><Button icon={<Save size={16} />} loading={saving} disabled={!dirty || saving} onClick={() => void save()}>Сохранить</Button></div></section><section className="content-card"><div className="roles-list">{displayedRoles.map((role) => <RoleBadge key={role.id} role={role.name} />)}</div>{dirty && <p className="roles-dirty">Есть несохранённые изменения.</p>}<DataTable columns={columns} rows={rows} toolbar={<TableToolbar><Input aria-label="Поиск права" placeholder="Поиск права" value={query} onChange={(event) => setQuery(event.target.value)} /><Button variant="secondary" icon={<Search size={16} />} onClick={() => setQuery("")}>Сбросить</Button></TableToolbar>} empty={<EmptyState title="Права не найдены" description="Сервер не вернул ни одного права для отображения." />} /></section>{toast && <Toast message={toast.message} kind={toast.kind} onClose={() => setToast(null)} />}</div>;
 }

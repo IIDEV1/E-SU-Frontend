@@ -17,7 +17,6 @@ const state: AdminState = {
   users: [],
   departments: [],
   categories: [],
-  roles: [],
   notifications: [],
   auditLogs: [],
   settings: emptySettings,
@@ -29,7 +28,6 @@ export const adminStore = {
   users: { create: () => undefined, update: () => undefined },
   departments: { create: () => undefined, update: () => undefined, remove: () => undefined },
   categories: { create: () => undefined, update: () => undefined, remove: () => undefined },
-  roles: { update: () => undefined },
   notifications: { markRead: () => undefined, markAllRead: () => undefined },
   settings: { update: () => undefined },
 };

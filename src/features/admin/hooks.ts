@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { adminApi, mapAdminDepartment, mapAdminUser } from "@/services/endpoints/admin.api";
 import { departmentsApi, type DepartmentWritePayload, type DepartmentsQueryParams } from "@/services/endpoints/departments.api";
 import { notificationsApi, type NotificationsQueryParams } from "@/services/endpoints/notifications.api";
@@ -12,6 +12,7 @@ export const adminKeys = {
   departments: ["admin", "departments"] as const,
   categories: ["admin", "categories"] as const,
   roles: ["admin", "roles"] as const,
+  permissions: ["admin", "permissions"] as const,
   notifications: ["admin", "notifications"] as const,
   unreadNotifications: ["admin", "notifications", "unread-count"] as const,
   auditLogs: ["admin", "auditLogs"] as const,
@@ -115,7 +116,20 @@ export function useAdminCategoriesQuery() {
 }
 
 export const useAdminCategories = () => useAdminCategoriesQuery().data ?? [];
-export const useAdminRoles = () => useQuery({ queryKey: adminKeys.roles, queryFn: adminApi.getRoles }).data ?? [];
+export function useAdminRolesQuery() {
+  return useQuery({ queryKey: adminKeys.roles, queryFn: adminApi.getRoles });
+}
+
+export const useAdminRoles = () => useAdminRolesQuery().data ?? [];
+export const useAdminPermissions = () => useQuery({ queryKey: adminKeys.permissions, queryFn: adminApi.getPermissions });
+
+export async function invalidateRolePermissionQueries(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: adminKeys.roles }),
+    queryClient.invalidateQueries({ queryKey: adminKeys.permissions }),
+    queryClient.invalidateQueries({ queryKey: ["auth", "me"] }),
+  ]);
+}
 
 export function useAdminNotificationsQuery(params: NotificationsQueryParams = {}) {
   return useQuery({ queryKey: [...adminKeys.notifications, params], queryFn: () => notificationsApi.getNotificationsPage(params) });
@@ -148,7 +162,7 @@ export function useAdminActions() {
   const createCategory = useMutation({ mutationFn: (value: Omit<AdminCategory, "id">) => adminApi.createCategory(value), onSuccess: () => invalidate(adminKeys.categories, ["documents"]) });
   const updateCategory = useMutation({ mutationFn: ({ categoryId, value }: { categoryId: string; value: Partial<AdminCategory> }) => adminApi.updateCategory(categoryId, value), onSuccess: () => invalidate(adminKeys.categories, ["documents"]) });
   const deleteCategory = useMutation({ mutationFn: adminApi.deleteCategory, onSuccess: () => invalidate(adminKeys.categories, ["documents"]) });
-  const updateRole = useMutation({ mutationFn: ({ roleId, value }: { roleId: string; value: Partial<AdminRole> }) => adminApi.setRolePermissions(roleId, value.permissions ?? []), onSuccess: () => invalidate(adminKeys.roles) });
+  const updateRole = useMutation({ mutationFn: ({ roleId, value }: { roleId: string; value: Partial<AdminRole> }) => adminApi.setRolePermissions(roleId, value.permissions ?? []), onSuccess: () => invalidateRolePermissionQueries(queryClient) });
   const updateSettings = useMutation({ mutationFn: (value: AdminSettings) => adminApi.updateSettings(value), onSuccess: () => invalidate(adminKeys.settings) });
   const markRead = useMutation({ mutationFn: notificationsApi.markRead, onSuccess: () => invalidate(adminKeys.notifications, adminKeys.unreadNotifications) });
   const markAllRead = useMutation({ mutationFn: notificationsApi.markAllRead, onSuccess: () => invalidate(adminKeys.notifications, adminKeys.unreadNotifications) });
