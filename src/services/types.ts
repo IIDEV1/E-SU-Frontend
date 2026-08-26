@@ -9,7 +9,7 @@ export interface ApiErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: Record<string, string[] | string>;
+    details?: Record<string, unknown>;
   };
 }
 
@@ -24,7 +24,7 @@ export interface AppApiError {
   status?: number;
   code: string;
   message: string;
-  details?: Record<string, string[] | string>;
+  details?: Record<string, unknown>;
 }
 
 export interface DocumentUserShortDto {

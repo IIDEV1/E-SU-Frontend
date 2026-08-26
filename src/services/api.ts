@@ -1,4 +1,4 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, updateTokens } from "@/services/tokenStorage";
 import type { ApiEnvelope, ApiErrorResponse, AppApiError } from "@/services/types";
 
@@ -11,7 +11,7 @@ export const api = axios.create({
   },
 });
 
-const publicApi = axios.create({
+export const publicApi = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
@@ -21,15 +21,64 @@ const publicApi = axios.create({
 type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 let refreshPromise: Promise<string | null> | null = null;
+let authFailureHandled = false;
+let authFailureHandler: (() => void) | null = null;
 
-function toAppApiError(error: AxiosError<ApiErrorResponse>): AppApiError {
+const fallbackMessages: Record<number, string> = {
+  400: "Некорректные данные",
+  401: "Требуется авторизация",
+  403: "Недостаточно прав",
+  404: "Объект не найден",
+  409: "Конфликт данных",
+  413: "Размер файла превышает допустимый лимит",
+  429: "Слишком много запросов. Попробуйте позже",
+  500: "Внутренняя ошибка сервера",
+};
+
+export function normalizeApiError(error: unknown): AppApiError {
+  if (!axios.isAxiosError<ApiErrorResponse>(error)) {
+    return {
+      code: "network_error",
+      message: "Не удалось подключиться к серверу. Проверьте интернет-соединение.",
+    };
+  }
+
   const backendError = error.response?.data?.error;
+  const status = error.response?.status;
+
   return {
-    status: error.response?.status,
+    status,
     code: backendError?.code ?? "network_error",
-    message: backendError?.message ?? "Произошла ошибка при выполнении запроса.",
+    message:
+      backendError?.message ??
+      (status ? fallbackMessages[status] ?? "Произошла ошибка при выполнении запроса." : "Не удалось подключиться к серверу. Проверьте интернет-соединение."),
     details: backendError?.details,
   };
+}
+
+export function setAuthFailureHandler(handler: (() => void) | null) {
+  authFailureHandler = handler;
+}
+
+export function resetAuthFailureState() {
+  authFailureHandled = false;
+}
+
+function handleAuthFailure() {
+  clearTokens();
+
+  if (authFailureHandled) {
+    return;
+  }
+
+  authFailureHandled = true;
+
+  if (authFailureHandler) {
+    authFailureHandler();
+    return;
+  }
+
+  window.location.assign("/login");
 }
 
 async function refreshAccessToken() {
@@ -43,7 +92,6 @@ async function refreshAccessToken() {
         updateTokens(response.data.data);
         return response.data.data.access;
       } catch {
-        clearTokens();
         return null;
       } finally {
         refreshPromise = null;
@@ -73,9 +121,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       return refreshAccessToken().then((access) => {
         if (!access) {
-          clearTokens();
-          window.location.assign("/login");
-          return Promise.reject(toAppApiError(error));
+          handleAuthFailure();
+          return Promise.reject(normalizeApiError(error));
         }
 
         originalRequest.headers.Authorization = `Bearer ${access}`;
@@ -83,7 +130,7 @@ api.interceptors.response.use(
       });
     }
 
-    return Promise.reject(toAppApiError(error));
+    return Promise.reject(normalizeApiError(error));
   },
 );
 
