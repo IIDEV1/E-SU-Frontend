@@ -87,6 +87,48 @@ export interface DocumentWriteResponseDto {
 
 export type PaginatedDocumentDto = ApiPagination<DocumentListDto>;
 
+export type ApprovalRouteStatusDto = "active" | "completed" | "returned" | "cancelled";
+export type ApprovalRouteSourceDto = "manual" | "category_template";
+export type ApprovalStepStatusDto = "pending" | "current" | "approved" | "returned" | "cancelled";
+
+export interface ApprovalRoleShortDto {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface ApprovalStepDto {
+  id: string;
+  order: number;
+  approver: DocumentUserShortDto;
+  role: ApprovalRoleShortDto | null;
+  status: ApprovalStepStatusDto;
+  comment: string;
+  acted_at: string | null;
+  created_at: string;
+}
+
+export interface ApprovalRouteDto {
+  id: string;
+  document: string;
+  status: ApprovalRouteStatusDto;
+  source: ApprovalRouteSourceDto;
+  template: string | null;
+  template_snapshot: Record<string, unknown>;
+  created_by: DocumentUserShortDto | null;
+  created_at: string;
+  completed_at: string | null;
+  steps: ApprovalStepDto[];
+  actions: Array<{
+    id: string;
+    step: string;
+    actor: DocumentUserShortDto;
+    action: "approve" | "return";
+    comment: string;
+    created_at: string;
+  }>;
+}
+
 export interface DocumentFileDto {
   id: string;
   document: string;

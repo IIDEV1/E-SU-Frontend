@@ -2,6 +2,7 @@ import { api, unwrapResponse } from "@/services/api";
 import { mapComment, mapDocumentDetail, mapDocumentFile, mapDocumentList } from "@/services/mappers";
 import type {
   ApiEnvelope,
+  ApprovalRouteDto,
   ApiPagination,
   DocumentCommentDto,
   DocumentDetailDto,
@@ -188,8 +189,26 @@ export const documentsApi = {
     return this.getDocument(documentId);
   },
 
-  async submitDocument(id: string): Promise<Document> {
-    await api.post(`/documents/${id}/submit/`, {});
+  async updateAndSubmitDocument(id: string, payload: Partial<DocumentFormPayload>): Promise<Document> {
+    const response = await api.patch<ApiEnvelope<DocumentWriteResponseDto>>(`/documents/${id}/`, toWritePayload(payload));
+    const documentId = unwrapResponse(response).id;
+
+    if (payload.comment) {
+      await api.post(`/documents/${documentId}/comments/`, { text: payload.comment });
+    }
+    await uploadPendingFiles(documentId, payload.files);
+    await api.post(`/documents/${documentId}/submit/`, { approvers: payload.approverIds ?? [] });
+
+    return this.getDocument(documentId);
+  },
+
+  async getApprovalRoute(id: string): Promise<ApprovalRouteDto> {
+    const response = await api.get<ApiEnvelope<ApprovalRouteDto>>(`/documents/${id}/approval/`);
+    return unwrapResponse(response);
+  },
+
+  async submitDocument(id: string, approverIds: string[] = []): Promise<Document> {
+    await api.post(`/documents/${id}/submit/`, { approvers: approverIds });
     return this.getDocument(id);
   },
 
@@ -205,6 +224,21 @@ export const documentsApi = {
 
   async archiveDocument(id: string): Promise<Document> {
     await api.post(`/documents/${id}/archive/`, {});
+    return this.getDocument(id);
+  },
+
+  async registerDocument(id: string): Promise<Document> {
+    await api.post(`/documents/${id}/register/`, {});
+    return this.getDocument(id);
+  },
+
+  async completeDocument(id: string): Promise<Document> {
+    await api.post(`/documents/${id}/complete/`, {});
+    return this.getDocument(id);
+  },
+
+  async restoreDocument(id: string): Promise<Document> {
+    await api.post(`/documents/${id}/restore/`, {});
     return this.getDocument(id);
   },
 

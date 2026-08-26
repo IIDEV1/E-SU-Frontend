@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilePlus2, Save, Send, Trash2, X } from "lucide-react";
@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreateDocument, useUpdateDocument } from "@/hooks/useDocuments";
+import { useCreateDocument, useUpdateAndSubmitDocument, useUpdateDocument } from "@/hooks/useDocuments";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useUsers } from "@/hooks/useUsers";
 import type { Document, DocumentFile, DocumentStatus } from "@/types";
@@ -61,6 +61,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
   const navigate = useNavigate();
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(document?.id ?? "");
+  const updateAndSubmitDocument = useUpdateAndSubmitDocument(document?.id ?? "");
   const { data: categories = [] } = useCategories();
   const { data: departments = [] } = useDepartments();
   const { data: users = [] } = useUsers();
@@ -68,11 +69,6 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
   const [fileError, setFileError] = useState("");
   const [toast, setToast] = useState<string>();
   const isLocked = document ? ["completed", "archived"].includes(document.status) : false;
-
-  const defaultApprovers = useMemo(
-    () => document?.approvalSteps.map((step) => step.approver.id) ?? users.slice(0, 2).map((user) => user.id),
-    [document, users],
-  );
 
   const {
     formState: { errors, isDirty, isSubmitting },
@@ -90,7 +86,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       deadline: document?.deadline ?? "",
       priority: document?.priority ?? "normal",
       comment: "",
-      approverIds: defaultApprovers,
+      approverIds: [],
     },
   });
 
@@ -129,8 +125,10 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       }
 
       if (!document) return;
-      const updatedDocument = await updateDocument.mutateAsync({ ...values, files });
-      setToast("Изменения сохранены.");
+      const updatedDocument = status === "in_review"
+        ? await updateAndSubmitDocument.mutateAsync({ ...values, files })
+        : await updateDocument.mutateAsync({ ...values, files });
+      setToast(status === "in_review" ? "Документ отправлен на согласование." : "Изменения сохранены.");
       setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 350);
     })();
 
@@ -256,15 +254,15 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
           variant="secondary"
           icon={<Save size={18} />}
           loading={createDocument.isPending && mode === "create"}
-          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending || updateAndSubmitDocument.isPending}
           onClick={() => void save("draft")}
         >
           Сохранить черновик
         </Button>
         <Button
           icon={<Send size={18} />}
-          loading={createDocument.isPending || updateDocument.isPending}
-          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          loading={createDocument.isPending || updateAndSubmitDocument.isPending}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending || updateAndSubmitDocument.isPending}
           onClick={() => void save("in_review")}
         >
           {mode === "edit" ? "Сохранить и отправить" : "Отправить на согласование"}

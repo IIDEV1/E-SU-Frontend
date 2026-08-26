@@ -1,23 +1,30 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Archive, CheckCircle2, Download, MessageSquarePlus, Pencil, RotateCcw, Send } from "lucide-react";
+import { Archive, CheckCircle2, ClipboardCheck, FileCheck2, MessageSquarePlus, Pencil, RotateCcw, Send, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog, Toast } from "@/components/ui";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { StateBlock } from "@/components/ui/StateBlock";
-import { useAdminNotifications } from "@/features/admin/hooks";
+import { useAuth } from "@/features/auth/AuthContext";
 import {
   useAddDocumentComment,
   useApproveDocument,
   useArchiveDocument,
+  useCompleteDocument,
   useDocument,
+  useDocumentApprovalRoute,
+  useRegisterDocument,
   useReturnDocument,
+  useRestoreDocument,
   useSubmitDocument,
 } from "@/hooks/useDocuments";
+import { useNotifications } from "@/hooks/useNotifications";
 import { formatBytes, formatDate } from "@/utils/format";
+import type { DocumentStatus, Permission } from "@/types";
 
 type Tab = "info" | "files" | "approval" | "comments" | "history" | "notifications";
-type PendingAction = "submit" | "approve" | "archive" | null;
+type PendingAction = "submit" | "approve" | "register" | "complete" | "archive" | "restore" | null;
+type PermissionCheck = (permission?: Permission | Permission[]) => boolean;
 
 const tabs: Array<{ id: Tab; label: string }> = [
   { id: "info", label: "Информация" },
@@ -28,14 +35,60 @@ const tabs: Array<{ id: Tab; label: string }> = [
   { id: "notifications", label: "Уведомления" },
 ];
 
+export function getDocumentWorkflowAvailability(status: DocumentStatus, can: PermissionCheck) {
+  const isEditable = status === "draft" || status === "returned";
+
+  return {
+    canEdit: isEditable && can("documents.create"),
+    canSubmit: isEditable && can("documents.create"),
+    canApprove: status === "in_review" && can("documents.approve"),
+    canReturn: status === "in_review" && can("documents.return"),
+    canRegister: status === "approved" && can("documents.register"),
+    canComplete: status === "approved" && (can("documents.edit") || can("documents.create")),
+    canArchive: status === "completed" && can("documents.archive"),
+    canRestore: status === "archived" && can("documents.archive"),
+  };
+}
+
+function getApiErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return "Не удалось выполнить действие. Попробуйте ещё раз.";
+}
+
+function isNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404
+  );
+}
+
+export function isValidReturnComment(value: string) {
+  return value.trim().length >= 3;
+}
+
 export function DocumentDetailPage() {
   const { id = "" } = useParams();
   const { data: document, isError, isLoading } = useDocument(id);
-  const notifications = useAdminNotifications();
+  const { can } = useAuth();
+  const { data: notifications = [] } = useNotifications();
+  const approvalRoute = useDocumentApprovalRoute(id);
   const submitDocument = useSubmitDocument(id);
   const approveDocument = useApproveDocument(id);
   const returnDocument = useReturnDocument(id);
   const archiveDocument = useArchiveDocument();
+  const registerDocument = useRegisterDocument(id);
+  const completeDocument = useCompleteDocument(id);
+  const restoreDocument = useRestoreDocument(id);
   const addComment = useAddDocumentComment(id);
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
@@ -43,6 +96,7 @@ export function DocumentDetailPage() {
   const [returnComment, setReturnComment] = useState("");
   const [commentText, setCommentText] = useState("");
   const [toast, setToast] = useState<string>();
+  const [actionError, setActionError] = useState<string>();
 
   const relatedNotifications = useMemo(
     () => notifications.filter((notification) => notification.documentId === id),
@@ -57,26 +111,50 @@ export function DocumentDetailPage() {
     return <StateBlock title="Документ не найден" description="Проверьте ссылку или вернитесь к списку документов." />;
   }
 
-  const canEdit = ["draft", "returned"].includes(document.status);
-  const canSubmit = ["draft", "returned"].includes(document.status);
-  const canApprove = document.status === "in_review";
-  const canReturn = document.status === "in_review";
-  const canArchive = !["archived", "draft"].includes(document.status);
+  const {
+    canEdit,
+    canSubmit,
+    canApprove,
+    canReturn,
+    canRegister,
+    canComplete,
+    canArchive,
+    canRestore,
+  } = getDocumentWorkflowAvailability(document.status, can);
 
   const runAction = async () => {
-    if (pendingAction === "submit") {
-      await submitDocument.mutateAsync();
-      setToast("Документ отправлен на согласование.");
+    if (!pendingAction) return;
+
+    try {
+      setActionError(undefined);
+      if (pendingAction === "submit") {
+        await submitDocument.mutateAsync([]);
+        setToast("Документ отправлен на согласование.");
+      }
+      if (pendingAction === "approve") {
+        await approveDocument.mutateAsync();
+        setToast("Документ согласован.");
+      }
+      if (pendingAction === "register") {
+        await registerDocument.mutateAsync();
+        setToast("Документ зарегистрирован.");
+      }
+      if (pendingAction === "complete") {
+        await completeDocument.mutateAsync();
+        setToast("Документ завершён.");
+      }
+      if (pendingAction === "archive") {
+        await archiveDocument.mutateAsync(document.id);
+        setToast("Документ архивирован.");
+      }
+      if (pendingAction === "restore") {
+        await restoreDocument.mutateAsync();
+        setToast("Документ восстановлен.");
+      }
+      setPendingAction(null);
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
     }
-    if (pendingAction === "approve") {
-      await approveDocument.mutateAsync();
-      setToast("Документ согласован.");
-    }
-    if (pendingAction === "archive") {
-      await archiveDocument.mutateAsync(document.id);
-      setToast("Документ архивирован.");
-    }
-    setPendingAction(null);
   };
 
   const addNewComment = async () => {
@@ -88,11 +166,16 @@ export function DocumentDetailPage() {
   };
 
   const returnCurrentDocument = async () => {
-    if (returnComment.trim().length < 3) return;
-    await returnDocument.mutateAsync(returnComment.trim());
-    setReturnComment("");
-    setIsReturnOpen(false);
-    setToast("Документ возвращен на доработку.");
+    if (!isValidReturnComment(returnComment)) return;
+    try {
+      setActionError(undefined);
+      await returnDocument.mutateAsync(returnComment.trim());
+      setReturnComment("");
+      setIsReturnOpen(false);
+      setToast("Документ возвращен на доработку.");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    }
   };
 
   return (
@@ -117,10 +200,14 @@ export function DocumentDetailPage() {
           {canSubmit && <Button variant="secondary" icon={<Send size={18} />} onClick={() => setPendingAction("submit")}>Отправить</Button>}
           {canApprove && <Button variant="secondary" icon={<CheckCircle2 size={18} />} onClick={() => setPendingAction("approve")}>Согласовать</Button>}
           {canReturn && <Button variant="ghost" icon={<RotateCcw size={18} />} onClick={() => setIsReturnOpen(true)}>Вернуть</Button>}
-          <Button variant="ghost" icon={<Download size={18} />} onClick={() => setToast("Файл подготовлен к скачиванию в mock-режиме.")}>Скачать</Button>
+          {canRegister && <Button variant="secondary" icon={<ClipboardCheck size={18} />} onClick={() => setPendingAction("register")}>Зарегистрировать</Button>}
+          {canComplete && <Button variant="secondary" icon={<FileCheck2 size={18} />} onClick={() => setPendingAction("complete")}>Завершить</Button>}
           {canArchive && <Button variant="ghost" icon={<Archive size={18} />} onClick={() => setPendingAction("archive")}>Архивировать</Button>}
+          {canRestore && <Button variant="ghost" icon={<Undo2 size={18} />} onClick={() => setPendingAction("restore")}>Восстановить</Button>}
         </div>
       </section>
+
+      {actionError && <div className="form-error" role="alert">{actionError}</div>}
 
       <section className="summary-grid">
         {[
@@ -168,11 +255,25 @@ export function DocumentDetailPage() {
         )}
         {activeTab === "approval" && (
           <div className="tab-panel timeline-list">
-            {document.approvalSteps.map((step) => (
+            {approvalRoute.isLoading && (
+              <StateBlock title="Загружаем маршрут" description="Получаем актуальные шаги согласования." />
+            )}
+            {approvalRoute.isError && (
+              <StateBlock
+                title={isNotFoundError(approvalRoute.error) ? "Маршрут ещё не создан" : "Не удалось загрузить маршрут"}
+                description={isNotFoundError(approvalRoute.error) ? "Документ пока не отправлен на согласование." : getApiErrorMessage(approvalRoute.error)}
+              />
+            )}
+            {approvalRoute.data && approvalRoute.data.steps.length === 0 && (
+              <StateBlock title="Шагов нет" description="Backend вернул маршрут без шагов согласования." />
+            )}
+            {approvalRoute.data?.steps.map((step) => (
               <div key={step.id}>
-                <span>{step.status}</span>
-                <strong>{step.approver.name}</strong>
+                <span>Шаг {step.order} · {step.status}</span>
+                <strong>{step.approver.full_name}</strong>
+                {step.approver.position && <p>{step.approver.position}</p>}
                 {step.comment && <p>{step.comment}</p>}
+                {step.acted_at && <p>{formatDate(step.acted_at)}</p>}
               </div>
             ))}
           </div>
@@ -232,7 +333,7 @@ export function DocumentDetailPage() {
         onClose={() => setPendingAction(null)}
         onConfirm={() => void runAction()}
         title="Подтвердите действие"
-        description="Действие изменит состояние документа в mock-сессии."
+        description="Состояние документа будет изменено на сервере."
         confirmLabel="Подтвердить"
       />
 
@@ -248,9 +349,10 @@ export function DocumentDetailPage() {
             <h2>Вернуть документ</h2>
             <p>Комментарий обязателен, чтобы автор понял, что нужно исправить.</p>
             <textarea value={returnComment} onChange={(event) => setReturnComment(event.target.value)} rows={5} />
-            {returnComment.trim().length > 0 && returnComment.trim().length < 3 && <small>Минимум 3 символа</small>}
+            {returnComment.trim().length > 0 && !isValidReturnComment(returnComment) && <small>Минимум 3 символа</small>}
+            {actionError && <div className="form-error" role="alert">{actionError}</div>}
             <div className="form-actions">
-              <Button type="submit" loading={returnDocument.isPending} disabled={returnComment.trim().length < 3}>Вернуть</Button>
+              <Button type="submit" loading={returnDocument.isPending} disabled={!isValidReturnComment(returnComment)}>Вернуть</Button>
               <Button variant="ghost" onClick={() => setIsReturnOpen(false)}>Отмена</Button>
             </div>
           </form>

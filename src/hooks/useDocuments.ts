@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { documentsApi, type DocumentFormPayload, type DocumentsParams } from "@/services/endpoints/documents.api";
+import { dashboardKeys } from "@/hooks/useDashboard";
+import { notificationKeys } from "@/hooks/useNotifications";
 
 export const documentKeys = {
   all: ["documents"] as const,
@@ -22,6 +24,8 @@ export const documentKeys = {
       },
     ] as const,
   detail: (id: string) => [...documentKeys.all, "detail", id] as const,
+  approval: (id: string) => [...documentKeys.all, "approval", id] as const,
+  history: (id: string) => [...documentKeys.all, "history", id] as const,
 };
 
 export function useDocuments(params: DocumentsParams = {}) {
@@ -39,13 +43,38 @@ export function useDocument(id: string) {
   });
 }
 
+export function useDocumentApprovalRoute(id: string) {
+  return useQuery({
+    queryKey: documentKeys.approval(id),
+    queryFn: () => documentsApi.getApprovalRoute(id),
+    enabled: Boolean(id),
+  });
+}
+
+export async function invalidateDocumentWorkflow(queryClient: ReturnType<typeof useQueryClient>, id: string) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: documentKeys.lists() }),
+    queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) }),
+    queryClient.invalidateQueries({ queryKey: documentKeys.approval(id) }),
+    queryClient.invalidateQueries({ queryKey: documentKeys.history(id) }),
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
+    queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+  ]);
+}
+
 function useDocumentInvalidation(id?: string) {
   const queryClient = useQueryClient();
-  return () => {
-    void queryClient.invalidateQueries({ queryKey: documentKeys.all });
+  return async () => {
     if (id) {
-      void queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) });
+      await invalidateDocumentWorkflow(queryClient, id);
+      return;
     }
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: documentKeys.all }),
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+    ]);
   };
 }
 
@@ -65,9 +94,17 @@ export function useUpdateDocument(id: string) {
   });
 }
 
+export function useUpdateAndSubmitDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({
+    mutationFn: (payload: Partial<DocumentFormPayload>) => documentsApi.updateAndSubmitDocument(id, payload),
+    onSuccess: invalidate,
+  });
+}
+
 export function useSubmitDocument(id: string) {
   const invalidate = useDocumentInvalidation(id);
-  return useMutation({ mutationFn: () => documentsApi.submitDocument(id), onSuccess: invalidate });
+  return useMutation({ mutationFn: (approverIds: string[] = []) => documentsApi.submitDocument(id, approverIds), onSuccess: invalidate });
 }
 
 export function useApproveDocument(id: string) {
@@ -81,14 +118,26 @@ export function useReturnDocument(id: string) {
 }
 
 export function useArchiveDocument() {
-  const invalidate = useDocumentInvalidation();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => documentsApi.archiveDocument(id),
-    onSuccess: (_, id) => {
-      invalidate();
-      void documentsApi.getDocument(id).catch(() => undefined);
-    },
+    onSuccess: (_, id) => invalidateDocumentWorkflow(queryClient, id),
   });
+}
+
+export function useRegisterDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: () => documentsApi.registerDocument(id), onSuccess: invalidate });
+}
+
+export function useCompleteDocument(id: string) {
+  const invalidate = useDocumentInvalidation(id);
+  return useMutation({ mutationFn: () => documentsApi.completeDocument(id), onSuccess: invalidate });
+}
+
+export function useRestoreDocument(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: () => documentsApi.restoreDocument(id), onSuccess: () => invalidateDocumentWorkflow(queryClient, id) });
 }
 
 export function useAddDocumentComment(id: string) {
