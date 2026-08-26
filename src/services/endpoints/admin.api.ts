@@ -1,8 +1,7 @@
 import { api, unwrapResponse } from "@/services/api";
-import { mapAuditLog } from "@/services/mappers";
 import type { ApiEnvelope, ApiPagination } from "@/services/types";
 import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminPermission, AdminPermissionDefinition, AdminRole, AdminSettings, AdminUser } from "@/features/admin/types";
-import type { Department, DocumentCategory, Permission, User } from "@/types";
+import type { Department, DocumentCategory, PaginatedResponse, Permission, User } from "@/types";
 
 interface BackendRole {
   id: string;
@@ -13,6 +12,42 @@ interface BackendRole {
   users_count?: number;
 }
 interface BackendPermission { id: string; code: string; name: string; group: string; description: string; }
+
+export interface AuditLogDto {
+  id: string;
+  user: { id: string; email: string; full_name: string } | null;
+  action: string;
+  action_display: string;
+  object_type: string;
+  object_id: string;
+  description: string;
+  ip_address: string | null;
+  user_agent: string;
+  result: "success" | "failure";
+  result_display: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AuditActionDto {
+  code: string;
+  name: string;
+}
+
+export interface AuditLogsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  user?: string;
+  userEmail?: string;
+  action?: string;
+  objectType?: string;
+  objectId?: string;
+  result?: "success" | "failure";
+  dateFrom?: string;
+  dateTo?: string;
+  ordering?: "created_at" | "-created_at" | "action" | "-action";
+}
 
 interface BackendSetting {
   key: string;
@@ -111,6 +146,38 @@ export function mapAdminRole(role: BackendRole): AdminRole {
   };
 }
 
+export function mapAdminAuditLog(log: AuditLogDto): AdminAuditLog {
+  return {
+    id: log.id,
+    user: log.user && { id: log.user.id, email: log.user.email, fullName: log.user.full_name },
+    action: log.action,
+    actionDisplay: log.action_display,
+    objectType: log.object_type,
+    objectId: log.object_id,
+    description: log.description,
+    result: log.result,
+    resultDisplay: log.result_display,
+    createdAt: log.created_at,
+  };
+}
+
+export function serializeAuditLogQueryParams(params: AuditLogsParams) {
+  return {
+    page: params.page,
+    page_size: params.pageSize,
+    search: params.search?.trim() || undefined,
+    user: params.user?.trim() || undefined,
+    user_email: params.userEmail?.trim() || undefined,
+    action: params.action || undefined,
+    object_type: params.objectType?.trim() || undefined,
+    object_id: params.objectId?.trim() || undefined,
+    result: params.result,
+    date_from: params.dateFrom || undefined,
+    date_to: params.dateTo || undefined,
+    ordering: params.ordering,
+  };
+}
+
 export function settingsFromBackend(settings: BackendSetting[]): AdminSettings {
   const value = (key: string, fallback: unknown) => settings.find((item) => item.key === key)?.typed_value ?? fallback;
   return {
@@ -184,17 +251,22 @@ export const adminApi = {
     return mapAdminRole(unwrapResponse(response));
   },
 
-  async getAuditLogs() {
-    const response = await api.get<ApiEnvelope<ApiPagination<unknown>>>("/audit/", { params: { page_size: 100 } });
-    return unwrapResponse(response).results.map((item) => {
-      const log = mapAuditLog(item as Parameters<typeof mapAuditLog>[0]);
-      return {
-        ...log,
-        userName: log.user,
-        entity: "document",
-        entityLabel: log.document || log.object,
-      } as AdminAuditLog;
-    });
+  async getAuditLogs(params: AuditLogsParams = {}): Promise<PaginatedResponse<AdminAuditLog>> {
+    const response = await api.get<ApiEnvelope<ApiPagination<AuditLogDto>>>("/audit/", { params: serializeAuditLogQueryParams(params) });
+    const page = unwrapResponse(response);
+    return {
+      data: page.results.map(mapAdminAuditLog),
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 20,
+      total: page.count,
+      next: page.next,
+      previous: page.previous,
+    };
+  },
+
+  async getAuditActions(): Promise<AuditActionDto[]> {
+    const response = await api.get<ApiEnvelope<AuditActionDto[]>>("/audit/actions/");
+    return unwrapResponse(response);
   },
 
   async getSettings() {

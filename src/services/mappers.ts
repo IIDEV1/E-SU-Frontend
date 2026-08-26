@@ -1,5 +1,4 @@
 import type {
-  AuditLog,
   Comment,
   Document,
   DocumentHistoryEntry,
@@ -41,18 +40,6 @@ interface BackendNotification {
   is_read?: boolean;
   document?: string | null;
   document_id?: string | null;
-  created_at?: string;
-}
-
-interface BackendAuditLog {
-  id: string;
-  user?: { full_name?: string; email?: string; role?: string } | null;
-  action?: string;
-  object_type?: string;
-  object_id?: string;
-  document?: string | null;
-  department?: string | null;
-  result?: "success" | "error";
   created_at?: string;
 }
 
@@ -185,19 +172,5 @@ export function mapNotification(notification: BackendNotification): Notification
     createdAt: notification.created_at ?? "",
     isRead: Boolean(notification.is_read),
     documentId: notification.document_id ?? notification.document ?? undefined,
-  };
-}
-
-export function mapAuditLog(log: BackendAuditLog): AuditLog {
-  return {
-    id: log.id,
-    dateTime: log.created_at ?? "",
-    user: log.user?.full_name ?? log.user?.email ?? "Система",
-    role: log.user?.role ?? "",
-    action: log.action ?? "",
-    object: log.object_type ?? log.object_id ?? "",
-    document: log.document ?? "",
-    department: log.department ?? "",
-    result: log.result ?? "success",
   };
 }

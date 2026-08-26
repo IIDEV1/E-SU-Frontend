@@ -18,7 +18,6 @@ const state: AdminState = {
   departments: [],
   categories: [],
   notifications: [],
-  auditLogs: [],
   settings: emptySettings,
 };
 

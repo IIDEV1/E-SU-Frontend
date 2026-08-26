@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { adminApi, mapAdminDepartment, mapAdminUser } from "@/services/endpoints/admin.api";
+import { adminApi, mapAdminDepartment, mapAdminUser, type AuditLogsParams } from "@/services/endpoints/admin.api";
 import { departmentsApi, type DepartmentWritePayload, type DepartmentsQueryParams } from "@/services/endpoints/departments.api";
 import { notificationsApi, type NotificationsQueryParams } from "@/services/endpoints/notifications.api";
 import { usersApi, type UserCreatePayload, type UserUpdatePayload, type UsersQueryParams } from "@/services/endpoints/users.api";
@@ -15,7 +15,8 @@ export const adminKeys = {
   permissions: ["admin", "permissions"] as const,
   notifications: ["admin", "notifications"] as const,
   unreadNotifications: ["admin", "notifications", "unread-count"] as const,
-  auditLogs: ["admin", "auditLogs"] as const,
+  auditLogs: (params: AuditLogsParams) => ["admin", "auditLogs", params] as const,
+  auditActions: ["admin", "auditActions"] as const,
   settings: ["admin", "settings"] as const,
 };
 
@@ -137,7 +138,13 @@ export function useAdminNotificationsQuery(params: NotificationsQueryParams = {}
 
 export const useAdminNotifications = () => useAdminNotificationsQuery({ page_size: 100 }).data?.results ?? [];
 export const useAdminUnreadNotificationCount = () => useQuery({ queryKey: adminKeys.unreadNotifications, queryFn: notificationsApi.getUnreadCount });
-export const useAdminAuditLogs = () => useQuery({ queryKey: adminKeys.auditLogs, queryFn: adminApi.getAuditLogs }).data ?? [];
+export function useAdminAuditLogsQuery(params: AuditLogsParams) {
+  return useQuery({ queryKey: adminKeys.auditLogs(params), queryFn: () => adminApi.getAuditLogs(params) });
+}
+
+export function useAdminAuditActionsQuery() {
+  return useQuery({ queryKey: adminKeys.auditActions, queryFn: adminApi.getAuditActions });
+}
 export const useAdminSettings = () => useQuery({ queryKey: adminKeys.settings, queryFn: adminApi.getSettings }).data ?? emptySettings;
 
 export function useAdminActions() {

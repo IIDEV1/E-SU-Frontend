@@ -185,18 +185,6 @@ export interface Notification {
   documentId?: string;
 }
 
-export interface AuditLog {
-  id: string;
-  dateTime: string;
-  user: string;
-  role: string;
-  action: string;
-  object: string;
-  document: string;
-  department: string;
-  result: "success" | "error";
-}
-
 export interface SystemSettings {
   general: {
     systemName: string;

@@ -298,42 +298,6 @@ export const mockRoles = [
   { id: "employee", name: "Сотрудник", description: "Создание и отправка внутренних документов", usersCount: 2 },
 ];
 
-export const mockAuditLogs = [
-  {
-    id: "1",
-    dateTime: "2026-08-09 14:20:15",
-    user: "Айдана Садыкова",
-    role: "Руководитель",
-    action: "Согласование",
-    object: "Документ",
-    document: "Приказ ESU-2026-001",
-    department: "Учебный отдел",
-    result: "success",
-  },
-  {
-    id: "2",
-    dateTime: "2026-08-08 11:05:40",
-    user: "Нурбек Алиев",
-    role: "Контролер",
-    action: "Создание",
-    object: "Документ",
-    document: "Заявка ESU-2026-020",
-    department: "Финансовый отдел",
-    result: "success",
-  },
-  {
-    id: "3",
-    dateTime: "2026-08-07 16:45:10",
-    user: "Мээрим Осмонова",
-    role: "Сотрудник",
-    action: "Возврат",
-    object: "Документ",
-    document: "Договор ESU-2026-014",
-    department: "IT департамент",
-    result: "error",
-  },
-];
-
 export const mockSettings = {
   general: { systemName: "E-SU Document Flow", timezone: "UTC+6 (Бишкек)", language: "Русский" },
   university: {

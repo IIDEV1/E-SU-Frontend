@@ -1,4 +1,4 @@
-import type { DocumentCategory, SystemSettings, UserRole } from "@/types";
+import type { DocumentCategory, SystemSettings } from "@/types";
 
 export type AdminUserStatus = "active" | "blocked" | "pending";
 
@@ -86,16 +86,15 @@ export interface AdminNotification {
 
 export interface AdminAuditLog {
   id: string;
-  dateTime: string;
-  userName: string;
-  role: UserRole;
-  action: "created" | "updated" | "deleted" | "read" | "role_changed" | "settings_changed";
-  entity: "user" | "department" | "category" | "role" | "settings" | "document";
-  entityLabel: string;
-  object: string;
-  document: string;
-  department: string;
-  result: "success" | "error";
+  user: { id: string; email: string; fullName: string } | null;
+  action: string;
+  actionDisplay: string;
+  objectType: string;
+  objectId: string;
+  description: string;
+  result: "success" | "failure";
+  resultDisplay: string;
+  createdAt: string;
 }
 
 export interface AdminDocumentStatus { id: string; name: string; color: string; active: boolean; order: number; }
@@ -114,6 +113,5 @@ export interface AdminState {
   departments: AdminDepartment[];
   categories: AdminCategory[];
   notifications: AdminNotification[];
-  auditLogs: AdminAuditLog[];
   settings: AdminSettings;
 }
