@@ -1,4 +1,4 @@
-import type { DocumentCategory, SystemSettings } from "@/types";
+import type { DocumentCategory } from "@/types";
 
 export type AdminUserStatus = "active" | "blocked" | "pending";
 
@@ -97,21 +97,9 @@ export interface AdminAuditLog {
   createdAt: string;
 }
 
-export interface AdminDocumentStatus { id: string; name: string; color: string; active: boolean; order: number; }
-export interface AdminSettings extends SystemSettings {
-  general: SystemSettings["general"] & { dateFormat: string };
-  university: SystemSettings["university"] & { shortName: string; phone: string; logoName?: string };
-  numbering: SystemSettings["numbering"] & { includeYear: boolean; includeDepartment: boolean; includeSequence: boolean };
-  documentStatuses: AdminDocumentStatus[];
-  emailNotifications: { enabled: boolean; assigned: boolean; approved: boolean; returned: boolean; deadlineReminder: boolean };
-  allowedExtensions: string[];
-  fileLimits: { maxSizeMb: number; maxFiles: number };
-}
-
 export interface AdminState {
   users: AdminUser[];
   departments: AdminDepartment[];
   categories: AdminCategory[];
   notifications: AdminNotification[];
-  settings: AdminSettings;
 }

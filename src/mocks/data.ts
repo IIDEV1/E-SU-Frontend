@@ -297,16 +297,3 @@ export const mockRoles = [
   { id: "approver", name: "Согласующий / Контролер", description: "Проверка финансовых и юридических аспектов", usersCount: 1 },
   { id: "employee", name: "Сотрудник", description: "Создание и отправка внутренних документов", usersCount: 2 },
 ];
-
-export const mockSettings = {
-  general: { systemName: "E-SU Document Flow", timezone: "UTC+6 (Бишкек)", language: "Русский" },
-  university: {
-    name: "Electronic Salymbekov University",
-    rector: "Б. К. Садыков",
-    address: "ул. Манаса 42",
-    email: "info@esu.kg",
-  },
-  numbering: { prefix: "ESU", format: "[PREFIX]-[YEAR]-[ID]", startNumber: "101" },
-  fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
-  maxFileSizeMb: 25,
-};

@@ -185,33 +185,6 @@ export interface Notification {
   documentId?: string;
 }
 
-export interface SystemSettings {
-  general: {
-    systemName: string;
-    timezone: string;
-    language: string;
-  };
-  university: {
-    name: string;
-    rector: string;
-    address: string;
-    email: string;
-  };
-  numbering: {
-    prefix: string;
-    format: string;
-    startNumber: string;
-  };
-  fileFormats: {
-    pdf: boolean;
-    docx: boolean;
-    xlsx: boolean;
-    png: boolean;
-    jpg: boolean;
-  };
-  maxFileSizeMb: number;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   page: number;

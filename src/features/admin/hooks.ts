@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { adminApi, mapAdminDepartment, mapAdminUser, type AuditLogsParams } from "@/services/endpoints/admin.api";
+import { adminApi, mapAdminDepartment, mapAdminUser, type AuditLogsParams, type SystemSettingsValues } from "@/services/endpoints/admin.api";
 import { departmentsApi, type DepartmentWritePayload, type DepartmentsQueryParams } from "@/services/endpoints/departments.api";
 import { notificationsApi, type NotificationsQueryParams } from "@/services/endpoints/notifications.api";
 import { usersApi, type UserCreatePayload, type UserUpdatePayload, type UsersQueryParams } from "@/services/endpoints/users.api";
-import type { AdminCategory, AdminDepartment, AdminRole, AdminSettings, AdminUser, AdminUserStatus } from "./types";
+import type { AdminCategory, AdminDepartment, AdminRole, AdminUser, AdminUserStatus } from "./types";
 
 export const adminKeys = {
   users: ["admin", "users"] as const,
@@ -18,18 +18,6 @@ export const adminKeys = {
   auditLogs: (params: AuditLogsParams) => ["admin", "auditLogs", params] as const,
   auditActions: ["admin", "auditActions"] as const,
   settings: ["admin", "settings"] as const,
-};
-
-const emptySettings: AdminSettings = {
-  general: { systemName: "E-SU", timezone: "Asia/Bishkek", language: "ru", dateFormat: "DD.MM.YYYY" },
-  university: { name: "Salymbekov University", rector: "", address: "", email: "", shortName: "SU", phone: "" },
-  numbering: { prefix: "ESU", format: "{prefix}-{department}-{year}-{number}", startNumber: "1", includeYear: true, includeDepartment: true, includeSequence: true },
-  fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
-  maxFileSizeMb: 25,
-  documentStatuses: [],
-  emailNotifications: { enabled: true, assigned: true, approved: true, returned: true, deadlineReminder: true },
-  allowedExtensions: ["pdf", "docx", "xlsx", "png", "jpg"],
-  fileLimits: { maxSizeMb: 25, maxFiles: 10 },
 };
 
 function splitName(fullName: string) {
@@ -145,7 +133,21 @@ export function useAdminAuditLogsQuery(params: AuditLogsParams) {
 export function useAdminAuditActionsQuery() {
   return useQuery({ queryKey: adminKeys.auditActions, queryFn: adminApi.getAuditActions });
 }
-export const useAdminSettings = () => useQuery({ queryKey: adminKeys.settings, queryFn: adminApi.getSettings }).data ?? emptySettings;
+export function useAdminSettingsQuery() {
+  return useQuery({ queryKey: adminKeys.settings, queryFn: adminApi.getSettings });
+}
+
+export async function invalidateSystemSettingsQuery(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({ queryKey: adminKeys.settings });
+}
+
+export function useUpdateSystemSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: SystemSettingsValues) => adminApi.updateSettings(values),
+    onSuccess: () => invalidateSystemSettingsQuery(queryClient),
+  });
+}
 
 export function useAdminActions() {
   const queryClient = useQueryClient();
@@ -170,7 +172,6 @@ export function useAdminActions() {
   const updateCategory = useMutation({ mutationFn: ({ categoryId, value }: { categoryId: string; value: Partial<AdminCategory> }) => adminApi.updateCategory(categoryId, value), onSuccess: () => invalidate(adminKeys.categories, ["documents"]) });
   const deleteCategory = useMutation({ mutationFn: adminApi.deleteCategory, onSuccess: () => invalidate(adminKeys.categories, ["documents"]) });
   const updateRole = useMutation({ mutationFn: ({ roleId, value }: { roleId: string; value: Partial<AdminRole> }) => adminApi.setRolePermissions(roleId, value.permissions ?? []), onSuccess: () => invalidateRolePermissionQueries(queryClient) });
-  const updateSettings = useMutation({ mutationFn: (value: AdminSettings) => adminApi.updateSettings(value), onSuccess: () => invalidate(adminKeys.settings) });
   const markRead = useMutation({ mutationFn: notificationsApi.markRead, onSuccess: () => invalidate(adminKeys.notifications, adminKeys.unreadNotifications) });
   const markAllRead = useMutation({ mutationFn: notificationsApi.markAllRead, onSuccess: () => invalidate(adminKeys.notifications, adminKeys.unreadNotifications) });
 
@@ -180,6 +181,5 @@ export function useAdminActions() {
     categories: { create: createCategory.mutateAsync, update: (categoryId: string, value: Partial<AdminCategory>) => updateCategory.mutateAsync({ categoryId, value }), remove: deleteCategory.mutateAsync },
     roles: { update: (roleId: string, value: Partial<AdminRole>) => updateRole.mutateAsync({ roleId, value }) },
     notifications: { markRead: markRead.mutateAsync, markAllRead: markAllRead.mutateAsync },
-    settings: { update: updateSettings.mutateAsync },
-  }), [createCategory.mutateAsync, createDepartment.mutateAsync, createUser.mutateAsync, deleteCategory.mutateAsync, deleteDepartment.mutateAsync, markAllRead.mutateAsync, markRead.mutateAsync, updateCategory, updateDepartment, updateRole, updateSettings.mutateAsync, updateUser]);
+  }), [createCategory.mutateAsync, createDepartment.mutateAsync, createUser.mutateAsync, deleteCategory.mutateAsync, deleteDepartment.mutateAsync, markAllRead.mutateAsync, markRead.mutateAsync, updateCategory, updateDepartment, updateRole, updateUser]);
 }
