@@ -6,5 +6,5 @@ export const departmentKeys = {
 };
 
 export function useDepartments() {
-  return useQuery({ queryKey: departmentKeys.all, queryFn: departmentsApi.getDepartments });
+  return useQuery({ queryKey: departmentKeys.all, queryFn: () => departmentsApi.getDepartments() });
 }

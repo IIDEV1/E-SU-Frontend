@@ -126,7 +126,9 @@ export async function uploadPendingFiles(documentId: string, files: Document["fi
       const formData = new FormData();
       formData.append("file", file.sourceFile);
       formData.append("is_main", String(index === 0));
-      return api.post(`/documents/${documentId}/files/`, formData);
+      return api.post(`/documents/${documentId}/files/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
     }),
   );
 }
@@ -171,7 +173,9 @@ export const documentsApi = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("is_main", String(isMain));
-    const response = await api.post<ApiEnvelope<DocumentFileDto>>(`/documents/${id}/files/`, formData);
+    const response = await api.post<ApiEnvelope<DocumentFileDto>>(`/documents/${id}/files/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return mapDocumentFile(unwrapResponse(response));
   },
 

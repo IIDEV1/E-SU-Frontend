@@ -53,7 +53,11 @@ describe("Release 1 document files, comments and history API", () => {
     expect(formData).toBeInstanceOf(FormData);
     expect((formData as FormData).get("file")).toBe(file);
     expect((formData as FormData).get("is_main")).toBe("true");
-    expect(api.post).toHaveBeenCalledWith("/documents/document-1/files/", expect.any(FormData));
+    expect(api.post).toHaveBeenCalledWith(
+      "/documents/document-1/files/",
+      expect.any(FormData),
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
   });
 
   it("downloads an authenticated blob and uses the attachment filename", async () => {

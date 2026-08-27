@@ -100,7 +100,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       description: document?.description ?? "",
       departmentId: document?.department.id ?? departments[0]?.id ?? "",
       responsibleId: document?.responsible?.id ?? "",
-      deadline: document?.deadline ?? "",
+      deadline: document?.deadline?.slice(0, 10) ?? "",
       priority: document?.priority ?? "normal",
       comment: "",
       approverIds: [],
