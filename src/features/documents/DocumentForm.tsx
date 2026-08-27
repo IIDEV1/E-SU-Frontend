@@ -146,7 +146,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       if (mode === "create") {
         const createdDocument = await createDocument.mutateAsync({ ...values, files: newFiles, status });
         setToast(status === "draft" ? "Черновик сохранен." : "Документ отправлен на согласование.");
-        setTimeout(() => navigate(`/documents/${createdDocument.id}`), 350);
+        navigate(`/documents/${createdDocument.id}`);
         return;
       }
 
@@ -155,7 +155,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         ? await updateAndSubmitDocument.mutateAsync({ ...values, files: newFiles })
         : await updateDocument.mutateAsync({ ...values, files: newFiles });
       setToast(status === "in_review" ? "Документ отправлен на согласование." : "Изменения сохранены.");
-      setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 350);
+      navigate(`/documents/${updatedDocument.id}`);
     });
 
     return submit().catch((error: unknown) => setFileError(getFileErrorMessage(error)));

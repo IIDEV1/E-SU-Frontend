@@ -30,7 +30,7 @@ export function LoginPage() {
   } = useForm<LoginForm>({
     resolver: zodResolver(schema),
     mode: "onChange",
-    defaultValues: { email: "employee@esu.kg", password: "DemoPass123!", remember: true },
+    defaultValues: { email: "", password: "", remember: true },
   });
 
   if (isAuthenticated) {
@@ -52,7 +52,7 @@ export function LoginPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <span className="accent-badge">Вход</span>
         <h2>Добро пожаловать</h2>
-        <p>Используйте demo-аккаунт для проверки документов, согласований и уведомлений.</p>
+        <p>Введите корпоративные данные для доступа к документам, согласованиям и уведомлениям.</p>
         <label>
           Email
           <input type="email" {...register("email")} />
