@@ -258,8 +258,8 @@ export const adminApi = {
   },
 
   async getPermissions(): Promise<AdminPermissionDefinition[]> {
-    const response = await api.get<ApiEnvelope<ApiPagination<BackendPermission>>>("/permissions/", { params: { page_size: 100 } });
-    return unwrapResponse(response).results;
+    const response = await api.get<ApiEnvelope<BackendPermission[]>>("/permissions/", { params: { page_size: 100 } });
+    return unwrapResponse(response);
   },
 
   async setRolePermissions(roleId: string, permissions: AdminPermission[]) {

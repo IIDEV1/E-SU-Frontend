@@ -41,6 +41,14 @@ describe("roles and permissions release 1 integration", () => {
     });
   });
 
+  it("accepts the confirmed non-paginated permissions response", async () => {
+    const permissions = [{ id: "1", code: "documents.view", name: "Просмотр", group: "documents", description: "" }];
+    vi.mocked(api.get).mockResolvedValue(response(permissions));
+
+    await expect(adminApi.getPermissions()).resolves.toEqual(permissions);
+    expect(api.get).toHaveBeenCalledWith("/permissions/", { params: { page_size: 100 } });
+  });
+
   it("keeps the caller draft intact when save fails", async () => {
     const draft: AdminRole[] = [{ ...savedRoles[0], permissions: ["documents.view", "users.manage"] }, savedRoles[1]];
     const update = vi.fn().mockRejectedValue(new Error("Запрещено"));
