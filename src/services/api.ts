@@ -2,7 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, updateTokens } from "@/services/tokenStorage";
 import type { ApiEnvelope, ApiErrorResponse, AppApiError } from "@/services/types";
 
-const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
+const baseURL = import.meta.env.VITE_API_URL ?? "https://esubackend21.pythonanywhere.com/api/v1";
 
 export const api = axios.create({
   baseURL,
