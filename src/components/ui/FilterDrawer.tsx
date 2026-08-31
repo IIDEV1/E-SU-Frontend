@@ -1,65 +1,11 @@
-import React from 'react';
-import { X, SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, X } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { Button, IconButton } from "./Button";
 
-interface FilterDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  onReset?: () => void;
-  children: React.ReactNode;
-}
+export interface FilterDrawerProps { isOpen: boolean; onClose: () => void; title?: string; onReset?: () => void; children: ReactNode; className?: string; }
 
-export const FilterDrawer: React.FC<FilterDrawerProps> = ({
-  isOpen,
-  onClose,
-  title = 'Фильтры',
-  onReset,
-  children,
-}) => {
+export function FilterDrawer({ isOpen, onClose, title = "Фильтры", onReset, children, className = "" }: FilterDrawerProps) {
+  useEffect(() => { const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; if (isOpen) window.addEventListener("keydown", closeOnEscape); return () => window.removeEventListener("keydown", closeOnEscape); }, [isOpen, onClose]);
   if (!isOpen) return null;
-
-  return (
-    <>
-      <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer-bottom">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 16 }}>
-            <SlidersHorizontal size={18} />
-            <span>{title}</span>
-          </div>
-          <button type="button" className="icon-button" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div style={{ display: 'grid', gap: 16 }}>
-          {children}
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-          {onReset && (
-            <button
-              type="button"
-              className="button button--secondary"
-              style={{ flex: 1 }}
-              onClick={() => {
-                onReset();
-                onClose();
-              }}
-            >
-              Сбросить
-            </button>
-          )}
-          <button
-            type="button"
-            className="button button--primary"
-            style={{ flex: 1 }}
-            onClick={onClose}
-          >
-            Применить
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
+  return <div className="filter-drawer" role="dialog" aria-modal="true" aria-label={title}><div className="filter-drawer__backdrop" onMouseDown={onClose} /><section className={`filter-drawer__panel ${className}`}><header className="filter-drawer__header"><span><SlidersHorizontal size={18} aria-hidden="true" />{title}</span><IconButton type="button" aria-label="Закрыть фильтры" onClick={onClose}><X size={20} /></IconButton></header><div className="filter-drawer__content">{children}</div><footer className="filter-drawer__actions">{onReset && <Button type="button" variant="secondary" onClick={() => { onReset(); onClose(); }}>Сбросить</Button>}<Button type="button" onClick={onClose}>Применить</Button></footer></section></div>;
+}

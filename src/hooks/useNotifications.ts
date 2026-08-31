@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { mockNotifications } from "@/mocks/data";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { notificationsApi } from "@/services/endpoints/notifications.api";
 
 export const notificationKeys = {
   all: ["notifications"] as const,
@@ -8,6 +8,22 @@ export const notificationKeys = {
 export function useNotifications() {
   return useQuery({
     queryKey: notificationKeys.all,
-    queryFn: () => Promise.resolve(mockNotifications),
+    queryFn: notificationsApi.getNotifications,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: notificationsApi.markRead,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: notificationsApi.markAllRead,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
   });
 }

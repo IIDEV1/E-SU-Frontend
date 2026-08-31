@@ -1,9 +1,12 @@
-import type { Department, Document, DocumentCategory, User } from "@/types";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+import type { Department, Document, DocumentCategory, Notification, User } from "@/types";
 
 export const departments: Department[] = [
-  { id: "dep-1", name: "Учебный отдел", code: "EDU" },
-  { id: "dep-2", name: "Финансовый отдел", code: "FIN" },
-  { id: "dep-3", name: "IT департамент", code: "IT" },
+  { id: "dep-edu", name: "Учебный отдел", code: "EDU" },
+  { id: "dep-fin", name: "Финансовый отдел", code: "FIN" },
+  { id: "dep-it", name: "IT департамент", code: "IT" },
+  { id: "dep-office", name: "Канцелярия", code: "OFF" },
 ];
 
 export const users: User[] = [
@@ -11,7 +14,7 @@ export const users: User[] = [
     id: "u-1",
     name: "Айдана Садыкова",
     email: "aidana@esu.kg",
-    role: "department_head",
+    role: "admin",
     department: departments[0],
     position: "Руководитель учебного отдела",
   },
@@ -29,162 +32,317 @@ export const users: User[] = [
     email: "meerim@esu.kg",
     role: "employee",
     department: departments[2],
-    position: "Frontend coordinator",
+    position: "Координатор цифровых сервисов",
+  },
+  {
+    id: "u-4",
+    name: "Бекжан Токтосунов",
+    email: "bekzhan@esu.kg",
+    role: "rector",
+    department: departments[3],
+    position: "Ректор",
+  },
+  {
+    id: "u-5",
+    name: "Алина Жээнбекова",
+    email: "alina@esu.kg",
+    role: "department_head",
+    department: departments[3],
+    position: "Руководитель канцелярии",
   },
 ];
 
 export const currentUser = users[0];
 
 export const categories: DocumentCategory[] = [
-  { id: "cat-1", name: "Приказ", code: "ORD" },
-  { id: "cat-2", name: "Договор", code: "AGR" },
-  { id: "cat-3", name: "Заявка", code: "REQ" },
+  { id: "cat-order", name: "Приказ", code: "ORD" },
+  { id: "cat-contract", name: "Договор", code: "AGR" },
+  { id: "cat-request", name: "Заявка", code: "REQ" },
+  { id: "cat-memo", name: "Служебная записка", code: "MEMO" },
+  { id: "cat-act", name: "Акт", code: "ACT" },
 ];
 
-export const documents: Document[] = [
-  {
-    id: "doc-1",
-    number: "ESU-2026-001",
-    title: "Приказ о запуске летней сессии",
-    category: categories[0],
-    type: "Внутренний документ",
-    description: "Согласование расписания, ответственных преподавателей и дедлайнов.",
-    author: users[0],
-    department: departments[0],
-    responsible: users[1],
-    createdAt: "2026-07-15",
-    deadline: "2026-07-28",
-    status: "in_review",
-    priority: "high",
-    files: [
-      {
-        id: "file-1",
-        name: "session-order.pdf",
-        size: 1450000,
-        type: "application/pdf",
-        url: "#",
-        uploadedAt: "2026-07-15",
-      },
-    ],
-    approvalSteps: [
-      { id: "step-1", approver: users[1], status: "approved", date: "2026-07-16" },
-      { id: "step-2", approver: users[2], status: "pending" },
-    ],
-    comments: [
-      { id: "c-1", author: users[1], text: "Финальная смета приложена.", createdAt: "2026-07-16" },
-    ],
-    history: ["Документ создан", "Отправлен на согласование", "Финансовый отдел согласовал"],
-  },
-  {
-    id: "doc-2",
-    number: "ESU-2026-014",
-    title: "Договор на обновление LMS",
-    category: categories[1],
-    type: "Внешний договор",
-    description: "Закупка лицензий и сопровождение платформы дистанционного обучения.",
-    author: users[2],
-    department: departments[2],
-    responsible: users[0],
-    createdAt: "2026-07-10",
-    deadline: "2026-07-24",
-    status: "overdue",
-    priority: "urgent",
-    files: [],
-    approvalSteps: [{ id: "step-3", approver: users[0], status: "pending" }],
-    comments: [],
-    history: ["Черновик сохранен", "Отправлен на согласование"],
-  },
-  {
-    id: "doc-3",
-    number: "ESU-2026-020",
-    title: "Заявка на аудит кабинетов",
-    category: categories[2],
-    type: "Служебная заявка",
-    description: "Проверка готовности аудиторий к новому учебному году.",
-    author: users[1],
-    department: departments[1],
-    responsible: users[2],
-    createdAt: "2026-07-18",
-    deadline: "2026-08-03",
-    status: "returned",
-    priority: "normal",
-    files: [],
-    approvalSteps: [
-      {
-        id: "step-4",
-        approver: users[0],
-        status: "returned",
-        comment: "Нужно уточнить список аудиторий.",
-      },
-    ],
-    comments: [],
-    history: ["Документ создан", "Возвращен на доработку"],
-    returnReason: "Нужно уточнить список аудиторий и ответственных.",
-  },
-  {
-    id: "doc-4",
-    number: "ESU-2026-021",
-    title: "Черновик регламента деканата",
-    category: categories[0],
-    type: "Регламент",
-    description: "Обновление процесса обработки студенческих заявлений.",
-    author: users[0],
-    department: departments[0],
-    responsible: users[0],
-    createdAt: "2026-07-20",
-    deadline: "2026-08-10",
-    status: "draft",
-    priority: "low",
-    files: [],
-    approvalSteps: [],
-    comments: [],
-    history: ["Черновик сохранен"],
-  },
-  {
-    id: "doc-5",
-    number: "ESU-2026-010",
-    title: "Архивный акт приемки",
-    category: categories[2],
-    type: "Акт",
-    description: "Документ завершен и перенесен в архив.",
-    author: users[1],
-    department: departments[1],
-    responsible: users[1],
-    createdAt: "2026-06-28",
-    deadline: "2026-07-05",
-    status: "archived",
-    priority: "normal",
-    files: [],
-    approvalSteps: [],
-    comments: [],
-    history: ["Согласован", "Исполнен", "Архивирован"],
-  },
+const statuses: Document["status"][] = [
+  "in_review",
+  "overdue",
+  "returned",
+  "draft",
+  "archived",
+  "approved",
+  "completed",
+  "in_review",
+  "draft",
+  "overdue",
+  "returned",
+  "approved",
+  "completed",
+  "in_review",
+  "draft",
+  "archived",
+  "in_review",
+  "completed",
+  "returned",
+  "approved",
 ];
 
-// Дополнительные mock-данные (уведомления, роли, журнал аудита, настройки)
-export const mockNotifications = [
-  { id: '1', type: 'approved', title: 'Документ согласован', message: 'Приказ №45-У успешно прошел все этапы согласования.', time: '14:20', isRead: false, documentId: 'doc-1' },
-  { id: '2', type: 'deadline', title: 'Приближается дедлайн', message: 'Срок рассмотрения служебной записки истекает завтра.', time: '11:05', isRead: false, documentId: 'doc-2' },
-  { id: '3', type: 'comment', title: 'Добавлен комментарий', message: 'Оставлено замечание к проекту договора подряда.', time: 'Вчера', isRead: true, documentId: 'doc-3' },
+const titles = [
+  "Приказ о запуске летней сессии",
+  "Договор на обновление LMS",
+  "Заявка на аудит кабинетов",
+  "Черновик регламента деканата",
+  "Архивный акт приемки оборудования",
+  "Согласование учебного календаря",
+  "Отчет о выполнении закупок",
+  "Служебная записка по расписанию",
+  "Заявка на доступ к электронному журналу",
+  "Договор на техническую поддержку",
+  "Возврат заявки на командировку",
+  "Приказ о составе комиссии",
+  "Акт сверки с поставщиком",
+  "Служебная записка по ремонту аудиторий",
+  "Черновик положения о практике",
+  "Архив договора с подрядчиком",
+  "Заявка на согласование мероприятия",
+  "Отчет по исполнению поручения",
+  "Возвращенный приказ по кафедре",
+  "Согласованный акт инвентаризации",
+];
+
+function makeFiles(index: number) {
+  if (index % 5 === 0) return [];
+  const main = {
+    id: `file-${index}-1`,
+    name: `esu-document-${index}.pdf`,
+    size: 850_000 + index * 45_000,
+    type: "application/pdf",
+    url: "#",
+    uploadedAt: `2026-08-${String(Math.min(index, 9) + 1).padStart(2, "0")}`,
+  };
+  const extra = {
+    id: `file-${index}-2`,
+    name: `appendix-${index}.docx`,
+    size: 420_000 + index * 12_000,
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    url: "#",
+    uploadedAt: main.uploadedAt,
+  };
+  return index % 3 === 0 ? [main, extra] : [main];
+}
+
+export const documents: Document[] = titles.map((title, index) => {
+  const status = statuses[index];
+  const category = categories[index % categories.length];
+  const author = users[index % users.length];
+  const responsible = users[(index + 1) % users.length];
+  const department = departments[index % departments.length];
+  const createdDay = String((index % 24) + 1).padStart(2, "0");
+  const deadlineDay = String(((index + 7) % 26) + 1).padStart(2, "0");
+  const currentStage =
+    status === "draft"
+      ? "Черновик у автора"
+      : status === "returned"
+        ? "Доработка автором"
+        : status === "approved" || status === "completed"
+          ? "Финальный этап"
+          : status === "archived"
+            ? "Архив"
+            : "Согласование руководителем";
+
+  return {
+    id: `doc-${index + 1}`,
+    number: `ESU-2026-${String(index + 1).padStart(3, "0")}`,
+    title,
+    category,
+    type: index % 2 === 0 ? "Внутренний документ" : "Внешний документ",
+    description:
+      "Mock-документ для демонстрации пользовательского сценария: создание, согласование, возврат, комментарии и контроль дедлайна.",
+    author,
+    department,
+    responsible,
+    createdAt: `2026-07-${createdDay}`,
+    deadline: `2026-08-${deadlineDay}`,
+    status,
+    priority: index % 5 === 0 ? "urgent" : index % 3 === 0 ? "high" : index % 2 === 0 ? "normal" : "low",
+    files: makeFiles(index + 1),
+    approvalSteps: [
+      {
+        id: `step-${index + 1}-1`,
+        approver: users[1],
+        status: status === "draft" ? "pending" : "approved",
+        date: status === "draft" ? undefined : `2026-07-${createdDay}`,
+      },
+      {
+        id: `step-${index + 1}-2`,
+        approver: users[4],
+        status: status === "returned" ? "returned" : status === "approved" || status === "completed" ? "approved" : "pending",
+        comment: status === "returned" ? "Нужно уточнить обоснование и вложения." : undefined,
+      },
+    ],
+    comments:
+      index % 4 === 0
+        ? [
+            {
+              id: `comment-${index + 1}`,
+              author: responsible,
+              text: "Проверил данные, ожидаю финальное вложение.",
+              createdAt: `2026-07-${createdDay}`,
+            },
+          ]
+        : [],
+    history: [
+      "Документ создан",
+      status === "draft" ? "Сохранен как черновик" : "Отправлен на согласование",
+      status === "returned" ? "Возвращен на доработку" : currentStage,
+    ],
+    currentStage,
+    returnReason: status === "returned" ? "Нужно уточнить список согласующих и приложить обновленный файл." : undefined,
+  };
+});
+
+export const mockNotifications: Notification[] = [
+  {
+    id: "notification-1",
+    type: "sent",
+    title: "Документ отправлен",
+    message: "Приказ о запуске летней сессии отправлен на согласование.",
+    time: "Сегодня, 10:30",
+    isRead: false,
+    documentId: "doc-1",
+  },
+  {
+    id: "notification-2",
+    type: "deadline",
+    title: "Приближается дедлайн",
+    message: "У договора на обновление LMS дедлайн завтра.",
+    time: "Сегодня, 11:05",
+    isRead: false,
+    documentId: "doc-2",
+  },
+  {
+    id: "notification-3",
+    type: "comment",
+    title: "Добавлен комментарий",
+    message: "Новый комментарий в заявке на аудит кабинетов.",
+    time: "Вчера, 16:20",
+    isRead: true,
+    documentId: "doc-3",
+  },
+  {
+    id: "notification-4",
+    type: "returned",
+    title: "Документ возвращен",
+    message: "Заявка требует доработки перед повторной отправкой.",
+    time: "Вчера, 15:10",
+    isRead: false,
+    documentId: "doc-11",
+  },
+  {
+    id: "notification-5",
+    type: "approved",
+    title: "Документ согласован",
+    message: "Учебный календарь прошел согласование.",
+    time: "08.08.2026, 09:40",
+    isRead: true,
+    documentId: "doc-6",
+  },
+  {
+    id: "notification-6",
+    type: "overdue",
+    title: "Документ просрочен",
+    message: "Срок согласования договора на поддержку истек.",
+    time: "07.08.2026, 18:00",
+    isRead: false,
+    documentId: "doc-10",
+  },
+  {
+    id: "notification-7",
+    type: "assigned",
+    title: "Назначен ответственный",
+    message: "Вы назначены ответственным по мероприятию.",
+    time: "06.08.2026, 12:15",
+    isRead: true,
+    documentId: "doc-17",
+  },
+  {
+    id: "notification-8",
+    type: "system",
+    title: "Обновлены правила файлов",
+    message: "Максимальный размер файла для документов: 25 MB.",
+    time: "05.08.2026, 14:05",
+    isRead: true,
+  },
+  {
+    id: "notification-9",
+    type: "approved",
+    title: "Акт согласован",
+    message: "Акт инвентаризации готов к исполнению.",
+    time: "04.08.2026, 10:00",
+    isRead: false,
+    documentId: "doc-20",
+  },
+  {
+    id: "notification-10",
+    type: "comment",
+    title: "Новый комментарий",
+    message: "Канцелярия оставила комментарий к служебной записке.",
+    time: "03.08.2026, 17:45",
+    isRead: true,
+    documentId: "doc-14",
+  },
 ];
 
 export const mockRoles = [
-  { id: 'admin', name: 'Администратор системы', description: 'Полный доступ ко всем модулям и настройкам', usersCount: 1 },
-  { id: 'department_head', name: 'Руководитель', description: 'Согласование и утверждение документов', usersCount: 1 },
-  { id: 'approver', name: 'Согласующий / Контролер', description: 'Проверка финансовых и юридических аспектов', usersCount: 1 },
-  { id: 'employee', name: 'Сотрудник', description: 'Создание и отправка внутренних документов', usersCount: 1 },
+  { id: "admin", name: "Администратор системы", description: "Полный доступ ко всем модулям и настройкам", usersCount: 1 },
+  { id: "department_head", name: "Руководитель", description: "Согласование и утверждение документов", usersCount: 1 },
+  { id: "approver", name: "Согласующий / Контролер", description: "Проверка финансовых и юридических аспектов", usersCount: 1 },
+  { id: "employee", name: "Сотрудник", description: "Создание и отправка внутренних документов", usersCount: 2 },
 ];
 
 export const mockAuditLogs = [
-  { id: '1', dateTime: '2026-07-27 14:20:15', user: 'Айдана Садыкова', role: 'Руководитель', action: 'Согласование', object: 'Документ', document: 'Приказ ESU-2026-001', department: 'Учебный отдел', result: 'success' },
-  { id: '2', dateTime: '2026-07-27 11:05:40', user: 'Нурбек Алиев', role: 'Контролер', action: 'Создание', object: 'Документ', document: 'Заявка ESU-2026-020', department: 'Финансовый отдел', result: 'success' },
-  { id: '3', dateTime: '2026-07-26 16:45:10', user: 'Мээрим Осмонова', role: 'Сотрудник', action: 'Возврат', object: 'Документ', document: 'Договор ESU-2026-014', department: 'IT департамент', result: 'error' },
+  {
+    id: "1",
+    dateTime: "2026-08-09 14:20:15",
+    user: "Айдана Садыкова",
+    role: "Руководитель",
+    action: "Согласование",
+    object: "Документ",
+    document: "Приказ ESU-2026-001",
+    department: "Учебный отдел",
+    result: "success",
+  },
+  {
+    id: "2",
+    dateTime: "2026-08-08 11:05:40",
+    user: "Нурбек Алиев",
+    role: "Контролер",
+    action: "Создание",
+    object: "Документ",
+    document: "Заявка ESU-2026-020",
+    department: "Финансовый отдел",
+    result: "success",
+  },
+  {
+    id: "3",
+    dateTime: "2026-08-07 16:45:10",
+    user: "Мээрим Осмонова",
+    role: "Сотрудник",
+    action: "Возврат",
+    object: "Документ",
+    document: "Договор ESU-2026-014",
+    department: "IT департамент",
+    result: "error",
+  },
 ];
 
 export const mockSettings = {
-  general: { systemName: 'Электронный документооборот ВУЗа', timezone: 'UTC+6 (Бишкек)', language: 'Русский' },
-  university: { name: 'Международный Университет', rector: 'Садыков Б. К.', address: 'ул. Манаса 42', email: 'info@esu.kg' },
-  numbering: { prefix: 'ESU', format: '[PREFIX]-[YEAR]-[ID]', startNumber: '101' },
+  general: { systemName: "E-SU Document Flow", timezone: "UTC+6 (Бишкек)", language: "Русский" },
+  university: {
+    name: "Electronic Salymbekov University",
+    rector: "Б. К. Садыков",
+    address: "ул. Манаса 42",
+    email: "info@esu.kg",
+  },
+  numbering: { prefix: "ESU", format: "[PREFIX]-[YEAR]-[ID]", startNumber: "101" },
   fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
   maxFileSizeMb: 25,
 };
