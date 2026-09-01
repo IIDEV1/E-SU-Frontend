@@ -1,31 +1,28 @@
+import { ArrowRight, Bell, FilePlus2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Bell, Clock, FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
-import { useAdminNotifications } from "@/features/admin/hooks";
+import { StateBlock } from "@/components/ui/StateBlock";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useDocuments } from "@/hooks/useDocuments";
-import { formatDate } from "@/utils/format";
+import { useDashboard } from "@/hooks/useDashboard";
+import { formatDate, formatDateTime } from "@/utils/format";
+
+const quickActionRoutes: Record<string, string> = {
+  create_document: "/documents/create",
+  review_documents: "/documents/approval",
+  register_documents: "/documents",
+};
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { data, isError, isLoading } = useDocuments();
-  const notifications = useAdminNotifications();
-  const documents = data?.data ?? [];
-  const metrics = [
-    { label: "Всего документов", value: documents.length, to: "/documents" },
-    { label: "На согласовании", value: documents.filter((item) => item.status === "in_review").length, to: "/documents/approval" },
-    { label: "Возвращено", value: documents.filter((item) => item.status === "returned").length, to: "/documents/returned" },
-    { label: "Просрочено", value: documents.filter((item) => item.status === "overdue").length, to: "/documents" },
-    { label: "Исполнено", value: documents.filter((item) => item.status === "completed").length, to: "/documents" },
-  ];
+  const { data, isError, isLoading, refetch } = useDashboard();
 
   if (isLoading) {
     return (
-      <div className="page-stack">
+      <div className="page-stack" aria-busy="true">
         <section className="page-hero skeleton-hero" />
         <section className="metric-grid">
-          {Array.from({ length: 5 }, (_, index) => (
+          {Array.from({ length: 6 }, (_, index) => (
             <article className="metric-card ui-skeleton" key={index}>
               <span />
               <span />
@@ -36,16 +33,26 @@ export function DashboardPage() {
     );
   }
 
-  if (isError) {
+  if (isError || !data) {
     return (
       <div className="page-stack">
-        <section className="content-card">
-          <h1>Не удалось загрузить Dashboard</h1>
-          <p>Попробуйте обновить страницу.</p>
-        </section>
+        <StateBlock
+          title="Не удалось загрузить Dashboard"
+          description="Сводка недоступна. Проверьте подключение и повторите запрос."
+          action={<Button onClick={() => void refetch()}>Повторить</Button>}
+        />
       </div>
     );
   }
+
+  const metrics = [
+    { label: "Все документы", value: data.counters.all, to: "/documents" },
+    { label: "Мои документы", value: data.counters.my, to: "/documents/my" },
+    { label: "На согласовании", value: data.counters.for_approval, to: "/documents/approval" },
+    { label: "Возвращено", value: data.counters.returned, to: "/documents/returned" },
+    { label: "Просрочено", value: data.counters.overdue, to: "/documents?scope=overdue" },
+    { label: "В архиве", value: data.counters.archived, to: "/documents/archive" },
+  ];
 
   return (
     <div className="page-stack">
@@ -53,21 +60,25 @@ export function DashboardPage() {
         <div>
           <span className="accent-badge">{formatDate(new Date().toISOString())}</span>
           <h1>Здравствуйте, {user?.name}</h1>
-          <p>
-            Документы, согласования и дедлайны Salymbekov University в одном рабочем контуре.
-          </p>
+          <p>Актуальная сводка документов, согласований и уведомлений.</p>
         </div>
-        <div className="quick-actions">
-          <Link to="/documents/create">
-            <Button icon={<FilePlus2 size={18} />}>Создать документ</Button>
-          </Link>
-          <Link to="/notifications">
-            <Button variant="secondary" icon={<Bell size={18} />}>Уведомления</Button>
-          </Link>
-        </div>
+        {data.quickActions.length > 0 && (
+          <div className="quick-actions">
+            {data.quickActions.map((action) => (
+              <Link key={action.code} to={quickActionRoutes[action.code] ?? action.url}>
+                <Button
+                  variant={action.code === "create_document" ? "primary" : "secondary"}
+                  icon={action.code === "create_document" ? <FilePlus2 size={18} /> : <ArrowRight size={18} />}
+                >
+                  {action.label}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
-      <section className="metric-grid">
+      <section className="metric-grid" aria-label="Счётчики документов">
         {metrics.map((metric) => (
           <Link className="metric-card" key={metric.label} to={metric.to}>
             <strong>{metric.value}</strong>
@@ -78,57 +89,57 @@ export function DashboardPage() {
 
       <section className="dashboard-grid">
         <article className="content-card">
-          <h2>Требуют внимания</h2>
-          <div className="document-list compact">
-            {documents
-              .filter((item) => ["overdue", "returned", "in_review"].includes(item.status))
-              .slice(0, 6)
-              .map((document) => (
+          <h2>На согласовании</h2>
+          {data.approvalDocuments.length === 0 ? (
+            <StateBlock title="Нет документов" description="Сейчас от вас не ожидается согласование." />
+          ) : (
+            <div className="document-list compact">
+              {data.approvalDocuments.map((document) => (
                 <Link to={`/documents/${document.id}`} key={document.id}>
                   <strong>{document.title}</strong>
                   <span>{document.number}</span>
                   <StatusBadge status={document.status} />
                 </Link>
               ))}
-          </div>
+            </div>
+          )}
         </article>
+
         <article className="content-card">
           <h2>Последние документы</h2>
-          <div className="document-list compact">
-            {documents.slice(0, 6).map((document) => (
-              <Link to={`/documents/${document.id}`} key={document.id}>
-                <strong>{document.title}</strong>
-                <span>{formatDate(document.createdAt)}</span>
-                <StatusBadge status={document.status} />
-              </Link>
-            ))}
-          </div>
-        </article>
-        <article className="content-card">
-          <h2>Ближайшие дедлайны</h2>
-          <div className="timeline-list">
-            {documents
-              .filter((document) => !["archived", "completed"].includes(document.status))
-              .slice(0, 5)
-              .map((document) => (
+          {data.recentDocuments.length === 0 ? (
+            <StateBlock title="Документов нет" description="Доступные вам документы пока отсутствуют." />
+          ) : (
+            <div className="document-list compact">
+              {data.recentDocuments.map((document) => (
                 <Link to={`/documents/${document.id}`} key={document.id}>
-                  <span><Clock size={15} /> {formatDate(document.deadline)}</span>
                   <strong>{document.title}</strong>
+                  <span>{formatDate(document.createdAt)}</span>
+                  <StatusBadge status={document.status} />
                 </Link>
               ))}
-          </div>
+            </div>
+          )}
         </article>
+
         <article className="content-card">
           <h2>Последние уведомления</h2>
-          <div className="timeline-list">
-            {notifications.slice(0, 5).map((notification) => (
-              <Link to={notification.documentId ? `/documents/${notification.documentId}` : "/notifications"} key={notification.id}>
-                <span>{notification.createdAt}</span>
-                <strong>{notification.title}</strong>
-                <p>{notification.message}</p>
-              </Link>
-            ))}
-          </div>
+          {data.recentNotifications.length === 0 ? (
+            <StateBlock title="Уведомлений нет" description="Новых событий пока нет." />
+          ) : (
+            <div className="timeline-list">
+              {data.recentNotifications.map((notification) => (
+                <Link
+                  to={notification.documentId ? `/documents/${notification.documentId}` : "/notifications"}
+                  key={notification.id}
+                >
+                  <span><Bell size={15} /> {formatDateTime(notification.createdAt)}</span>
+                  <strong>{notification.title}</strong>
+                  <p>{notification.message}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </article>
       </section>
     </div>

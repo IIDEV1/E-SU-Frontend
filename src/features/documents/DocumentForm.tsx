@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilePlus2, Save, Send, Trash2, X } from "lucide-react";
@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreateDocument, useUpdateDocument } from "@/hooks/useDocuments";
+import { useCreateDocument, useDeleteDocumentFile, useDocumentFiles, useUpdateAndSubmitDocument, useUpdateDocument } from "@/hooks/useDocuments";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useUsers } from "@/hooks/useUsers";
 import type { Document, DocumentFile, DocumentStatus } from "@/types";
@@ -32,8 +32,8 @@ interface DocumentFormProps {
   mode: "create" | "edit";
 }
 
-const allowedFileExtensions = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg"];
-const maxFileSize = 25 * 1024 * 1024;
+const allowedFileExtensions = ["pdf", "doc", "docx", "xlsx", "png", "jpg", "jpeg"];
+const maxFileSize = 20 * 1024 * 1024;
 
 function toDocumentFile(file: File): DocumentFile {
   return {
@@ -53,26 +53,39 @@ function validateFile(file: File) {
     throw new Error(`Формат .${extension || "unknown"} не поддерживается.`);
   }
   if (file.size > maxFileSize) {
-    throw new Error(`Файл ${file.name} больше 25 MB.`);
+    throw new Error(`Файл ${file.name} больше 20 MB.`);
   }
+}
+
+function getFileErrorMessage(error: unknown) {
+  if (typeof error === "object" && error !== null && "status" in error && error.status === 413) {
+    return "Размер файла превышает ограничение сервера: 20 MB.";
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return "Не удалось обработать файл.";
 }
 
 export function DocumentForm({ document, mode }: DocumentFormProps) {
   const navigate = useNavigate();
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(document?.id ?? "");
+  const updateAndSubmitDocument = useUpdateAndSubmitDocument(document?.id ?? "");
+  const serverFiles = useDocumentFiles(document?.id ?? "");
+  const deleteDocumentFile = useDeleteDocumentFile(document?.id ?? "");
   const { data: categories = [] } = useCategories();
   const { data: departments = [] } = useDepartments();
   const { data: users = [] } = useUsers();
-  const [files, setFiles] = useState<DocumentFile[]>(document?.files ?? []);
+  const [newFiles, setNewFiles] = useState<DocumentFile[]>([]);
   const [fileError, setFileError] = useState("");
   const [toast, setToast] = useState<string>();
   const isLocked = document ? ["completed", "archived"].includes(document.status) : false;
-
-  const defaultApprovers = useMemo(
-    () => document?.approvalSteps.map((step) => step.approver.id) ?? users.slice(0, 2).map((user) => user.id),
-    [document, users],
-  );
 
   const {
     formState: { errors, isDirty, isSubmitting },
@@ -86,11 +99,11 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       type: document?.type ?? "document",
       description: document?.description ?? "",
       departmentId: document?.department.id ?? departments[0]?.id ?? "",
-      responsibleId: document?.responsible.id ?? users[0]?.id ?? "",
-      deadline: document?.deadline ?? "",
+      responsibleId: document?.responsible?.id ?? "",
+      deadline: document?.deadline?.slice(0, 10) ?? "",
       priority: document?.priority ?? "normal",
       comment: "",
-      approverIds: defaultApprovers,
+      approverIds: [],
     },
   });
 
@@ -111,28 +124,42 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
     try {
       const nextFiles = Array.from(fileList);
       nextFiles.forEach(validateFile);
-      setFiles((current) => [...current, ...nextFiles.map(toDocumentFile)]);
+      setNewFiles((current) => [...current, ...nextFiles.map(toDocumentFile)]);
     } catch (error) {
       setFileError(error instanceof Error ? error.message : "Не удалось добавить файл.");
     }
   };
 
-  const removeFile = (fileId: string) => setFiles((current) => current.filter((file) => file.id !== fileId));
+  const removeFile = (fileId: string) => setNewFiles((current) => current.filter((file) => file.id !== fileId));
 
-  const save = (status: Extract<DocumentStatus, "draft" | "in_review">) =>
-    handleSubmit(async (values) => {
+  const removeServerFile = async (fileId: string) => {
+    try {
+      setFileError("");
+      await deleteDocumentFile.mutateAsync(fileId);
+    } catch (error) {
+      setFileError(getFileErrorMessage(error));
+    }
+  };
+
+  const save = (status: Extract<DocumentStatus, "draft" | "in_review">) => {
+    const submit = handleSubmit(async (values) => {
       if (mode === "create") {
-        const createdDocument = await createDocument.mutateAsync({ ...values, files, status });
+        const createdDocument = await createDocument.mutateAsync({ ...values, files: newFiles, status });
         setToast(status === "draft" ? "Черновик сохранен." : "Документ отправлен на согласование.");
-        setTimeout(() => navigate(`/documents/${createdDocument.id}`), 350);
+        navigate(`/documents/${createdDocument.id}`);
         return;
       }
 
       if (!document) return;
-      const updatedDocument = await updateDocument.mutateAsync({ ...values, files });
-      setToast("Изменения сохранены.");
-      setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 350);
-    })();
+      const updatedDocument = status === "in_review"
+        ? await updateAndSubmitDocument.mutateAsync({ ...values, files: newFiles })
+        : await updateDocument.mutateAsync({ ...values, files: newFiles });
+      setToast(status === "in_review" ? "Документ отправлен на согласование." : "Изменения сохранены.");
+      navigate(`/documents/${updatedDocument.id}`);
+    });
+
+    return submit().catch((error: unknown) => setFileError(getFileErrorMessage(error)));
+  };
 
   if (isLocked) {
     return (
@@ -225,27 +252,39 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         <input
           type="file"
           multiple
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+          accept=".pdf,.doc,.docx,.xlsx,.png,.jpg,.jpeg"
           onChange={(event) => addFiles(event.target.files)}
         />
         <FilePlus2 size={22} />
         <strong>Файлы документа</strong>
-        <span>Перетащите файлы или выберите вручную. PDF, DOCX, XLSX, PNG/JPG до 25 MB.</span>
+        <span>Перетащите файлы или выберите вручную. PDF, DOC, DOCX, XLSX, PNG/JPG до 20 MB.</span>
       </label>
       {fileError && <div className="form-error">{fileError}</div>}
       <div className="uploaded-files">
-        {files.length ? (
-          files.map((file) => (
+        {serverFiles.isLoading && <p>Загружаем сохранённые файлы…</p>}
+        {serverFiles.isError && <div className="form-error">{getFileErrorMessage(serverFiles.error)}</div>}
+        {serverFiles.data?.map((file) => (
+          <div key={file.id}>
+            <span>{file.name}</span>
+            <span>Сохранён на сервере</span>
+            <Button variant="ghost" icon={<Trash2 size={15} />} loading={deleteDocumentFile.isPending} onClick={() => void removeServerFile(file.id)}>
+              Удалить
+            </Button>
+          </div>
+        ))}
+        {newFiles.length ? (
+          newFiles.map((file) => (
             <div key={file.id}>
               <span>{file.name}</span>
+              <span>Будет загружен после сохранения</span>
               <Button variant="ghost" icon={<Trash2 size={15} />} onClick={() => removeFile(file.id)}>
                 Удалить
               </Button>
             </div>
           ))
-        ) : (
+        ) : !serverFiles.isLoading && !serverFiles.data?.length ? (
           <p>Файлы пока не добавлены.</p>
-        )}
+        ) : null}
       </div>
       <label>
         Комментарий
@@ -256,15 +295,15 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
           variant="secondary"
           icon={<Save size={18} />}
           loading={createDocument.isPending && mode === "create"}
-          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending || updateAndSubmitDocument.isPending}
           onClick={() => void save("draft")}
         >
           Сохранить черновик
         </Button>
         <Button
           icon={<Send size={18} />}
-          loading={createDocument.isPending || updateDocument.isPending}
-          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending}
+          loading={createDocument.isPending || updateAndSubmitDocument.isPending}
+          disabled={isSubmitting || createDocument.isPending || updateDocument.isPending || updateAndSubmitDocument.isPending}
           onClick={() => void save("in_review")}
         >
           {mode === "edit" ? "Сохранить и отправить" : "Отправить на согласование"}

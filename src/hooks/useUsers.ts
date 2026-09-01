@@ -9,7 +9,7 @@ export const userKeys = {
 };
 
 export function useUsers() {
-  return useQuery({ queryKey: userKeys.lists(), queryFn: usersApi.getUsers });
+  return useQuery({ queryKey: userKeys.lists(), queryFn: () => usersApi.getUsers() });
 }
 
 export function useUser(id: string) {

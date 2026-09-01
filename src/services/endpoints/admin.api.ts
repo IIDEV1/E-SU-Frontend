@@ -1,8 +1,7 @@
 import { api, unwrapResponse } from "@/services/api";
-import { mapAuditLog } from "@/services/mappers";
 import type { ApiEnvelope, ApiPagination } from "@/services/types";
-import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminPermission, AdminRole, AdminSettings, AdminUser } from "@/features/admin/types";
-import type { Department, DocumentCategory, Permission, User } from "@/types";
+import type { AdminAuditLog, AdminCategory, AdminDepartment, AdminPermission, AdminPermissionDefinition, AdminRole, AdminUser } from "@/features/admin/types";
+import type { Department, DocumentCategory, PaginatedResponse, Permission, User } from "@/types";
 
 interface BackendRole {
   id: string;
@@ -12,10 +11,84 @@ interface BackendRole {
   permissions: Permission[];
   users_count?: number;
 }
+interface BackendPermission { id: string; code: string; name: string; group: string; description: string; }
 
-interface BackendSetting {
+export interface AuditLogDto {
+  id: string;
+  user: { id: string; email: string; full_name: string } | null;
+  action: string;
+  action_display: string;
+  object_type: string;
+  object_id: string;
+  description: string;
+  ip_address: string | null;
+  user_agent: string;
+  result: "success" | "failure";
+  result_display: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AuditActionDto {
+  code: string;
+  name: string;
+}
+
+export interface AuditLogsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  user?: string;
+  userEmail?: string;
+  action?: string;
+  objectType?: string;
+  objectId?: string;
+  result?: "success" | "failure";
+  dateFrom?: string;
+  dateTo?: string;
+  ordering?: "created_at" | "-created_at" | "action" | "-action";
+}
+
+export interface SystemSettingDto {
   key: string;
+  value: string;
   typed_value: unknown;
+  value_type: "string" | "integer" | "boolean" | "json";
+  description: string;
+  is_public: boolean;
+  updated_at: string;
+}
+
+export const systemSettingKeys = [
+  "university_name",
+  "sender_email",
+  "allowed_file_extensions",
+  "max_file_size_mb",
+  "document_number_format",
+  "reminder_days_before_deadline",
+] as const;
+
+export type SystemSettingKey = typeof systemSettingKeys[number];
+export type SystemSettingValue = string | number | string[];
+export type SystemSettingsValues = Partial<Record<SystemSettingKey, SystemSettingValue>>;
+
+export interface Release1SystemSettings {
+  values: SystemSettingsValues;
+}
+
+function isSystemSettingKey(key: string): key is SystemSettingKey {
+  return (systemSettingKeys as readonly string[]).includes(key);
+}
+
+function getSystemSettingValue(setting: SystemSettingDto): SystemSettingValue | undefined {
+  if (!isSystemSettingKey(setting.key)) return undefined;
+  if (["max_file_size_mb", "reminder_days_before_deadline"].includes(setting.key)) {
+    return setting.value_type === "integer" && typeof setting.typed_value === "number" ? setting.typed_value : undefined;
+  }
+  if (setting.key === "allowed_file_extensions") {
+    return setting.value_type === "json" && Array.isArray(setting.typed_value) && setting.typed_value.every((item) => typeof item === "string") ? setting.typed_value : undefined;
+  }
+  return setting.value_type === "string" && typeof setting.typed_value === "string" ? setting.typed_value : undefined;
 }
 
 function splitName(fullName: string) {
@@ -106,46 +179,57 @@ export function mapAdminRole(role: BackendRole): AdminRole {
     code: role.code,
     name: role.name,
     description: role.description ?? "",
-    permissions: role.permissions as AdminPermission[],
+    permissions: role.permissions,
   };
 }
 
-export function settingsFromBackend(settings: BackendSetting[]): AdminSettings {
-  const value = (key: string, fallback: unknown) => settings.find((item) => item.key === key)?.typed_value ?? fallback;
+export function mapAdminAuditLog(log: AuditLogDto): AdminAuditLog {
   return {
-    general: {
-      systemName: String(value("system_name", "E-SU")),
-      timezone: String(value("timezone", "Asia/Bishkek")),
-      language: String(value("language", "ru")),
-      dateFormat: String(value("date_format", "DD.MM.YYYY")),
-    },
-    university: {
-      name: String(value("university_name", "Salymbekov University")),
-      shortName: String(value("university_short_name", "SU")),
-      rector: String(value("university_rector", "")),
-      address: String(value("university_address", "")),
-      email: String(value("university_email", "")),
-      phone: String(value("university_phone", "")),
-    },
-    numbering: {
-      prefix: String(value("document_number_prefix", "ESU")),
-      format: String(value("document_number_format", "{prefix}-{department}-{year}-{number}")),
-      startNumber: String(value("document_number_start", "1")),
-      includeYear: true,
-      includeDepartment: true,
-      includeSequence: true,
-    },
-    fileFormats: { pdf: true, docx: true, xlsx: true, png: true, jpg: true },
-    maxFileSizeMb: Number(value("max_file_size_mb", 25)),
-    documentStatuses: [
-      { id: "draft", name: "Черновик", color: "gray", active: true, order: 1 },
-      { id: "in_review", name: "На согласовании", color: "orange", active: true, order: 2 },
-      { id: "approved", name: "Согласован", color: "green", active: true, order: 3 },
-    ],
-    emailNotifications: { enabled: true, assigned: true, approved: true, returned: true, deadlineReminder: true },
-    allowedExtensions: ["pdf", "doc", "docx", "xlsx", "png", "jpg", "jpeg"],
-    fileLimits: { maxSizeMb: Number(value("max_file_size_mb", 25)), maxFiles: Number(value("max_document_files", 10)) },
+    id: log.id,
+    user: log.user && { id: log.user.id, email: log.user.email, fullName: log.user.full_name },
+    action: log.action,
+    actionDisplay: log.action_display,
+    objectType: log.object_type,
+    objectId: log.object_id,
+    description: log.description,
+    result: log.result,
+    resultDisplay: log.result_display,
+    createdAt: log.created_at,
   };
+}
+
+export function serializeAuditLogQueryParams(params: AuditLogsParams) {
+  return {
+    page: params.page,
+    page_size: params.pageSize,
+    search: params.search?.trim() || undefined,
+    user: params.user?.trim() || undefined,
+    user_email: params.userEmail?.trim() || undefined,
+    action: params.action || undefined,
+    object_type: params.objectType?.trim() || undefined,
+    object_id: params.objectId?.trim() || undefined,
+    result: params.result,
+    date_from: params.dateFrom || undefined,
+    date_to: params.dateTo || undefined,
+    ordering: params.ordering,
+  };
+}
+
+export function settingsFromBackend(settings: SystemSettingDto[]): Release1SystemSettings {
+  const values: SystemSettingsValues = {};
+  for (const setting of settings) {
+    const value = getSystemSettingValue(setting);
+    if (value !== undefined && isSystemSettingKey(setting.key)) values[setting.key] = value;
+  }
+  return { values };
+}
+
+export function toSystemSettingsPayload(values: SystemSettingsValues): SystemSettingsValues {
+  const payload: SystemSettingsValues = {};
+  for (const key of systemSettingKeys) {
+    if (key in values) payload[key] = Array.isArray(values[key]) ? [...values[key]] : values[key];
+  }
+  return payload;
 }
 
 export const adminApi = {
@@ -164,9 +248,18 @@ export const adminApi = {
     return mapAdminCategory(unwrapResponse(response) as DocumentCategory & Record<string, unknown>);
   },
 
+  async deleteCategory(id: string): Promise<void> {
+    await api.delete(`/document-categories/${id}/`);
+  },
+
   async getRoles() {
     const response = await api.get<ApiEnvelope<ApiPagination<BackendRole>>>("/roles/", { params: { page_size: 100 } });
     return unwrapResponse(response).results.map(mapAdminRole);
+  },
+
+  async getPermissions(): Promise<AdminPermissionDefinition[]> {
+    const response = await api.get<ApiEnvelope<BackendPermission[]>>("/permissions/", { params: { page_size: 100 } });
+    return unwrapResponse(response);
   },
 
   async setRolePermissions(roleId: string, permissions: AdminPermission[]) {
@@ -174,36 +267,31 @@ export const adminApi = {
     return mapAdminRole(unwrapResponse(response));
   },
 
-  async getAuditLogs() {
-    const response = await api.get<ApiEnvelope<ApiPagination<unknown>>>("/audit/", { params: { page_size: 100 } });
-    return unwrapResponse(response).results.map((item) => {
-      const log = mapAuditLog(item as Parameters<typeof mapAuditLog>[0]);
-      return {
-        ...log,
-        userName: log.user,
-        entity: "document",
-        entityLabel: log.document || log.object,
-      } as AdminAuditLog;
-    });
+  async getAuditLogs(params: AuditLogsParams = {}): Promise<PaginatedResponse<AdminAuditLog>> {
+    const response = await api.get<ApiEnvelope<ApiPagination<AuditLogDto>>>("/audit/", { params: serializeAuditLogQueryParams(params) });
+    const page = unwrapResponse(response);
+    return {
+      data: page.results.map(mapAdminAuditLog),
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 20,
+      total: page.count,
+      next: page.next,
+      previous: page.previous,
+    };
   },
 
-  async getSettings() {
-    const response = await api.get<ApiEnvelope<BackendSetting[]>>("/settings/");
+  async getAuditActions(): Promise<AuditActionDto[]> {
+    const response = await api.get<ApiEnvelope<AuditActionDto[]>>("/audit/actions/");
+    return unwrapResponse(response);
+  },
+
+  async getSettings(): Promise<Release1SystemSettings> {
+    const response = await api.get<ApiEnvelope<SystemSettingDto[]>>("/settings/");
     return settingsFromBackend(unwrapResponse(response));
   },
 
-  async updateSettings(settings: AdminSettings) {
-    const response = await api.patch<ApiEnvelope<BackendSetting[]>>("/settings/", {
-      system_name: settings.general.systemName,
-      timezone: settings.general.timezone,
-      language: settings.general.language,
-      university_name: settings.university.name,
-      university_email: settings.university.email,
-      document_number_prefix: settings.numbering.prefix,
-      document_number_format: settings.numbering.format,
-      max_file_size_mb: settings.fileLimits.maxSizeMb,
-      max_document_files: settings.fileLimits.maxFiles,
-    });
+  async updateSettings(settings: SystemSettingsValues): Promise<Release1SystemSettings> {
+    const response = await api.patch<ApiEnvelope<SystemSettingDto[]>>("/settings/", toSystemSettingsPayload(settings));
     return settingsFromBackend(unwrapResponse(response));
   },
 };

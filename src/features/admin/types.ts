@@ -1,4 +1,4 @@
-import type { DocumentCategory, SystemSettings, UserRole } from "@/types";
+import type { DocumentCategory } from "@/types";
 
 export type AdminUserStatus = "active" | "blocked" | "pending";
 
@@ -36,9 +36,7 @@ export interface AdminCategory extends DocumentCategory {
   documentCount: number;
 }
 
-export type AdminPermission =
-  | "documents.view" | "documents.create" | "documents.edit" | "documents.approve" | "documents.return" | "documents.archive" | "documents.register"
-  | "users.manage" | "departments.manage" | "categories.manage" | "audit.view" | "settings.manage";
+export type AdminPermission = string;
 
 export interface AdminRole {
   id: string;
@@ -46,6 +44,14 @@ export interface AdminRole {
   name: string;
   description: string;
   permissions: AdminPermission[];
+}
+
+export interface AdminPermissionDefinition {
+  id: string;
+  code: AdminPermission;
+  name: string;
+  group: string;
+  description: string;
 }
 
 export type AdminNotificationType =
@@ -80,35 +86,20 @@ export interface AdminNotification {
 
 export interface AdminAuditLog {
   id: string;
-  dateTime: string;
-  userName: string;
-  role: UserRole;
-  action: "created" | "updated" | "deleted" | "read" | "role_changed" | "settings_changed";
-  entity: "user" | "department" | "category" | "role" | "settings" | "document";
-  entityLabel: string;
-  object: string;
-  document: string;
-  department: string;
-  result: "success" | "error";
-}
-
-export interface AdminDocumentStatus { id: string; name: string; color: string; active: boolean; order: number; }
-export interface AdminSettings extends SystemSettings {
-  general: SystemSettings["general"] & { dateFormat: string };
-  university: SystemSettings["university"] & { shortName: string; phone: string; logoName?: string };
-  numbering: SystemSettings["numbering"] & { includeYear: boolean; includeDepartment: boolean; includeSequence: boolean };
-  documentStatuses: AdminDocumentStatus[];
-  emailNotifications: { enabled: boolean; assigned: boolean; approved: boolean; returned: boolean; deadlineReminder: boolean };
-  allowedExtensions: string[];
-  fileLimits: { maxSizeMb: number; maxFiles: number };
+  user: { id: string; email: string; fullName: string } | null;
+  action: string;
+  actionDisplay: string;
+  objectType: string;
+  objectId: string;
+  description: string;
+  result: "success" | "failure";
+  resultDisplay: string;
+  createdAt: string;
 }
 
 export interface AdminState {
   users: AdminUser[];
   departments: AdminDepartment[];
   categories: AdminCategory[];
-  roles: AdminRole[];
   notifications: AdminNotification[];
-  auditLogs: AdminAuditLog[];
-  settings: AdminSettings;
 }

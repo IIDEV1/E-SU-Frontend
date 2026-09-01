@@ -16,6 +16,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
+    "types": ["node"],
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -30,5 +31,5 @@
       "@/utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "e2e", "playwright.config.ts"]
 }

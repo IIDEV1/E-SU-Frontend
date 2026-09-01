@@ -6,5 +6,5 @@ export const auditLogKeys = {
 };
 
 export function useAuditLogs() {
-  return useQuery({ queryKey: auditLogKeys.all, queryFn: adminApi.getAuditLogs });
+  return useQuery({ queryKey: auditLogKeys.all, queryFn: () => adminApi.getAuditLogs() });
 }

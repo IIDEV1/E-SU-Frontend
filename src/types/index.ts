@@ -127,13 +127,13 @@ export interface Document {
   category: DocumentCategory;
   type: string;
   document_type?: string;
-  description: string;
+  description?: string;
   author: UserShort;
   department: Department;
-  responsible: UserShort;
+  responsible: UserShort | null;
   createdAt: string;
   updatedAt?: string;
-  deadline: string;
+  deadline: string | null;
   status: DocumentStatus;
   priority: DocumentPriority;
   files: DocumentFile[];
@@ -143,6 +143,16 @@ export interface Document {
   currentStage: string;
   returnReason?: string;
 }
+
+export interface DocumentHistoryEntry {
+  id: string;
+  user: UserShort | null;
+  action: string;
+  description: string;
+  createdAt: string;
+}
+
+export type DocumentListItem = Omit<Document, "description">;
 
 export type NotificationType =
   | "document_submitted"
@@ -175,50 +185,13 @@ export interface Notification {
   documentId?: string;
 }
 
-export interface AuditLog {
-  id: string;
-  dateTime: string;
-  user: string;
-  role: string;
-  action: string;
-  object: string;
-  document: string;
-  department: string;
-  result: "success" | "error";
-}
-
-export interface SystemSettings {
-  general: {
-    systemName: string;
-    timezone: string;
-    language: string;
-  };
-  university: {
-    name: string;
-    rector: string;
-    address: string;
-    email: string;
-  };
-  numbering: {
-    prefix: string;
-    format: string;
-    startNumber: string;
-  };
-  fileFormats: {
-    pdf: boolean;
-    docx: boolean;
-    xlsx: boolean;
-    png: boolean;
-    jpg: boolean;
-  };
-  maxFileSizeMb: number;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   page: number;
   pageSize: number;
   total: number;
+  next: string | null;
+  previous: string | null;
 }
 
 export interface ApiError {
