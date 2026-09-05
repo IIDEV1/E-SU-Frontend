@@ -105,7 +105,7 @@ export interface DocumentFile {
 export interface ApprovalStep {
   id: string;
   approver: UserShort;
-  status: "pending" | "approved" | "returned" | "rejected";
+  status: "pending" | "current" | "approved" | "returned" | "rejected" | "cancelled" | string;
   comment?: string;
   date?: string;
   order?: number;

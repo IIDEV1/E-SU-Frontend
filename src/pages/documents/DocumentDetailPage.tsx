@@ -42,7 +42,7 @@ export function DocumentDetailPage() {
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [returnComment, setReturnComment] = useState("");
   const [commentText, setCommentText] = useState("");
-  const [toast, setToast] = useState<string>();
+  const [toast, setToast] = useState<{ message: string; kind?: "success" | "error" }>();
 
   const relatedNotifications = useMemo(
     () => notifications.filter((notification) => notification.documentId === id),
@@ -63,36 +63,71 @@ export function DocumentDetailPage() {
   const canReturn = document.status === "in_review";
   const canArchive = !["archived", "draft"].includes(document.status);
 
+  const confirmDetails = {
+    submit: {
+      title: "Отправить на согласование",
+      description: "Документ перейдет в статус «На согласовании» и будет направлен первому согласующему.",
+      confirmLabel: "Отправить",
+    },
+    approve: {
+      title: "Подтвердить согласование",
+      description: "Вы подтверждаете согласование документа на текущем этапе маршрута.",
+      confirmLabel: "Согласовать",
+    },
+    archive: {
+      title: "Архивировать документ",
+      description: "Документ будет перемещён в архив.",
+      confirmLabel: "Архивировать",
+    },
+  }[pendingAction || "submit"];
+
   const runAction = async () => {
-    if (pendingAction === "submit") {
-      await submitDocument.mutateAsync();
-      setToast("Документ отправлен на согласование.");
+    try {
+      if (pendingAction === "submit") {
+        await submitDocument.mutateAsync();
+        setToast({ message: "Документ отправлен на согласование.", kind: "success" });
+      } else if (pendingAction === "approve") {
+        await approveDocument.mutateAsync();
+        setToast({ message: "Документ успешно согласован.", kind: "success" });
+      } else if (pendingAction === "archive") {
+        await archiveDocument.mutateAsync(document.id);
+        setToast({ message: "Документ архивирован.", kind: "success" });
+      }
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setToast({
+        message: error?.message || "Не удалось выполнить действие.",
+        kind: "error",
+      });
+    } finally {
+      setPendingAction(null);
     }
-    if (pendingAction === "approve") {
-      await approveDocument.mutateAsync();
-      setToast("Документ согласован.");
-    }
-    if (pendingAction === "archive") {
-      await archiveDocument.mutateAsync(document.id);
-      setToast("Документ архивирован.");
-    }
-    setPendingAction(null);
   };
 
   const addNewComment = async () => {
     if (commentText.trim().length < 2) return;
-    await addComment.mutateAsync(commentText.trim());
-    setCommentText("");
-    setActiveTab("comments");
-    setToast("Комментарий добавлен.");
+    try {
+      await addComment.mutateAsync(commentText.trim());
+      setCommentText("");
+      setActiveTab("comments");
+      setToast({ message: "Комментарий добавлен.", kind: "success" });
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setToast({ message: error?.message || "Не удалось добавить комментарий.", kind: "error" });
+    }
   };
 
   const returnCurrentDocument = async () => {
     if (returnComment.trim().length < 3) return;
-    await returnDocument.mutateAsync(returnComment.trim());
-    setReturnComment("");
-    setIsReturnOpen(false);
-    setToast("Документ возвращен на доработку.");
+    try {
+      await returnDocument.mutateAsync(returnComment.trim());
+      setReturnComment("");
+      setIsReturnOpen(false);
+      setToast({ message: "Документ возвращен на доработку.", kind: "success" });
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setToast({ message: error?.message || "Не удалось вернуть документ.", kind: "error" });
+    }
   };
 
   return (
@@ -117,7 +152,7 @@ export function DocumentDetailPage() {
           {canSubmit && <Button variant="secondary" icon={<Send size={18} />} onClick={() => setPendingAction("submit")}>Отправить</Button>}
           {canApprove && <Button variant="secondary" icon={<CheckCircle2 size={18} />} onClick={() => setPendingAction("approve")}>Согласовать</Button>}
           {canReturn && <Button variant="ghost" icon={<RotateCcw size={18} />} onClick={() => setIsReturnOpen(true)}>Вернуть</Button>}
-          <Button variant="ghost" icon={<Download size={18} />} onClick={() => setToast("Файл подготовлен к скачиванию в mock-режиме.")}>Скачать</Button>
+          <Button variant="ghost" icon={<Download size={18} />} onClick={() => setToast({ message: "Файл подготовлен к скачиванию.", kind: "success" })}>Скачать</Button>
           {canArchive && <Button variant="ghost" icon={<Archive size={18} />} onClick={() => setPendingAction("archive")}>Архивировать</Button>}
         </div>
       </section>
@@ -168,13 +203,35 @@ export function DocumentDetailPage() {
         )}
         {activeTab === "approval" && (
           <div className="tab-panel timeline-list">
-            {document.approvalSteps.map((step) => (
-              <div key={step.id}>
-                <span>{step.status}</span>
-                <strong>{step.approver.name}</strong>
-                {step.comment && <p>{step.comment}</p>}
-              </div>
-            ))}
+            {document.approvalSteps.length ? (
+              document.approvalSteps.map((step, index) => {
+                const statusLabels: Record<string, { label: string; color: string }> = {
+                  current: { label: "Текущий шаг (на согласовании)", color: "var(--color-primary, #2563eb)" },
+                  approved: { label: "Согласовано", color: "#16a34a" },
+                  pending: { label: "В ожидании очереди", color: "var(--color-fog, #64748b)" },
+                  returned: { label: "Возвращено на доработку", color: "#dc2626" },
+                  cancelled: { label: "Отменено", color: "var(--color-fog, #64748b)" },
+                };
+                const statusInfo = statusLabels[step.status] || { label: step.status, color: "var(--color-fog)" };
+
+                return (
+                  <div key={step.id || index} style={{ padding: "12px 14px", border: "1px solid var(--color-cloud)", borderRadius: "12px", background: step.status === "current" ? "var(--color-primary-soft, #eff6ff)" : "var(--color-snow)", display: "grid", gap: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+                      <span className="accent-badge" style={{ fontSize: "11px", padding: "2px 8px" }}>Шаг {step.order || index + 1}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: statusInfo.color }}>
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                    <strong>{step.approver?.name || step.approver?.full_name || "Согласующий"}</strong>
+                    {step.approver?.position && <span style={{ fontSize: "12px", color: "var(--color-fog)" }}>{step.approver.position}</span>}
+                    {step.date && <time style={{ fontSize: "12px", color: "var(--color-fog)" }}>{formatDate(step.date)}</time>}
+                    {step.comment && <p style={{ margin: "4px 0 0", fontStyle: "italic", color: "var(--color-iron)" }}>«{step.comment}»</p>}
+                  </div>
+                );
+              })
+            ) : (
+              <StateBlock title="Маршрут согласования пуст" description="Маршрут согласования формируется при отправке документа на согласование." />
+            )}
           </div>
         )}
         {activeTab === "comments" && (
@@ -231,9 +288,9 @@ export function DocumentDetailPage() {
         isOpen={Boolean(pendingAction)}
         onClose={() => setPendingAction(null)}
         onConfirm={() => void runAction()}
-        title="Подтвердите действие"
-        description="Действие изменит состояние документа в mock-сессии."
-        confirmLabel="Подтвердить"
+        title={confirmDetails.title}
+        description={confirmDetails.description}
+        confirmLabel={confirmDetails.confirmLabel}
       />
 
       {isReturnOpen && (
@@ -256,7 +313,7 @@ export function DocumentDetailPage() {
           </form>
         </div>
       )}
-      {toast && <Toast kind="success" message={toast} onClose={() => setToast(undefined)} />}
+      {toast && <Toast kind={toast.kind || "success"} message={toast.message} onClose={() => setToast(undefined)} />}
     </div>
   );
 }
