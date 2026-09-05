@@ -12,12 +12,14 @@ import { notificationsApi } from "@/services/endpoints/notifications.api";
 import { usersApi } from "@/services/endpoints/users.api";
 import type { AdminCategory, AdminDepartment, AdminRole, AdminSettings, AdminUser } from "./types";
 
+import { notificationKeys, useNotifications } from "@/hooks/useNotifications";
+
 export const adminKeys = {
   users: ["admin", "users"] as const,
   departments: ["admin", "departments"] as const,
   categories: ["admin", "categories"] as const,
   roles: ["admin", "roles"] as const,
-  notifications: ["admin", "notifications"] as const,
+  notifications: notificationKeys.all,
   auditLogs: ["admin", "auditLogs"] as const,
   settings: ["admin", "settings"] as const,
 };
@@ -50,8 +52,7 @@ export const useAdminCategories = () =>
 
 export const useAdminRoles = () => useQuery({ queryKey: adminKeys.roles, queryFn: adminApi.getRoles }).data ?? [];
 
-export const useAdminNotifications = () =>
-  useQuery({ queryKey: adminKeys.notifications, queryFn: notificationsApi.getNotifications }).data ?? [];
+export const useAdminNotifications = () => useNotifications().data ?? [];
 
 export const useAdminAuditLogs = () => useQuery({ queryKey: adminKeys.auditLogs, queryFn: adminApi.getAuditLogs }).data ?? [];
 
