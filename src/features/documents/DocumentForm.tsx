@@ -5,27 +5,41 @@ import { FilePlus2, Save, Send, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
-import { Toast } from "@/components/ui";
+import { Toast, type ToastKind } from "@/components/ui";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/useDocuments";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useUsers } from "@/hooks/useUsers";
 import type { Document, DocumentFile, DocumentStatus } from "@/types";
 
-const schema = z.object({
-  title: z.string().min(3, "Укажите название документа"),
-  categoryId: z.string().min(1, "Выберите категорию"),
-  type: z.string().min(2, "Укажите тип"),
-  description: z.string().min(10, "Опишите документ подробнее"),
+const submitSchema = z.object({
+  title: z.string().min(3, "Укажите название документа (минимум 3 символа)"),
+  categoryId: z.string().min(1, "Выберите категорию документа"),
+  type: z.string().min(2, "Укажите тип документа"),
+  description: z.string().min(5, "Опишите документ подробнее (минимум 5 символов)"),
   departmentId: z.string().min(1, "Выберите подразделение"),
   responsibleId: z.string().min(1, "Выберите ответственного"),
   deadline: z.string().min(1, "Укажите дедлайн"),
   priority: z.enum(["low", "normal", "high", "urgent"]),
   comment: z.string().optional(),
-  approverIds: z.array(z.string()).min(1, "Выберите хотя бы одного согласующего"),
+  approverIds: z.array(z.string()).optional(),
 });
 
-type DocumentFormValues = z.infer<typeof schema>;
+const draftSchema = z.object({
+  title: z.string().min(1, "Укажите хотя бы краткое название для черновика"),
+  categoryId: z.string().optional(),
+  type: z.string().optional(),
+  description: z.string().optional(),
+  departmentId: z.string().optional(),
+  responsibleId: z.string().optional(),
+  deadline: z.string().optional(),
+  priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+  comment: z.string().optional(),
+  approverIds: z.array(z.string()).optional(),
+});
+
+type DocumentFormValues = z.infer<typeof submitSchema>;
 
 interface DocumentFormProps {
   document?: Document;
@@ -57,8 +71,14 @@ function validateFile(file: File) {
   }
 }
 
+function getSevenDaysAhead(): string {
+  const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  return date.toISOString().split("T")[0];
+}
+
 export function DocumentForm({ document, mode }: DocumentFormProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(document?.id ?? "");
   const { data: categories = [] } = useCategories();
@@ -66,33 +86,56 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
   const { data: users = [] } = useUsers();
   const [files, setFiles] = useState<DocumentFile[]>(document?.files ?? []);
   const [fileError, setFileError] = useState("");
-  const [toast, setToast] = useState<string>();
+  const [toast, setToast] = useState<{ message: string; kind: ToastKind } | null>(null);
   const isLocked = document ? ["completed", "archived"].includes(document.status) : false;
 
   const defaultApprovers = useMemo(
-    () => document?.approvalSteps.map((step) => step.approver.id) ?? users.slice(0, 2).map((user) => user.id),
+    () => document?.approvalSteps?.map((step) => step.approver.id) ?? users.slice(0, 2).map((u) => u.id),
     [document, users],
   );
 
   const {
     formState: { errors, isDirty, isSubmitting },
+    getValues,
     handleSubmit,
     register,
+    reset,
+    setValue,
+    watch,
   } = useForm<DocumentFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(submitSchema),
     defaultValues: {
       title: document?.title ?? "",
       categoryId: document?.category.id ?? categories[0]?.id ?? "",
       type: document?.type ?? "document",
       description: document?.description ?? "",
-      departmentId: document?.department.id ?? departments[0]?.id ?? "",
-      responsibleId: document?.responsible.id ?? users[0]?.id ?? "",
-      deadline: document?.deadline ?? "",
+      departmentId: document?.department.id ?? user?.department?.id ?? departments[0]?.id ?? "",
+      responsibleId: document?.responsible.id ?? user?.id ?? users[0]?.id ?? "",
+      deadline: document?.deadline ? document.deadline.split("T")[0] : getSevenDaysAhead(),
       priority: document?.priority ?? "normal",
       comment: "",
       approverIds: defaultApprovers,
     },
   });
+
+  // Re-sync default values when asynchronous options load (for create mode, if pristine)
+  useEffect(() => {
+    if (mode === "create" && !isDirty) {
+      const currentVals = getValues();
+      reset({
+        title: currentVals.title || "",
+        categoryId: currentVals.categoryId || categories[0]?.id || "",
+        type: currentVals.type || "document",
+        description: currentVals.description || "",
+        departmentId: currentVals.departmentId || user?.department?.id || departments[0]?.id || "",
+        responsibleId: currentVals.responsibleId || user?.id || users[0]?.id || "",
+        deadline: currentVals.deadline || getSevenDaysAhead(),
+        priority: currentVals.priority || "normal",
+        comment: currentVals.comment || "",
+        approverIds: currentVals.approverIds && currentVals.approverIds.length > 0 ? currentVals.approverIds : (users.slice(0, 2).map((u) => u.id)),
+      });
+    }
+  }, [categories, departments, users, user, mode, isDirty, reset, getValues]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -119,20 +162,107 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
 
   const removeFile = (fileId: string) => setFiles((current) => current.filter((file) => file.id !== fileId));
 
-  const save = (status: Extract<DocumentStatus, "draft" | "in_review">) =>
-    handleSubmit(async (values) => {
-      if (mode === "create") {
-        const createdDocument = await createDocument.mutateAsync({ ...values, files, status });
-        setToast(status === "draft" ? "Черновик сохранен." : "Документ отправлен на согласование.");
-        setTimeout(() => navigate(`/documents/${createdDocument.id}`), 350);
+  const selectedApprovers = watch("approverIds") ?? [];
+
+  const handleApproverToggle = (approverId: string) => {
+    const current = getValues("approverIds") ?? [];
+    const next = current.includes(approverId)
+      ? current.filter((id) => id !== approverId)
+      : [...current, approverId];
+    setValue("approverIds", next, { shouldDirty: true });
+  };
+
+  const save = async (status: Extract<DocumentStatus, "draft" | "in_review">) => {
+    const currentValues = getValues();
+
+    if (status === "draft") {
+      // Draft validation
+      const result = draftSchema.safeParse(currentValues);
+      if (!result.success) {
+        const firstError = result.error.issues[0]?.message || "Заполните название документа.";
+        setToast({ message: firstError, kind: "error" });
         return;
       }
 
-      if (!document) return;
-      const updatedDocument = await updateDocument.mutateAsync({ ...values, files });
-      setToast("Изменения сохранены.");
-      setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 350);
-    })();
+      const payload = {
+        title: currentValues.title.trim() || "Новый документ",
+        categoryId: currentValues.categoryId || categories[0]?.id || "",
+        type: currentValues.type || "document",
+        description: currentValues.description || "",
+        departmentId: currentValues.departmentId || user?.department?.id || departments[0]?.id || "",
+        responsibleId: currentValues.responsibleId || user?.id || users[0]?.id || "",
+        deadline: currentValues.deadline || getSevenDaysAhead(),
+        priority: currentValues.priority || "normal",
+        comment: currentValues.comment || "",
+        approverIds: currentValues.approverIds || [],
+        files,
+        status: "draft" as const,
+      };
+
+      try {
+        if (mode === "create") {
+          const createdDocument = await createDocument.mutateAsync(payload);
+          setToast({ message: "Черновик успешно сохранён.", kind: "success" });
+          setTimeout(() => navigate(`/documents/${createdDocument.id}`), 400);
+        } else if (document) {
+          const updatedDocument = await updateDocument.mutateAsync(payload);
+          setToast({ message: "Изменения сохранены.", kind: "success" });
+          setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 400);
+        }
+      } catch (err: unknown) {
+        const error = err as { message?: string };
+        setToast({
+          message: error?.message || "Ошибка при сохранении черновика. Проверьте данные.",
+          kind: "error",
+        });
+      }
+      return;
+    }
+
+    // Full validation when sending to review
+    await handleSubmit(
+      async (values) => {
+        try {
+          const resolvedDepartmentId = values.departmentId || user?.department?.id || departments[0]?.id || "";
+          const resolvedCategoryId = values.categoryId || categories[0]?.id || "";
+          const resolvedResponsibleId = values.responsibleId || user?.id || users[0]?.id || "";
+
+          const payload = {
+            ...values,
+            departmentId: resolvedDepartmentId,
+            categoryId: resolvedCategoryId,
+            responsibleId: resolvedResponsibleId,
+            approverIds: values.approverIds || [],
+            files,
+            status: "in_review" as const,
+          };
+
+          if (mode === "create") {
+            const createdDocument = await createDocument.mutateAsync(payload);
+            setToast({ message: "Документ отправлен на согласование.", kind: "success" });
+            setTimeout(() => navigate(`/documents/${createdDocument.id}`), 400);
+          } else if (document) {
+            const updatedDocument = await updateDocument.mutateAsync(payload);
+            setToast({ message: "Изменения сохранены и документ отправлен.", kind: "success" });
+            setTimeout(() => navigate(`/documents/${updatedDocument.id}`), 400);
+          }
+        } catch (err: unknown) {
+          const error = err as { message?: string };
+          setToast({
+            message: error?.message || "Ошибка при отправке документа. Проверьте данные.",
+            kind: "error",
+          });
+        }
+      },
+      (invalidErrors) => {
+        const errorList = Object.values(invalidErrors)
+          .map((item) => item?.message)
+          .filter(Boolean);
+        const firstError = errorList[0] || "Пожалуйста, заполните все обязательные поля формы.";
+        setToast({ message: firstError, kind: "error" });
+      },
+    )();
+  };
 
   if (isLocked) {
     return (
@@ -143,17 +273,19 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
     );
   }
 
+  const isUserAdmin = user?.is_superuser || user?.role?.code === "admin";
+
   return (
     <form className="content-card document-form" onSubmit={(event) => event.preventDefault()}>
       {document?.returnReason && <div className="form-warning">Причина возврата: {document.returnReason}</div>}
       <div className="form-grid">
         <label>
-          Название
-          <input {...register("title")} />
+          Название документа *
+          <input placeholder="Например: Служебная записка на закупку оборудования" {...register("title")} />
           {errors.title && <small>{errors.title.message}</small>}
         </label>
         <label>
-          Категория
+          Категория *
           <select {...register("categoryId")}>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -164,34 +296,39 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
           {errors.categoryId && <small>{errors.categoryId.message}</small>}
         </label>
         <label>
-          Тип
-          <input {...register("type")} />
+          Тип документа *
+          <input placeholder="document, report, request, memo..." {...register("type")} />
           {errors.type && <small>{errors.type.message}</small>}
         </label>
         <label>
-          Подразделение
+          Подразделение *
           <select {...register("departmentId")}>
             {departments.map((department) => (
               <option key={department.id} value={department.id}>
-                {department.name}
+                {department.name} {user?.department?.id === department.id ? "(Ваше подразделение)" : ""}
               </option>
             ))}
           </select>
+          {!isUserAdmin && user?.department && (
+            <span style={{ fontSize: "12px", color: "var(--color-fog)" }}>
+              Документ привязывается к вашему подразделению: {user.department.name}
+            </span>
+          )}
           {errors.departmentId && <small>{errors.departmentId.message}</small>}
         </label>
         <label>
-          Ответственный
+          Ответственный *
           <select {...register("responsibleId")}>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
+            {users.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name} {user?.id === item.id ? "(Вы)" : ""}
               </option>
             ))}
           </select>
           {errors.responsibleId && <small>{errors.responsibleId.message}</small>}
         </label>
         <label>
-          Дедлайн
+          Дедлайн *
           <input type="date" {...register("deadline")} />
           {errors.deadline && <small>{errors.deadline.message}</small>}
         </label>
@@ -204,21 +341,50 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
             <option value="urgent">Срочный</option>
           </select>
         </label>
-        <label>
-          Согласующие
-          <select multiple {...register("approverIds")}>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
+        <div style={{ display: "grid", gap: "6px" }}>
+          <label style={{ margin: 0 }}>Согласующие лица</label>
+          <div
+            style={{
+              maxHeight: "130px",
+              overflowY: "auto",
+              border: "1px solid var(--color-cloud)",
+              borderRadius: "14px",
+              padding: "8px 12px",
+              display: "grid",
+              gap: "6px",
+              background: "var(--color-snow)",
+            }}
+          >
+            {users.map((u) => (
+              <label
+                key={u.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontWeight: "normal",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={selectedApprovers.includes(u.id)}
+                  onChange={() => handleApproverToggle(u.id)}
+                />
+                <span>{u.name} {u.position ? `(${u.position})` : ""}</span>
+              </label>
             ))}
-          </select>
-          {errors.approverIds && <small>{errors.approverIds.message}</small>}
-        </label>
+          </div>
+          <span style={{ fontSize: "11px", color: "var(--color-fog)" }}>
+            Если не выбраны вручную, будет использован стандартный маршрут выбранной категории.
+          </span>
+        </div>
       </div>
       <label>
-        Описание
-        <textarea rows={5} {...register("description")} />
+        Описание *
+        <textarea rows={4} placeholder="Подробно опишите суть и цель документа..." {...register("description")} />
         {errors.description && <small>{errors.description.message}</small>}
       </label>
       <label className="dropzone document-uploader">
@@ -244,12 +410,12 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
             </div>
           ))
         ) : (
-          <p>Файлы пока не добавлены.</p>
+          <p style={{ color: "var(--color-fog)", fontSize: "13px" }}>Файлы пока не добавлены.</p>
         )}
       </div>
       <label>
         Комментарий
-        <textarea rows={3} {...register("comment")} />
+        <textarea rows={2} placeholder="Примечание к документу..." {...register("comment")} />
       </label>
       <div className="form-actions">
         <Button
@@ -273,7 +439,13 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
           Отмена
         </Button>
       </div>
-      {toast && <Toast kind="success" message={toast} onClose={() => setToast(undefined)} />}
+      {toast && (
+        <Toast
+          kind={toast.kind}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </form>
   );
 }

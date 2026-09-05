@@ -2,15 +2,15 @@ import { Link } from "react-router-dom";
 import { Bell, Clock, FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
-import { useAdminNotifications } from "@/features/admin/hooks";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useDocuments } from "@/hooks/useDocuments";
+import { useNotifications } from "@/hooks/useNotifications";
 import { formatDate } from "@/utils/format";
 
 export function DashboardPage() {
   const { user } = useAuth();
   const { data, isError, isLoading } = useDocuments();
-  const notifications = useAdminNotifications();
+  const { data: notifications = [] } = useNotifications();
   const documents = data?.data ?? [];
   const metrics = [
     { label: "Всего документов", value: documents.length, to: "/documents" },

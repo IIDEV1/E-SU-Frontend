@@ -1,7 +1,11 @@
 import { CheckCheck, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, EmptyState, Input, NotificationItem, PageError, PageLoader, Select, TableToolbar, Toast } from "@/components/ui";
-import { useAdminActions, useAdminNotifications } from "@/features/admin/hooks";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from "@/hooks/useNotifications";
 import type { AdminNotificationType } from "@/features/admin/types";
 import { notificationTypeLabels } from "@/utils/format";
 
@@ -12,14 +16,13 @@ const typeOptions: Array<{ value: AdminNotificationType; label: string }> = Obje
 );
 
 export function NotificationsPage() {
-  const notifications = useAdminNotifications();
-  const actions = useAdminActions();
+  const { data: notifications = [], isLoading, isError, error } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
   const [readFilter, setReadFilter] = useState<ReadFilter>("all");
   const [typeFilter, setTypeFilter] = useState<AdminNotificationType | "all">("all");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState<string>();
-  const isLoading = false;
-  const error: string | undefined = undefined;
 
   const filteredNotifications = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -37,13 +40,18 @@ export function NotificationsPage() {
     setSearch("");
   };
 
-  const markAllRead = () => {
-    actions.notifications.markAllRead();
-    setToast("Все уведомления отмечены как прочитанные.");
+  const handleMarkAllRead = () => {
+    markAllRead.mutate(undefined, {
+      onSuccess: () => setToast("Все уведомления отмечены как прочитанные."),
+    });
+  };
+
+  const handleMarkRead = (id: string) => {
+    markRead.mutate(id);
   };
 
   if (isLoading) return <PageLoader label="Загрузка уведомлений" />;
-  if (error) return <PageError description={error} />;
+  if (isError) return <PageError description={error instanceof Error ? error.message : "Не удалось загрузить уведомления"} />;
 
   return (
     <section className="admin-page notifications-page">
@@ -56,8 +64,9 @@ export function NotificationsPage() {
           type="button"
           variant="secondary"
           icon={<CheckCheck size={17} />}
-          onClick={markAllRead}
-          disabled={!notifications.some((item) => !item.isRead)}
+          onClick={handleMarkAllRead}
+          disabled={!notifications.some((item) => !item.isRead) || markAllRead.isPending}
+          loading={markAllRead.isPending}
         >
           Отметить все прочитанными
         </Button>
@@ -100,7 +109,7 @@ export function NotificationsPage() {
       <div className="notifications-list">
         {filteredNotifications.length > 0 ? (
           filteredNotifications.map((notification) => (
-            <NotificationItem key={notification.id} notification={notification} onMarkRead={actions.notifications.markRead} />
+            <NotificationItem key={notification.id} notification={notification} onMarkRead={handleMarkRead} />
           ))
         ) : (
           <EmptyState

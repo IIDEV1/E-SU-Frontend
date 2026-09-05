@@ -24,10 +24,28 @@ let refreshPromise: Promise<string | null> | null = null;
 
 function toAppApiError(error: AxiosError<ApiErrorResponse>): AppApiError {
   const backendError = error.response?.data?.error;
+  let message = backendError?.message ?? error.message ?? "Произошла ошибка при выполнении запроса.";
+
+  if (backendError?.details && typeof backendError.details === "object") {
+    const detailParts: string[] = [];
+    for (const [key, value] of Object.entries(backendError.details)) {
+      if (Array.isArray(value)) {
+        detailParts.push(`${key}: ${value.join(", ")}`);
+      } else if (typeof value === "string") {
+        detailParts.push(`${key}: ${value}`);
+      } else if (value && typeof value === "object") {
+        detailParts.push(`${key}: ${JSON.stringify(value)}`);
+      }
+    }
+    if (detailParts.length > 0) {
+      message = `${message} (${detailParts.join("; ")})`;
+    }
+  }
+
   return {
     status: error.response?.status,
     code: backendError?.code ?? "network_error",
-    message: backendError?.message ?? "Произошла ошибка при выполнении запроса.",
+    message,
     details: backendError?.details,
   };
 }
