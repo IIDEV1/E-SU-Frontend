@@ -1,4 +1,5 @@
 import type {
+  ApprovalStep,
   AuditLog,
   Comment,
   Department,
@@ -175,5 +176,27 @@ export function mapAuditLog(log: BackendAuditLog): AuditLog {
     document: log.document ?? "",
     department: log.department ?? "",
     result: log.result ?? "success",
+  };
+}
+
+export interface BackendApprovalStep {
+  id: string;
+  order?: number;
+  approver?: BackendUserShort | null;
+  role?: { id: string; name: string; code: string } | null;
+  status: string;
+  comment?: string | null;
+  acted_at?: string | null;
+  created_at?: string;
+}
+
+export function mapApprovalStep(step: BackendApprovalStep): ApprovalStep {
+  return {
+    id: step.id,
+    order: step.order,
+    approver: mapUserShort(step.approver),
+    status: step.status as ApprovalStep["status"],
+    comment: step.comment || undefined,
+    date: step.acted_at || step.created_at || undefined,
   };
 }

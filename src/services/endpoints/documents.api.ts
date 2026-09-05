@@ -1,5 +1,5 @@
 import { api, unwrapResponse } from "@/services/api";
-import { mapComment, mapDocument, mapDocumentFile } from "@/services/mappers";
+import { mapApprovalStep, mapComment, mapDocument, mapDocumentFile } from "@/services/mappers";
 import type { ApiEnvelope, ApiPagination } from "@/services/types";
 import type { Document, DocumentStatus, PaginatedResponse } from "@/types";
 
@@ -83,7 +83,7 @@ async function uploadPendingFiles(documentId: string, files: Document["files"] =
 }
 
 async function hydrateDocument(document: Document): Promise<Document> {
-  const [files, comments, history] = await Promise.all([
+  const [files, comments, history, approvalSteps] = await Promise.all([
     api
       .get<ApiEnvelope<ApiPagination<unknown> | unknown[]>>(`/documents/${document.id}/files/`)
       .then((response) => unwrapResponse(response))
@@ -105,9 +105,21 @@ async function hydrateDocument(document: Document): Promise<Document> {
         ),
       )
       .catch(() => []),
+    api
+      .get<ApiEnvelope<{ steps?: unknown[] }>>(`/documents/${document.id}/approval/`)
+      .then((response) => unwrapResponse(response))
+      .then((data) => (data?.steps || []).map((step) => mapApprovalStep(step as Parameters<typeof mapApprovalStep>[0])))
+      .catch(() => []),
   ]);
 
-  return { ...document, files, comments, history };
+  const returnReason =
+    document.status === "returned"
+      ? approvalSteps.find((s) => s.status === "returned")?.comment ||
+        comments.find((c) => c.comment_type === "return_reason")?.text ||
+        document.returnReason
+      : undefined;
+
+  return { ...document, files, comments, history, approvalSteps, returnReason };
 }
 
 export const documentsApi = {
