@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useDocuments } from "@/hooks/useDocuments";
 import { useNotifications } from "@/hooks/useNotifications";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatDateTime } from "@/utils/format";
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -123,7 +123,7 @@ export function DashboardPage() {
           <div className="timeline-list">
             {notifications.slice(0, 5).map((notification) => (
               <Link to={notification.documentId ? `/documents/${notification.documentId}` : "/notifications"} key={notification.id}>
-                <span>{notification.createdAt}</span>
+                <span>{formatDateTime(notification.createdAt)}</span>
                 <strong>{notification.title}</strong>
                 <p>{notification.message}</p>
               </Link>

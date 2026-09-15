@@ -48,6 +48,15 @@ interface DocumentFormProps {
 
 const allowedFileExtensions = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg"];
 const maxFileSize = 25 * 1024 * 1024;
+const documentTypeOptions = [
+  { value: "document", label: "Документ" },
+  { value: "request", label: "Заявка" },
+  { value: "memo", label: "Служебная записка" },
+  { value: "report", label: "Отчёт" },
+  { value: "order", label: "Приказ" },
+  { value: "contract", label: "Договор" },
+  { value: "act", label: "Акт" },
+];
 
 function toDocumentFile(file: File): DocumentFile {
   return {
@@ -297,7 +306,13 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         </label>
         <label>
           Тип документа *
-          <input placeholder="document, report, request, memo..." {...register("type")} />
+          <select {...register("type")}>
+            {documentTypeOptions.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
           {errors.type && <small>{errors.type.message}</small>}
         </label>
         <label>
@@ -389,6 +404,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
       </label>
       <label className="dropzone document-uploader">
         <input
+          id="document-files"
           type="file"
           multiple
           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
@@ -396,6 +412,7 @@ export function DocumentForm({ document, mode }: DocumentFormProps) {
         />
         <FilePlus2 size={22} />
         <strong>Файлы документа</strong>
+        <span className="document-uploader__button">Выбрать файлы</span>
         <span>Перетащите файлы или выберите вручную. PDF, DOCX, XLSX, PNG/JPG до 25 MB.</span>
       </label>
       {fileError && <div className="form-error">{fileError}</div>}

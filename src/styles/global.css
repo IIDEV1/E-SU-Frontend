@@ -479,7 +479,7 @@ label {
 
 .page-container {
   margin: 0 auto;
-  max-width: 1240px;
+  max-width: 1400px;
   padding: 32px;
   width: 100%;
 }
@@ -575,6 +575,7 @@ label {
 }
 
 .document-list a,
+.timeline-list a,
 .timeline-list > div,
 .file-list > div {
   align-items: center;
@@ -587,7 +588,15 @@ label {
 }
 
 .document-list.compact a {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(110px, max-content) max-content;
+  gap: 12px;
+}
+
+.document-list.compact strong,
+.timeline-list strong,
+.timeline-list p {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .document-list span,
@@ -609,7 +618,7 @@ label {
 
 table {
   border-collapse: collapse;
-  min-width: 1040px;
+  min-width: 1280px;
   width: 100%;
 }
 
@@ -630,6 +639,43 @@ th {
 td {
   color: var(--color-iron);
   font-size: 14px;
+}
+
+.document-desktop-table table {
+  table-layout: fixed;
+}
+
+.document-desktop-table th:nth-child(1),
+.document-desktop-table td:nth-child(1) {
+  width: 86px;
+}
+
+.document-desktop-table th:nth-child(2),
+.document-desktop-table td:nth-child(2) {
+  width: 190px;
+}
+
+.document-desktop-table th:nth-child(6),
+.document-desktop-table td:nth-child(6),
+.document-desktop-table th:nth-child(8),
+.document-desktop-table td:nth-child(8),
+.document-desktop-table th:nth-child(9),
+.document-desktop-table td:nth-child(9) {
+  width: 86px;
+}
+
+.document-desktop-table th:nth-child(10),
+.document-desktop-table td:nth-child(10) {
+  width: 112px;
+}
+
+.document-desktop-table th:nth-child(11),
+.document-desktop-table td:nth-child(11) {
+  width: 82px;
+}
+
+.document-desktop-table td {
+  overflow-wrap: anywhere;
 }
 
 .pagination {
@@ -1047,7 +1093,30 @@ td {
 }
 
 .document-uploader input {
-  max-width: 360px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+.document-uploader__button {
+  align-items: center;
+  background: var(--color-obsidian);
+  border-radius: 14px;
+  color: var(--color-snow) !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 38px;
+  padding: 9px 14px;
+}
+
+.document-uploader:focus-within {
+  border-color: var(--color-primary);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  outline-offset: 2px;
 }
 
 .uploaded-files {
