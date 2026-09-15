@@ -171,17 +171,34 @@ small {
   color: var(--color-iron);
 }
 
-.badge--overdue,
-.badge--returned,
-.badge--priority-urgent {
+.badge.badge--overdue,
+.badge.badge--returned,
+.badge.badge--blocked,
+.badge.badge--priority-urgent {
   background: var(--color-obsidian);
   color: var(--color-snow);
 }
 
-.badge--in_review,
-.badge--priority-high {
+.badge.badge--in_review,
+.badge.badge--priority-high {
   background: var(--color-primary);
   color: var(--color-snow);
+}
+
+.badge.badge--approved,
+.badge.badge--completed,
+.badge.badge--active {
+  background: #166534;
+  color: var(--color-snow);
+}
+
+.badge.badge--draft,
+.badge.badge--pending,
+.badge.badge--disabled,
+.badge.badge--priority-low,
+.badge.badge--priority-normal {
+  background: var(--color-snow);
+  color: var(--color-graphite);
 }
 
 .auth-layout {
